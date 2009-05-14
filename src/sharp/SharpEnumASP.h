@@ -1,0 +1,4 @@
+#ifndef SHARPENUMASP_H_
+#define SHARPENUMASP_H_
+
+#endif /*SHARPENUMASP_H_*/

@@ -1,0 +1,4 @@
+#ifndef SHARPENUMMINSAT_H_
+#define SHARPENUMMINSAT_H_
+
+#endif /*SHARPENUMMINSAT_H_*/
