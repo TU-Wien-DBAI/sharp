@@ -16,7 +16,7 @@ class Hypertree;
 
 class Hypergraph  
 {
-private:
+protected:
 	// Maximum number of edges contained in the hypergraph
 	int iMyMaxNbrOfEdges;
 
@@ -40,7 +40,7 @@ public:
 	virtual~Hypergraph();
 
 	// Read hypergraph from file and construct internal representation
-	void buildHypergraph(Parser *P);
+	virtual void buildHypergraph(Parser *P = NULL);
 
 	// Returns the number of edges in the hypergraph
 	int getNbrOfEdges();
