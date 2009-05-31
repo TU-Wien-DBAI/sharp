@@ -61,14 +61,14 @@ void InitializeErrorHandling(const char *programName)
  ============================================================================
  */
 #ifdef DEBUG
-void _printError(int line, char *file, char *message)
+void _printError(int line, char *file, const char *message)
 {
     if(errno == 0)
     	cerr << sProgramName << ": " << file << ":" << line << " - " << message << endl;
     else
     	cerr << sProgramName << ": " << file << ":" << line << " - " << message << " " << strerror(errno) << endl;
 #else
-void _printError(char *message)
+void _printError(const char *message)
 {
     if(errno == 0)
     	cerr << sProgramName << ": " << message << endl;

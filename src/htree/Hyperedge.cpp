@@ -15,6 +15,9 @@ Hyperedge::Hyperedge(int ID, char *cName, int iSize, int iNbrOfNeighbours) : Com
 {
 }
 
+Hyperedge::Hyperedge(int ID, char *cName) : Component(ID, cName)
+{
+}
 
 Hyperedge::~Hyperedge()
 {
@@ -38,6 +41,11 @@ int Hyperedge::getNbrOfNodes()
 void Hyperedge::insNode(Node *Comp, int iPos)
 {
 	Component::ins((Component *)Comp, iPos);
+}
+
+void Hyperedge::insNode(Node *Comp)
+{
+	Component::ins((Component *)Comp);
 }
 
 

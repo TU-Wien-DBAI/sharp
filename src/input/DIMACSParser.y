@@ -3,65 +3,77 @@
 %define LSP_NEEDED
 
 %define MEMBERS \
-		virtual ~DIMACSParser() { } \
-		long getClauses() { return this->lClauses; } \
-		long getVariables() { return this->lVariables; } \
+	public: \
+		virtual ~DIMACSParser(); \
+		int getClauseCount(); \
+		int getVariableCount(); \
 	private: \
 		yyFlexLexer lexer; \
-		long lClauses; \
-		long lVariables; \
-		long lCurrentClause; \
-		void addVariable(long number);
+		int iClauseCount; \
+		int iVariableCount; \
+		int iCurrentClause; \
+	protected: \
+		virtual void addVariable(int iClause, int iVariable, bool bNegative = false) = 0;
 
-%define LEX_BODY { yylval.yytext = strdup(lexer.YYText()); return lexer.yylex(); }
+%define CONSTRUCTOR_PARAM istream *in
+
+%define CONSTRUCTOR_CODE \
+	this->iClauseCount = this->iVariableCount = this->iCurrentClause = 0; \
+	if(in != NULL) lexer.switch_streams(in);
+
+%define LEX_BODY { int r = lexer.yylex(); yylval.yytext = strdup(lexer.YYText()); return r; }
 
 %define ERROR_BODY { cerr << "Parser error - line: " << lexer.lineno() << ", at word: " << lexer.YYText() << endl; }
 
 %header{
-#include "../htree/Hypergraph.h"
-%}
-
-%{
 #include <fstream>
 #include <cstdlib>
 #include <cstring>
+#include <map>
 
 #include <FlexLexer.h>
 
 using namespace std;
-%} 
+
+#include "../htree/Hypergraph.h"
+%}
 
 %union{
 	char *yytext;
 }
 
-%token 			EC NOT PROGRAM UNKNOWN NUMBER
+%token 			ENDOFCLAUSE NOT PROGRAM COMMENT NEWLINE UNKNOWN
+%token <yytext>		NUMBER
 
 %start dimacs
 
 %%
 
-dimacs		: program clauses		{ }
+dimacs		: comments program clauses		{ }
 		;
 
-program		: PROGRAM NUMBER NUMBER		{ this->lClauses = strtol($<yytext>2, NULL, 10); this->lVariables = strtol($<yytext>3, NULL, 10); }
+comments	: 					{ }
+		| COMMENT NEWLINE comments		{ }
+
+program		: PROGRAM NUMBER NUMBER NEWLINE		{ this->iVariableCount = (int)strtol($2, NULL, 10); this->iClauseCount = (int)strtol($3, NULL, 10); }
 		;
 
-clauses		: variables EC			{ }		
-		| variables EC clauses		{ ++this->lCurrentClause; }
+clauses		: variables ENDOFCLAUSE NEWLINE		{ }		
+		| variables ENDOFCLAUSE NEWLINE clauses	{ }
 		;
 
-variables	: variable			{ }
-		| variable variables		{ }
+variables	: variable				{ ++this->iCurrentClause; }
+		| variable variables			{ }
 		;
 
-variable	: NUMBER			{  }
-		| NOT NUMBER			{ cout << "Got negative variable number;" << endl; }
+variable	: NUMBER				{ addVariable(this->iCurrentClause, (int)strtol($1, NULL, 10)); }
+		| NOT NUMBER				{ addVariable(this->iCurrentClause, (int)strtol($2, NULL, 10), true); }
 		;
 
 %%
 
-void DIMACSParser::addVariable(long number)
-{
-	;
-}
+DIMACSParser::~DIMACSParser() { }
+
+int DIMACSParser::getClauseCount() { return this->iClauseCount; }
+
+int DIMACSParser::getVariableCount() { return this->iVariableCount; }

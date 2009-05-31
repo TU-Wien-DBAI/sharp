@@ -38,10 +38,10 @@ void InitializeErrorHandling(const char *programName);
  ============================================================================
  */
 #ifdef DEBUG
-    void _printError(int line, char *file, char *message);
+    void _printError(int line, char *file, const char *message);
     #define PrintError(MESSAGE) _printError(__LINE__, __FILE__, (MESSAGE))
 #else
-    void _printError(char *message);
+    void _printError(const char *message);
     #define PrintError(MESSAGE) _printError(MESSAGE)
 #endif
     

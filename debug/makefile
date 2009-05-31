@@ -11,9 +11,9 @@ RM := rm -rf
 -include subdir.mk
 -include src/support/subdir.mk
 -include src/sharp/subdir.mk
--include src/subdir.mk
 -include src/input/subdir.mk
 -include src/htree/subdir.mk
+-include src/subdir.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)

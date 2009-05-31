@@ -20,7 +20,7 @@ class Node;
 
 class Hypertree  
 {
-private:
+protected:
 	// Pointer to the parent node in the hypertree
 	Hypertree *MyParent;
 
@@ -84,6 +84,12 @@ public:
 
 	// Writes hypertree to GML format file
 	void outputToGML(Hypergraph *HGraph, char *cNameOfFile);
+
+	// Gets the parent of this node
+	Hypertree *getParent();
+
+	// Gets a list populated with all the children of this node
+	list<Hypertree *> *getChildren();
     
 	// Writes hypertree to text format file
 	void outputToText(char *cNameOfFile);

@@ -8,6 +8,8 @@ Class Hypergraph  models a hypergraph consisting of its edges and nodes.
 #if !defined(CLS_HYPERGRAPH)
 #define CLS_HYPERGRAPH
 
+#include <vector>
+using namespace std;
 
 class Parser;
 class Hyperedge;
@@ -24,10 +26,10 @@ protected:
 	int iMyMaxNbrOfNodes;
 
 	// Array of pointers to the edges contained in the hypergraph
-	Hyperedge **MyEdges;
+	vector<Hyperedge *> MyEdges;
 
 	// Array of pointers to the nodes contained in the hypergraph
-	Node **MyNodes;
+	vector<Node *> MyNodes;
 
 	// Labels all edges reachable from Edge
 	void labelReachEdges(Hyperedge *Edge);
@@ -40,7 +42,7 @@ public:
 	virtual~Hypergraph();
 
 	// Read hypergraph from file and construct internal representation
-	virtual void buildHypergraph(Parser *P = NULL);
+	virtual void buildHypergraph(Parser *P);
 
 	// Returns the number of edges in the hypergraph
 	int getNbrOfEdges();

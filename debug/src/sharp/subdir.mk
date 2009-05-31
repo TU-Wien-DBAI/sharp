@@ -6,17 +6,20 @@
 CPP_SRCS += \
 ../src/sharp/SharpEnumASP.cpp \
 ../src/sharp/SharpEnumMinSAT.cpp \
-../src/sharp/SharpSAT.cpp 
+../src/sharp/SharpSAT.cpp \
+../src/sharp/ExtendedHypertree.cpp
 
 OBJS += \
 ./src/sharp/SharpEnumASP.o \
 ./src/sharp/SharpEnumMinSAT.o \
-./src/sharp/SharpSAT.o 
+./src/sharp/SharpSAT.o \
+./src/sharp/ExtendedHypertree.o
 
 CPP_DEPS += \
 ./src/sharp/SharpEnumASP.d \
 ./src/sharp/SharpEnumMinSAT.d \
-./src/sharp/SharpSAT.d 
+./src/sharp/SharpSAT.d \
+./src/sharp/ExtendedHypertree.d
 
 
 # Each subdirectory must supply rules for building sources it contributes

@@ -10,6 +10,7 @@ Class Component models a component of a hypergraph, i.e., a hyperedge or a node.
 
 
 #include <list>
+#include <vector>
 using namespace std;
 
 
@@ -29,10 +30,10 @@ protected:
 	int iMyMaxNbrOfNeighbours;
 
 	// Array of pointers to contained components
-	Component **MyComponents;
+	vector<Component *> MyComponents;
 
 	// Array of pointers to components that contain common components
-	Component **MyNeighbours;
+	vector<Component *> MyNeighbours;
 
 	// List of component IDs that are covered by the actual component
 	list<int> MyCoveredCompIDs;
@@ -48,6 +49,7 @@ protected:
 
 	// Inserts a component at position iPos
 	void ins(Component *Comp, int iPos);
+	void ins(Component *Comp);
 
 	// Removes a component
 	bool rem(Component *Comp);
@@ -67,6 +69,7 @@ protected:
 public:
 	// Constructor
 	Component(int ID, char *cName, int iSize, int iNbrOfNeighbours);
+	Component(int ID, char *cName);
 
 	// Destructor
 	virtual ~Component();

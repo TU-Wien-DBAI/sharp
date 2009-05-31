@@ -15,6 +15,9 @@ Node::Node(int ID, char *cName, int iSize, int iNbrOfNeighbours) : Component(ID,
 {
 }
 
+Node::Node(int ID, char *cName) : Component(ID, cName)
+{
+}
 
 Node::~Node()
 {
@@ -40,6 +43,10 @@ void Node::insEdge(Hyperedge *Comp, int iPos)
 	Component::ins((Component *)Comp, iPos);
 }
 
+void Node::insEdge(Hyperedge *Comp)
+{
+	Component::ins((Component *)Comp);
+}
 
 // Removes a hyperedge
 bool Node::remEdge(Hyperedge *Comp)

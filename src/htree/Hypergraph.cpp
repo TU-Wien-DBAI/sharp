@@ -24,8 +24,6 @@ Hypergraph::Hypergraph()
 {
 	iMyMaxNbrOfEdges = 0;
 	iMyMaxNbrOfNodes = 0;
-	MyEdges = NULL;
-	MyNodes = NULL;
 }
 
 
@@ -37,9 +35,6 @@ Hypergraph::~Hypergraph()
 		delete MyEdges[i];
 	for(i=0; i < iMyMaxNbrOfNodes; i++)
 		delete MyNodes[i];
-
-	delete [] MyEdges;
-	delete [] MyNodes;
 }
 
 
@@ -94,16 +89,11 @@ void Hypergraph::buildHypergraph(Parser *P)
     int i, j;
 
 	// Allocate arrays with pointers to the edges and nodes of the hypergraph
- 	MyEdges = new Hyperedge*[P->getNbrOfAtoms()];
-	MyNodes = new Node*[P->getNbrOfVars()];
+ 	MyEdges.reserve(P->getNbrOfAtoms());
+	MyNodes.reserve(P->getNbrOfVars());
 
-	if((MyEdges == NULL) || (MyNodes == NULL))
-		writeErrorMsg("Error assigning memory.", "Hypergraph::buildHypergraph");
-	else
-	{
-		iMyMaxNbrOfEdges = P->getNbrOfAtoms();
-		iMyMaxNbrOfNodes = P->getNbrOfVars();
-	}
+	iMyMaxNbrOfEdges = P->getNbrOfAtoms();
+	iMyMaxNbrOfNodes = P->getNbrOfVars();
 
 	// Create the edges of the hypergraph
 	for(i=0; i < iMyMaxNbrOfEdges; i++) {
@@ -275,12 +265,18 @@ Comments:
 void Hypergraph::makeDual()
 {
 	int iTmp;
-	Component **Tmp;
+	vector<Node *> Nodes; Nodes.reserve(this->MyEdges.size());
+	vector<Hyperedge *> Edges; Edges.reserve(this->MyNodes.size());
 
 	// Swap hyperedges and nodes
-	Tmp = (Component **)MyEdges;
-	MyEdges = (Hyperedge **)MyNodes;
-	MyNodes = (Node **)Tmp;
+	for(int i = 0; i < (int)this->MyEdges.size(); ++i)
+		Nodes[i] = (Node *)this->MyEdges[i];
+
+	for(int i = 0; i < (int)this->MyNodes.size(); ++i)
+		Edges[i] = (Hyperedge *)this->MyNodes[i];
+
+	MyEdges = Edges;
+	MyNodes = Nodes;
 
 	// Swap limiters
 	iTmp = iMyMaxNbrOfEdges;
@@ -487,9 +483,7 @@ void Hypergraph::divideNodes(int *iPartitioning, Hypergraph ***Subgraphs, Hypere
 			++iPartSizes[iPartitioning[i]];
 	for(i=0; i < iNbrOfParts; i++) {
 		(*Subgraphs)[i]->iMyMaxNbrOfNodes = iPartSizes[i];
-		(*Subgraphs)[i]->MyNodes = new Node*[iPartSizes[i]];
-		if((*Subgraphs)[i]->MyNodes == NULL)
-			writeErrorMsg("Error assigning memory.", "Hypergraph::divideNodes");
+		(*Subgraphs)[i]->MyNodes.reserve(iPartSizes[i]);
 	}
 	for(i=0; i < iNbrOfParts; i++)
 		iPartSizes[i] = 0;
@@ -505,9 +499,7 @@ void Hypergraph::divideNodes(int *iPartitioning, Hypergraph ***Subgraphs, Hypere
 			++iPartSizes[MyEdges[i]->getLabel()];
 	for(i=0; i < iNbrOfParts; i++) {
 		(*Subgraphs)[i]->iMyMaxNbrOfEdges = iPartSizes[i];
-		(*Subgraphs)[i]->MyEdges = new Hyperedge*[iPartSizes[i]+1];
-		if((*Subgraphs)[i]->MyEdges == NULL)
-			writeErrorMsg("Error assigning memory.", "Hypergraph::divideNodes");
+		(*Subgraphs)[i]->MyEdges.reserve(iPartSizes[i]+1);
 	}
 	for(i=0; i < iNbrOfParts; i++)
 		iPartSizes[i] = 0;

@@ -19,6 +19,7 @@ class Hyperedge : public Component
 public:
 	// Constructor
 	Hyperedge(int ID, char *cName, int iSize, int iNbrOfNeighbours);
+	Hyperedge(int ID, char *cName);
 
 	// Destructor
 	virtual ~Hyperedge();
@@ -28,6 +29,7 @@ public:
 
 	// Inserts a node at position iPos
 	void insNode(Node *Comp, int iPos);
+	void insNode(Node *Comp);
 
 	// Removes a node
 	bool remNode(Node *Comp);

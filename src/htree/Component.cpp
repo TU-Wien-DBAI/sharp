@@ -20,16 +20,12 @@ Component::Component(int ID, char *cName, int iSize, int iNbrOfNeighbours)
 	iMyID = ID;
 	cMyName = cName;
   
-	MyComponents = new Component*[iSize];
-	if(MyComponents == NULL)
-		writeErrorMsg("Error assigning memory.", "Component::Component");
+	MyComponents.reserve(iSize);
 	for(i=0; i < iSize; i++)
 		MyComponents[i] = NULL;
 	iMyMaxSize = iSize;
 
-	MyNeighbours = new Component*[iNbrOfNeighbours];
-	if(MyNeighbours == NULL)
-		writeErrorMsg("Error assigning memory.", "Component::Component");
+	MyNeighbours.reserve(iNbrOfNeighbours);
 	for(i=0; i < iNbrOfNeighbours; i++)
 		MyNeighbours[i] = NULL;
 	iMyMaxNbrOfNeighbours = iNbrOfNeighbours;
@@ -38,11 +34,16 @@ Component::Component(int ID, char *cName, int iSize, int iNbrOfNeighbours)
 	bMySpecial = false;
 }
 
+Component::Component(int ID, char *cName)
+{
+	iMyID = ID;
+	cMyName = cName;
+
+	iMyMaxSize = iMyMaxNbrOfNeighbours = 0;
+}
 
 Component::~Component()
 {
-	delete [] MyComponents;
-	delete [] MyNeighbours;
 }
 
 
@@ -109,12 +110,9 @@ void Component::updateNeighbourhood()
 				Neighbours.insert(MyComponents[i]->get(j));
 
 	// Allocate memory for pointers to new neighbours
-	if(MyNeighbours != NULL)
-		delete [] MyNeighbours;
+	MyNeighbours.clear();
 	iMyMaxNbrOfNeighbours = Neighbours.size();
-	MyNeighbours = new Component*[iMyMaxNbrOfNeighbours];
-	if(MyNeighbours == NULL)
-		writeErrorMsg("Error assigning memory.", "Component::updateNeighbourhood");
+	MyNeighbours.reserve(iMyMaxNbrOfNeighbours);
 
 	// Set new neighbours
 	for(i=0, SetIter=Neighbours.begin(); SetIter != Neighbours.end(); i++, SetIter++)
@@ -169,6 +167,12 @@ void Component::ins(Component *Comp, int iPos)
 		MyComponents[iPos] = Comp;
 	else
 		writeErrorMsg("Position not available.", "Component::ins");
+}
+
+void Component::ins(Component *Comp)
+{
+	MyComponents.push_back(Comp);
+	++iMyMaxSize;
 }
 
 
@@ -388,7 +392,6 @@ Component *Component::clone()
 	// Initialize pointers
 	for(i=0; i < iMyMaxSize; i++)
 		Clone->MyComponents[i] = NULL;
-	Clone->MyNeighbours = NULL;
 
 	// Copy covered component IDs
 	for(ListIter = MyCoveredCompIDs.begin(); ListIter != MyCoveredCompIDs.end(); ListIter++)

@@ -788,6 +788,15 @@ void Hypertree::setParent(Hypertree *Parent)
 	MyParent = Parent;
 }
 
+Hypertree *Hypertree::getParent()
+{
+	return this->MyParent;
+}
+
+list<Hypertree *> *Hypertree::getChildren()
+{
+	return &this->MyChildren;
+}
 
 // The method inserts a child node.
 void Hypertree::insChild(Hypertree *Child, bool bSetParent)
