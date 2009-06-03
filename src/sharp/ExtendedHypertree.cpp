@@ -182,13 +182,13 @@ ExtendedHypertree *ExtendedHypertree::parent() const
 
 ExtendedHypertree *ExtendedHypertree::firstChild() const
 {
-	return dynamic_cast<ExtendedHypertree *>(this->MyChildren[0]);
+	return dynamic_cast<ExtendedHypertree *>(*this->MyChildren.begin());
 }
 
 ExtendedHypertree *ExtendedHypertree::secondChild() const
 {
-	return dynamic_cast<ExtendedHypertree *>(this->MyChildren[1]);
+	return dynamic_cast<ExtendedHypertree *>(*++this->MyChildren.begin());
 }
 
-set<int> &ExtendedHypertree::getClauses() const { return this->clauses; }
-set<int> &ExtendedHypertree::getVariables() const { return this->variables; }
+const set<int> &ExtendedHypertree::getClauses() const { return this->clauses; }
+const set<int> &ExtendedHypertree::getVariables() const { return this->variables; }

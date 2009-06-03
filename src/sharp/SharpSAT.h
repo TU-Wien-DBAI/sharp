@@ -17,26 +17,17 @@ struct PartitionValue
 	set<int> positive;
 	set<int> negative;
 	set<int> clauses;
-	mpz_class value;
+	mutable mpz_class value;
 	
-	PartitionValue();
+	PartitionValue(set<int> positive, set<int> negative, set<int> clauses);
 	PartitionValue(const PartitionValue &other);
 
 	bool operator==(const PartitionValue &other) const;
-	bool operator!=(const PartitionValue &other) const;
-	bool operator>(const PartitionValue &other) const;
-	bool operator<=(const PartitionValue &other) const;
-	bool operator>=(const PartitionValue &other) const;
 	bool operator<(const PartitionValue &other) const;
-	PartitionValue &operator=(const PartitionValue &other);
-	PartitionValue &operator+=(const mpz_class value);	
 };
 
 class SharpSAT
 {
-private:
-	static set<PartitionValue &> &partition(const set<int> &variables, const set<int> &clauses);
-
 public:
 	SharpSAT(ExtendedHypertree *root, signmap &signs);
 	virtual ~SharpSAT();
@@ -47,7 +38,10 @@ protected:
 	signmap &signs;
 
 private:
-	set<PartitionValue &> &eval(const ExtendedHypertree *node) const;
+	set<PartitionValue> &eval(const ExtendedHypertree *node) const;
+	set<PartitionValue> &partition(const set<int> &variables, const set<int> &clauses) const;
+	set<int> istrue(const set<int> &positives, const set<int> &negatives, const set<int> &clauses) const;
+	set<PartitionValue> &introduceVariable(set<PartitionValue> &base, int variable, const set<int> &clauses) const;
 };
 
 #endif /*SHARPSAT_H_*/

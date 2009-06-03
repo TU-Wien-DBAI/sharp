@@ -4,7 +4,7 @@
 #include <set>
 #include <map>
 
-extern bool containsAll(set<int> &a, set<int> &b);
+extern bool containsAll(const set<int> &a, const set<int> &b);
 
 typedef map<int, map<int, bool> > signmap;
 

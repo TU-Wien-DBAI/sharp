@@ -4,7 +4,7 @@
 
 using namespace std;
 
-bool containsAll(set<int> &a, set<int> &b)
+bool containsAll(const set<int> &a, const set<int> &b)
 {
 	if(a.size() < b.size()) return false;
 

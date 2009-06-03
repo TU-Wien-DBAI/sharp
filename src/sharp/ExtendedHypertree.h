@@ -20,8 +20,8 @@ public:
 	void normalize();
 	int getType() const;
 	bool isRoot() const;
-	set<int> &getClauses() const;
-	set<int> &getVariables() const;
+	const set<int> &getClauses() const;
+	const set<int> &getVariables() const;
 	ExtendedHypertree *parent() const;
 	ExtendedHypertree *firstChild() const;
 	ExtendedHypertree *secondChild() const;
