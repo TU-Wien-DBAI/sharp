@@ -50,8 +50,8 @@ void DIMACSHypergraph::addVariable(int iClause, int iVariable, bool bNegative)
 {
 	static int iEdgeID = 0, iNodeID = 0;
 
-	if(signs.find(iClause) == signs.end()) signs.insert(signmap::value_type(iClause, list<pair<int, bool> >()));
-	signs[iClause].push_back(pair<int, bool>(iVariable, bNegative));
+	if(signs.find(iClause) == signs.end()) signs.insert(signmap::value_type(iClause, map<int, bool>()));
+	signs[iClause].insert(map<int, bool>::value_type(iVariable, bNegative));
 
 	Node *c, *v;
 	Hyperedge *e;
@@ -89,4 +89,9 @@ void DIMACSHypergraph::addVariable(int iClause, int iVariable, bool bNegative)
 	e->insNode(v);
 	c->insEdge(e);
 	v->insEdge(e);
+}
+
+signmap &DIMACSHypergraph::getSignMap()
+{
+	return this->signs;
 }

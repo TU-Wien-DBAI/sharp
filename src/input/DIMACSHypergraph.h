@@ -7,8 +7,7 @@
 
 using namespace std;
 
-typedef map<int, list<pair<int, bool> > > signmap;
-
+#include "../Global.h"
 #include "DIMACSParser.h"
 
 class Hypergraph;
@@ -21,9 +20,12 @@ public:
 	DIMACSHypergraph(istream *in);
 	virtual ~DIMACSHypergraph();
 	virtual void buildHypergraph(Parser *p = NULL);
+	signmap &getSignMap();
+
 protected:
 	virtual void addVariable(int iClause, int iVariable, bool bNegative = false);
-private:
+
+protected:
 	signmap signs;
 };
 

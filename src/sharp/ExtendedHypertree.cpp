@@ -61,7 +61,7 @@ Hypertree *ExtendedHypertree::createChild(Hypertree *child, set<int> clauses, se
 	return child;
 }
 
-int ExtendedHypertree::getType()
+int ExtendedHypertree::getType() const
 {
 	if(this->MyChildren.size() == 0) return ExtendedHypertree::LEAF;
 	if(this->MyChildren.size() == 2) return ExtendedHypertree::BRANCH;
@@ -77,7 +77,7 @@ int ExtendedHypertree::getType()
 	return -1;
 }
 
-bool ExtendedHypertree::isRoot()
+bool ExtendedHypertree::isRoot() const
 {
 	return this->MyParent == NULL;
 }
@@ -175,10 +175,20 @@ void ExtendedHypertree::adapt()
 	}
 }
 
-ExtendedHypertree *ExtendedHypertree::parent()
+ExtendedHypertree *ExtendedHypertree::parent() const
 {
 	return dynamic_cast<ExtendedHypertree *>(this->MyParent);
 }
 
-set<int> &ExtendedHypertree::getClauses() { return this->clauses; }
-set<int> &ExtendedHypertree::getVariables() { return this->variables; }
+ExtendedHypertree *ExtendedHypertree::firstChild() const
+{
+	return dynamic_cast<ExtendedHypertree *>(this->MyChildren[0]);
+}
+
+ExtendedHypertree *ExtendedHypertree::secondChild() const
+{
+	return dynamic_cast<ExtendedHypertree *>(this->MyChildren[1]);
+}
+
+set<int> &ExtendedHypertree::getClauses() const { return this->clauses; }
+set<int> &ExtendedHypertree::getVariables() const { return this->variables; }
