@@ -10,6 +10,7 @@ using namespace std;
 
 #include "input/DIMACSHypergraph.h"
 #include "sharp/ExtendedHypertree.h"
+#include "sharp/SharpSAT.h"
 
 #include "htree/H_BucketElim.h"
 
@@ -17,6 +18,36 @@ static bool bBenchmark = false;
 
 void usage(char *);
 Hypertree *decompose(Hypergraph *);
+
+void print(ExtendedHypertree *foo)
+{
+	if(foo->getParent() == NULL) cout << "root: " << foo << endl;
+	int type = foo->getType();
+	
+	cout << "node " << foo << ", parent = " << foo->getParent() << ", type = " << type << flush;
+	if(type == ExtendedHypertree::BRANCH) cout << ", children: " << foo->firstChild() << " - " << foo->secondChild();
+	else if(type != ExtendedHypertree::LEAF) cout << ", child: " << foo->firstChild();
+
+	cout << ", vars: ";
+	for(set<int>::const_iterator it = foo->getVariables().begin(); it != foo->getVariables().end(); ++it) cout << *it << ", ";
+	cout << "clauses: ";
+	for(set<int>::const_iterator it = foo->getClauses().begin(); it != foo->getClauses().end(); ++it) cout << *it << ", ";
+	cout << "DONE" << endl;
+
+	if(type == ExtendedHypertree::BRANCH) { print(foo->firstChild()); print(foo->secondChild()); }
+	else if(type == ExtendedHypertree::LEAF) {}
+	else print(foo->firstChild());
+}
+
+void printSignMap(signmap &foo)
+{
+	for(map<int, map<int, bool> >::iterator it = foo.begin(); it != foo.end(); ++it)
+	{
+		cout << "clause " << it->first << ": ";
+		for(map<int, bool>::iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
+			cout << (sit->second ? "-" : "\0") << sit->first << ", "; cout << "END" << endl;
+	}
+}
 
 int main(int argc, char **argv)
 {
@@ -58,6 +89,16 @@ int main(int argc, char **argv)
 
 	eht = new ExtendedHypertree(ht); ht = NULL;
 	eht->normalize();
+
+	if(bBenchmark) { tEnd = clock(); cout << "done! (took " << (double)(tEnd - tStart)/CLOCKS_PER_SEC << " seconds)" << endl; }
+
+	print(eht);
+	printSignMap(dhg.getSignMap());
+
+	if(bBenchmark) { cout << "Evaluating formula:" << endl; tStart = clock(); }
+
+	SharpSAT *ss = new SharpSAT(eht, dhg.getSignMap());
+	cout << ss->evaluate() << endl;
 
 	if(bBenchmark) { tEnd = clock(); cout << "done! (took " << (double)(tEnd - tStart)/CLOCKS_PER_SEC << " seconds)" << endl; }
 

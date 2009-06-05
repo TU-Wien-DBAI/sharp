@@ -16,7 +16,7 @@ struct PartitionValue
 {
 	set<int> positive;
 	set<int> negative;
-	set<int> clauses;
+	mutable set<int> clauses;
 	mutable mpz_class value;
 	
 	PartitionValue(set<int> positive, set<int> negative, set<int> clauses);
@@ -38,10 +38,11 @@ protected:
 	signmap &signs;
 
 private:
-	set<PartitionValue> &eval(const ExtendedHypertree *node) const;
+	set<PartitionValue> &eval(ExtendedHypertree *node) const;
 	set<PartitionValue> &partition(const set<int> &variables, const set<int> &clauses) const;
 	set<int> istrue(const set<int> &positives, const set<int> &negatives, const set<int> &clauses) const;
 	set<PartitionValue> &introduceVariable(set<PartitionValue> &base, int variable, const set<int> &clauses) const;
+	set<PartitionValue> &introduceClause(set<PartitionValue> &base, int clause) const;
 };
 
 #endif /*SHARPSAT_H_*/

@@ -59,10 +59,10 @@ void DIMACSHypergraph::addVariable(int iClause, int iVariable, bool bNegative)
 
 	if(aClauses == NULL)
 	{
-		CNULL(aClauses = new Node *[this->getClauseCount()]);
+		CNULL(aClauses = new Node *[this->getClauseCount()+1]);
 		for(int i = 0; i < this->getClauseCount(); ++i) aClauses[i] = NULL;
-		CNULL(aVariables = new Node *[this->getVariableCount()]);
-		for(int i = 0; i < this->getVariableCount(); ++i) aVariables[i] = NULL;
+		CNULL(aVariables = new Node *[this->getVariableCount()+1]);
+		for(int i = 0; i < this->getVariableCount()+1; ++i) aVariables[i] = NULL;
 	}
 
 	CNEG(snprintf(str, 256, "E%d", iEdgeID));

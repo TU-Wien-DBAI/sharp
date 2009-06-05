@@ -14,6 +14,8 @@ using namespace std;
 
 ExtendedHypertree::ExtendedHypertree(Hypertree *node) : Hypertree()
 {
+	this->type = -1;
+	
 	this->MyParent = node->getParent();
 
 	for(list<Hypertree *>::iterator i = node->getChildren()->begin(); i != node->getChildren()->end(); ++i)
@@ -45,6 +47,7 @@ ExtendedHypertree::ExtendedHypertree(set<int> clauses, set<int> variables) : Hyp
 {
 	this->variables = variables;
 	this->clauses = clauses;
+	this->type = -1;
 }
 
 ExtendedHypertree::~ExtendedHypertree() { }
@@ -63,16 +66,17 @@ Hypertree *ExtendedHypertree::createChild(Hypertree *child, set<int> clauses, se
 
 int ExtendedHypertree::getType() const
 {
-	if(this->MyChildren.size() == 0) return ExtendedHypertree::LEAF;
-	if(this->MyChildren.size() == 2) return ExtendedHypertree::BRANCH;
+	if(this->type != -1) return this->type;
 
-	Hypertree *c = *this->MyChildren.begin();
-	ExtendedHypertree *child = dynamic_cast<ExtendedHypertree *>(c);
+	if(this->MyChildren.size() == 0) return this->type = ExtendedHypertree::LEAF;
+	if(this->MyChildren.size() == 2) return this->type = ExtendedHypertree::BRANCH;
 
-	if(child->variables.size() != this->variables.size() && containsAll(child->variables, this->variables)) return ExtendedHypertree::VARREM;
-	if(child->clauses.size() != this->clauses.size() && containsAll(child->clauses, this->clauses)) return ExtendedHypertree::CLREM;
-	if(this->variables.size() != child->variables.size() && containsAll(this->variables, child->variables)) return ExtendedHypertree::VARINTR;
-	if(this->clauses.size() != child->clauses.size() && containsAll(this->clauses, child->clauses)) return ExtendedHypertree::CLINTR;
+	ExtendedHypertree *child = this->firstChild();
+
+	if(child->variables.size() != this->variables.size() && containsAll(child->variables, this->variables)) return this->type = ExtendedHypertree::VARREM;
+	if(child->clauses.size() != this->clauses.size() && containsAll(child->clauses, this->clauses)) return this->type = ExtendedHypertree::CLREM;
+	if(this->variables.size() != child->variables.size() && containsAll(this->variables, child->variables)) return this->type = ExtendedHypertree::VARINTR;
+	if(this->clauses.size() != child->clauses.size() && containsAll(this->clauses, child->clauses)) return this->type = ExtendedHypertree::CLINTR;
 
 	return -1;
 }

@@ -11,7 +11,7 @@ using namespace std;
 class ExtendedHypertree : public Hypertree
 {
 public:
-	enum { ROOT = 0, LEAF = 1, BRANCH = 2, VARREM = 3, CLREM = 4, VARINTR = 5, CLINTR = 6 };
+	enum { LEAF = 1, BRANCH = 2, VARREM = 3, CLREM = 4, VARINTR = 5, CLINTR = 6 };
 	
 public:
 	ExtendedHypertree(Hypertree *node);
@@ -27,6 +27,8 @@ public:
 	ExtendedHypertree *secondChild() const;
 
 private:
+	mutable int type;
+	
 	set<int> clauses;
 	set<int> variables;
 
