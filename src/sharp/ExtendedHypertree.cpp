@@ -114,7 +114,7 @@ void ExtendedHypertree::normalize()
 	}
 	else
 	{
-		new ExtendedHypertree(this);
+		if(dynamic_cast<ExtendedHypertree *>(this) == NULL) new ExtendedHypertree(this);
 	}
 }
 
@@ -173,7 +173,7 @@ void ExtendedHypertree::adapt()
 	
 	for(it = greenVariables.begin(); changes > 1 && it != greenVariables.end(); ++it)
 	{
-		currentClauses.push_back(*it);
+		currentVariables.push_back(*it);
 		createChild(this, set<int>(currentClauses.begin(), currentClauses.end()), set<int>(currentVariables.begin(), currentVariables.end()));
 		--changes;
 	}

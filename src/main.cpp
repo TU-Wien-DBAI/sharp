@@ -92,8 +92,10 @@ int main(int argc, char **argv)
 
 	if(bBenchmark) { tEnd = clock(); cout << "done! (took " << (double)(tEnd - tStart)/CLOCKS_PER_SEC << " seconds)" << endl; }
 
+#ifdef DEBUG1
 	print(eht);
 	printSignMap(dhg.getSignMap());
+#endif
 
 	if(bBenchmark) { cout << "Evaluating formula:" << endl; tStart = clock(); }
 

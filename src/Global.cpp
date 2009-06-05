@@ -26,6 +26,4 @@ void printIntSet(const set<int> &toprint)
 		cout << prefix << *it;
 		prefix = ", ";
 	}	
-
-	cout << endl;
 }

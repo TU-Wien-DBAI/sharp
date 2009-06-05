@@ -22,11 +22,11 @@ static void printPartitions(set<PV> &partvals)
 	for(set<PV>::iterator it = partvals.begin(); it != partvals.end(); ++it)
 	{
 		cout << "pos: "; printIntSet(it->positive);
-		cout << "neg: "; printIntSet(it->negative);
-		cout << "cla: "; printIntSet(it->clauses);
-		cout << "val: " << it->value << endl;	
-		cout << "---" << endl;
-	}	
+		cout << ", neg: "; printIntSet(it->negative);
+		cout << ", cla: "; printIntSet(it->clauses);
+		cout << ", val: " << it->value << endl;
+	}
+	cout << "---" << endl;	
 }
 
 PartitionValue::PartitionValue(set<int> positive, set<int> negative, set<int> clauses) : positive(positive), negative(negative), clauses(clauses)
@@ -273,7 +273,11 @@ static set<PV> &merge(set<PV> &left, set<PV> &right)
 	set<PV>::iterator rit = right.begin();
 	for(set<PV>::iterator lit = left.begin(); lit != left.end();)
 	{
-		if(eq(lit->positive, rit->positive) && eq(lit->negative, rit->negative))
+		if(rit != right.end() 
+			&& lit->positive.size() == rit->positive.size() 
+			&& lit->negative.size() == rit->negative.size()
+			&& eq(lit->positive, rit->positive) 
+			&& eq(lit->negative, rit->negative))
 		{
 			PV p = PV(*lit);
 			for(set<int>::iterator it = rit->clauses.begin(); it != rit->clauses.end(); ++it) p.clauses.insert(*it);
