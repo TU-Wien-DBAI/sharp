@@ -1,16 +1,15 @@
-################################################################################
-# Automatically-generated file. Do not edit!
-################################################################################
-
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../src/main.cpp 
+../src/Global.cpp \
+../src/main.cpp
 
 OBJS += \
-./src/main.o 
+./src/Global.o \
+./src/main.o
 
 CPP_DEPS += \
-./src/main.d 
+./src/Global.d \
+./src/main.d
 
 
 # Each subdirectory must supply rules for building sources it contributes

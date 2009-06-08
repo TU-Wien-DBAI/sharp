@@ -1,7 +1,3 @@
-################################################################################
-# Automatically-generated file. Do not edit!
-################################################################################
-
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../src/htree/CompSet.cpp \
@@ -11,7 +7,6 @@ CPP_SRCS += \
 ../src/htree/Hyperedge.cpp \
 ../src/htree/Hypergraph.cpp \
 ../src/htree/Hypertree.cpp \
-../src/htree/Main.cpp \
 ../src/htree/Node.cpp \
 ../src/htree/Parser.cpp \
 ../src/htree/SetCover.cpp \
@@ -25,7 +20,6 @@ OBJS += \
 ./src/htree/Hyperedge.o \
 ./src/htree/Hypergraph.o \
 ./src/htree/Hypertree.o \
-./src/htree/Main.o \
 ./src/htree/Node.o \
 ./src/htree/Parser.o \
 ./src/htree/SetCover.o \
@@ -39,7 +33,6 @@ CPP_DEPS += \
 ./src/htree/Hyperedge.d \
 ./src/htree/Hypergraph.d \
 ./src/htree/Hypertree.d \
-./src/htree/Main.d \
 ./src/htree/Node.d \
 ./src/htree/Parser.d \
 ./src/htree/SetCover.d \

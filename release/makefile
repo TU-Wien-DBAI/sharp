@@ -1,7 +1,3 @@
-################################################################################
-# Automatically-generated file. Do not edit!
-################################################################################
-
 -include ../makefile.init
 
 RM := rm -rf
@@ -10,10 +6,10 @@ RM := rm -rf
 -include sources.mk
 -include subdir.mk
 -include src/support/subdir.mk
+-include src/htree/subdir.mk
+-include src/input/subdir.mk
 -include src/sharp/subdir.mk
 -include src/subdir.mk
--include src/input/subdir.mk
--include src/htree/subdir.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)

@@ -1,7 +1,3 @@
-################################################################################
-# Automatically-generated file. Do not edit!
-################################################################################
-
 O_SRCS := 
 CPP_SRCS := 
 C_UPPER_SRCS := 
@@ -25,7 +21,7 @@ C_UPPER_DEPS :=
 SUBDIRS := \
 src/support \
 src/sharp \
-src \
 src/input \
 src/htree \
+src \
 

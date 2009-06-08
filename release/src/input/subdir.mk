@@ -1,19 +1,18 @@
-################################################################################
-# Automatically-generated file. Do not edit!
-################################################################################
-
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../src/input/DIMACSParser.cpp \
-../src/input/DIMACSLexer.cpp
+../src/input/DIMACSLexer.cpp \
+../src/input/DIMACSHypergraph.cpp 
 
 OBJS += \
 ./src/input/DIMACSParser.o \
-./src/input/DIMACSLexer.o
+./src/input/DIMACSLexer.o \
+./src/input/DIMACSHypergraph.o
 
 CPP_DEPS += \
 ./src/input/DIMACSParser.d \
-./src/input/DIMACSLexer.d
+./src/input/DIMACSLexer.d \
+./src/input/DIMACSHypergraph.d
 
 ../src/input/DIMACSParser.h: ../src/input/DIMACSParser.cpp
 
@@ -34,6 +33,7 @@ CPP_DEPS += \
 src/input/%.o: ../src/input/%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -DDEBUG -O0 -g3 -Wall -ansi -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
+	g++ -O3 -Wall -c -ansi -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
+
