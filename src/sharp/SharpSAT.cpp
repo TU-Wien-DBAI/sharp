@@ -133,8 +133,10 @@ set<PV> &SharpSAT::partition(const set<int> &variables, const set<int> &clauses)
 {
 	typedef set<int> set_t;
 	typedef set_t::iterator iter_t;
+	
+	int size = int(pow(2.0f, (int)variables.size()));
 
-	vector<set_t> positives, negatives; positives.reserve(int(pow(2, variables.size()))); negatives.reserve(int(pow(2, variables.size())));
+	vector<set_t> positives, negatives; positives.reserve(size); negatives.reserve(size);
 	vector<iter_t> elements;
 
 	set<PV> &partvals = *new set<PV>();
@@ -160,7 +162,7 @@ set<PV> &SharpSAT::partition(const set<int> &variables, const set<int> &clauses)
 	}
 	while(!elements.empty());
 	
-	for(int i = 0; i < int(pow(2, variables.size())); ++i)
+	for(int i = 0; i < size; ++i)
 		partvals.insert(PV(positives[i], negatives[i], this->istrue(positives[i], negatives[i], clauses)));
 
 	return partvals;

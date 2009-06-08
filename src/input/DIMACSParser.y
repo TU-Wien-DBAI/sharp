@@ -19,7 +19,7 @@
 
 %define CONSTRUCTOR_CODE \
 	this->iClauseCount = this->iVariableCount = this->iCurrentClause = 0; \
-	if(in != NULL) lexer.switch_streams(in);
+	if(in != NULL) lexer.switch_streams(in, NULL);
 
 %define LEX_BODY { int r = lexer.yylex(); yylval.yytext = strdup(lexer.YYText()); return r; }
 
