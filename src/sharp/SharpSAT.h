@@ -19,7 +19,7 @@ struct PartitionValue
 	mutable set<int> clauses;
 	mutable mpz_class value;
 	
-	PartitionValue(set<int> positive, set<int> negative, set<int> clauses);
+	PartitionValue(const set<int> &positive, const set<int> &negative, const set<int> &clauses);
 	PartitionValue(const PartitionValue &other);
 
 	bool operator==(const PartitionValue &other) const;

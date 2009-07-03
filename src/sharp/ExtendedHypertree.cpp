@@ -15,6 +15,7 @@ using namespace std;
 ExtendedHypertree::ExtendedHypertree(Hypertree *node) : Hypertree()
 {
 	this->type = -1;
+	this->difference = -1;
 	
 	this->MyParent = node->getParent();
 
@@ -48,37 +49,72 @@ ExtendedHypertree::ExtendedHypertree(set<int> clauses, set<int> variables) : Hyp
 	this->variables = variables;
 	this->clauses = clauses;
 	this->type = -1;
+	this->difference = -1;
 }
 
 ExtendedHypertree::~ExtendedHypertree() { }
 
-Hypertree *ExtendedHypertree::createChild(Hypertree *child, set<int> clauses, set<int> variables)
+ExtendedHypertree *ExtendedHypertree::createChild(ExtendedHypertree *child, set<int> clauses, set<int> variables)
 {
-	Hypertree *parent = child->getParent();
-	Hypertree *newChild = new ExtendedHypertree(clauses, variables);
+	ExtendedHypertree *parent = child->parent();
+	ExtendedHypertree *newChild = new ExtendedHypertree(clauses, variables);
 
 	parent->remChild(child);
 	newChild->insChild(child);
 	parent->insChild(newChild);
 
+	parent->type = parent->calculateType();
+
 	return child;
+}
+
+int ExtendedHypertree::calculateType()
+{
+	if(this->MyChildren.size() == 0) return ExtendedHypertree::LEAF;
+	if(this->MyChildren.size() == 2) return ExtendedHypertree::BRANCH;
+
+	ExtendedHypertree *child = this->firstChild();
+	vector<int> diff(1);
+
+	if(child->variables.size() != this->variables.size() && containsAll(child->variables, this->variables))
+	{
+		set_difference(child->variables.begin(), child->variables.end(), this->variables.begin(), this->variables.end(), diff.begin());
+		this->difference = diff[0];
+		return ExtendedHypertree::VARREM;
+	}
+
+	if(child->clauses.size() != this->clauses.size() && containsAll(child->clauses, this->clauses))
+	{
+		set_difference(child->clauses.begin(), child->clauses.end(), this->clauses.begin(), this->clauses.end(), diff.begin());
+		this->difference = diff[0];
+		return ExtendedHypertree::CLREM;
+	}
+	
+	if(this->variables.size() != child->variables.size() && containsAll(this->variables, child->variables))
+	{
+		set_difference(this->variables.begin(), this->variables.end(), child->variables.begin(), child->variables.end(), diff.begin());
+		this->difference = diff[0];
+		return ExtendedHypertree::VARINTR;
+	}
+
+	if(this->clauses.size() != child->clauses.size() && containsAll(this->clauses, child->clauses))
+	{
+		set_difference(this->clauses.begin(), this->clauses.end(), child->clauses.begin(), child->clauses.end(), diff.begin());
+		this->difference = diff[0];
+		return ExtendedHypertree::CLINTR;
+	}
+
+	return -1;
 }
 
 int ExtendedHypertree::getType() const
 {
-	if(this->type != -1) return this->type;
+	return this->type;
+}
 
-	if(this->MyChildren.size() == 0) return this->type = ExtendedHypertree::LEAF;
-	if(this->MyChildren.size() == 2) return this->type = ExtendedHypertree::BRANCH;
-
-	ExtendedHypertree *child = this->firstChild();
-
-	if(child->variables.size() != this->variables.size() && containsAll(child->variables, this->variables)) return this->type = ExtendedHypertree::VARREM;
-	if(child->clauses.size() != this->clauses.size() && containsAll(child->clauses, this->clauses)) return this->type = ExtendedHypertree::CLREM;
-	if(this->variables.size() != child->variables.size() && containsAll(this->variables, child->variables)) return this->type = ExtendedHypertree::VARINTR;
-	if(this->clauses.size() != child->clauses.size() && containsAll(this->clauses, child->clauses)) return this->type = ExtendedHypertree::CLINTR;
-
-	return -1;
+int ExtendedHypertree::getDifference() const
+{
+	return this->difference;
 }
 
 bool ExtendedHypertree::isRoot() const
@@ -110,12 +146,11 @@ void ExtendedHypertree::normalize()
 		if(child == NULL) child = new ExtendedHypertree(*this->MyChildren.begin());
 		
 		child->adapt();
+		child->parent()->type = child->parent()->calculateType();
 		child->normalize();
 	}
-	else
-	{
-		if(dynamic_cast<ExtendedHypertree *>(this) == NULL) new ExtendedHypertree(this);
-	}
+
+	this->type = this->calculateType();
 }
 
 void ExtendedHypertree::adapt()

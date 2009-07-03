@@ -29,7 +29,7 @@ static void printPartitions(set<PV> &partvals)
 	cout << "---" << endl;	
 }
 
-PartitionValue::PartitionValue(set<int> positive, set<int> negative, set<int> clauses) : positive(positive), negative(negative), clauses(clauses)
+PartitionValue::PartitionValue(const set<int> &positive, const set<int> &negative, const set<int> &clauses) : positive(positive), negative(negative), clauses(clauses)
 {
 	this->value = 1;
 }
@@ -89,15 +89,15 @@ set<PV> &SharpSAT::eval(ExtendedHypertree *node) const
 	case ExtendedHypertree::LEAF:
 		return partition(node->getVariables(), node->getClauses());
 	case ExtendedHypertree::VARREM:
-		return removeVariable(eval(node->firstChild()), head(node->firstChild()->getVariables(), node->getVariables()));
+		return removeVariable(eval(node->firstChild()), node->getDifference());
 	case ExtendedHypertree::VARINTR:
-		return introduceVariable(eval(node->firstChild()), head(node->getVariables(), node->firstChild()->getVariables()), node->getClauses());
+		return introduceVariable(eval(node->firstChild()), node->getDifference(), node->getClauses());
 	case ExtendedHypertree::BRANCH:
 		return merge(eval(node->firstChild()), eval(node->secondChild()));
 	case ExtendedHypertree::CLREM:
-		return removeClause(eval(node->firstChild()), head(node->firstChild()->getClauses(), node->getClauses()));
+		return removeClause(eval(node->firstChild()), node->getDifference());
 	case ExtendedHypertree::CLINTR:
-		return introduceClause(eval(node->firstChild()), head(node->getClauses(), node->firstChild()->getClauses()));
+		return introduceClause(eval(node->firstChild()), node->getDifference());
 	}
 	
 	CNULL(NULL);

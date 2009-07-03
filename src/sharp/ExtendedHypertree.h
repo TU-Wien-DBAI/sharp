@@ -19,6 +19,7 @@ public:
 	virtual ~ExtendedHypertree();
 	void normalize();
 	int getType() const;
+	int getDifference() const;
 	bool isRoot() const;
 	const set<int> &getClauses() const;
 	const set<int> &getVariables() const;
@@ -27,13 +28,15 @@ public:
 	ExtendedHypertree *secondChild() const;
 
 private:
-	mutable int type;
+	int type;
+	int difference;
 	
 	set<int> clauses;
 	set<int> variables;
 
 	void adapt();
+	int calculateType();
 
-	static Hypertree *createChild(Hypertree *child, set<int> clauses, set<int> variables);
+	static ExtendedHypertree *createChild(ExtendedHypertree *child, set<int> clauses, set<int> variables);
 };
 #endif

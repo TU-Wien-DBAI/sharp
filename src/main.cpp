@@ -11,6 +11,7 @@ using namespace std;
 #include "input/DIMACSHypergraph.h"
 #include "sharp/ExtendedHypertree.h"
 #include "sharp/SharpSAT.h"
+#include "sharp/SharpEnumMinSAT.h"
 
 #include "htree/H_BucketElim.h"
 
@@ -32,7 +33,8 @@ void print(ExtendedHypertree *foo)
 	for(set<int>::const_iterator it = foo->getVariables().begin(); it != foo->getVariables().end(); ++it) cout << *it << ", ";
 	cout << "clauses: ";
 	for(set<int>::const_iterator it = foo->getClauses().begin(); it != foo->getClauses().end(); ++it) cout << *it << ", ";
-	cout << "DONE" << endl;
+	cout << "difference: " << foo->getDifference() << ", ";
+	cout << "END" << endl;
 
 	if(type == ExtendedHypertree::BRANCH) { print(foo->firstChild()); print(foo->secondChild()); }
 	else if(type == ExtendedHypertree::LEAF) {}
@@ -92,7 +94,7 @@ int main(int argc, char **argv)
 
 	if(bBenchmark) { tEnd = clock(); cout << "done! (took " << (double)(tEnd - tStart)/CLOCKS_PER_SEC << " seconds)" << endl; }
 
-#ifdef DEBUG1
+#ifdef DEBUG
 	print(eht);
 	printSignMap(dhg.getSignMap());
 #endif
@@ -100,7 +102,9 @@ int main(int argc, char **argv)
 	if(bBenchmark) { cout << "Evaluating formula:" << endl; tStart = clock(); }
 
 	SharpSAT *ss = new SharpSAT(eht, dhg.getSignMap());
-	cout << ss->evaluate() << endl;
+	SharpEnumMinSAT *sems = new SharpEnumMinSAT(eht, dhg.getSignMap());
+
+	cout << sems->evaluate().first << endl;
 
 	if(bBenchmark) { tEnd = clock(); cout << "done! (took " << (double)(tEnd - tStart)/CLOCKS_PER_SEC << " seconds)" << endl; }
 
