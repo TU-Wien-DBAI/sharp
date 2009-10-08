@@ -20,13 +20,13 @@ public:
 	DIMACSHypergraph(istream *in);
 	virtual ~DIMACSHypergraph();
 	virtual void buildHypergraph(Parser *p = NULL);
-	signmap &getSignMap();
+	SignMap &getSignMap();
 
 protected:
 	virtual void addVariable(int iClause, int iVariable, bool bNegative = false);
 
 protected:
-	signmap signs;
+	SignMap signs;
 };
 
 #endif

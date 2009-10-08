@@ -10,25 +10,20 @@ using namespace std;
 
 typedef SharpValue SV;
 
-static void printSharpValues(set<SV> &svals)
+static void printSharpValues(set<SV> &svals, ExtendedHypertree *node)
 {
-        cout << "SVALS: " << svals.size() << endl;
+        cout << "SVALS: " << svals.size() << " for node " << node << endl;
         for(set<SV>::iterator it = svals.begin(); it != svals.end(); ++it)
         {
                 cout << "var: "; printIntSet(it->assignmentVariables);
                 cout << ", cla: "; printIntSet(it->assignmentClauses);
 		cout << ", gua: "; 
 		for(set<Atom>::iterator i = it->guards.begin(); i != it->guards.end(); ++i)
-		{ cout << "[>"; printIntSet(i->first); cout << "<|>"; printIntSet(i->second); cout << "<], "; }
-                cout << ", val: " << it->value;
-		cout << ", sol: ";
-		for(set<set<int> >::iterator i = it->solutions.begin(); i != it->solutions.end(); ++i)
-		{ cout << "["; printIntSet(*i); cout << "], "; }
+		{ cout << "[>"; printIntSet(i->first); cout << "<|>"; printIntSet(i->second); cout << "<]"; }
 		cout << endl;
         }
         cout << "---" << endl;
 }
-
 
 bool SharpValue::operator<(const SharpValue &other) const
 {
@@ -43,7 +38,7 @@ bool SharpValue::operator<(const SharpValue &other) const
 			&& lsa(this->guards, other.guards));
 }
 
-SharpEnumMinSAT::SharpEnumMinSAT(ExtendedHypertree *root, signmap &signs) : signs(signs)
+SharpEnumMinSAT::SharpEnumMinSAT(ExtendedHypertree *root, SignMap &signs) : signs(signs)
 {
         this->root = root;
 }
@@ -97,16 +92,21 @@ set<int> SharpEnumMinSAT::trueClauses(const set<int> &positives, const set<int> 
                 bool add = false;
                 for(set<int>::const_iterator var = positives.begin(); !add && var != positives.end(); ++var)
                 {
+			if(add) break;
+
                         map<int, bool> &posneg = this->signs[*cl];
                         map<int, bool>::iterator it = posneg.find(*var);
                         add = it != posneg.end() && !it->second;
                 }
                 for(set<int>::const_iterator var = negatives.begin(); !add && var != negatives.end(); ++var)
                 {
+			if(add) break;
+
                         map<int, bool> &posneg = this->signs[*cl];
                         map<int, bool>::iterator it = posneg.find(*var);
                         add = it != posneg.end() && it->second;
                 }
+
                 if(add) trueclauses.insert(*cl);
         }
 
@@ -130,15 +130,14 @@ bool SharpEnumMinSAT::isTrue(const set<int> &positives, const set<int> &all, int
 }
 
 
-pair<mpz_class, set<set<int> > > SharpEnumMinSAT::evaluate() const
+pair<mpz_class, SolutionSet> SharpEnumMinSAT::evaluate() const
 {
 	//TODO
 
-	cout << "start" << endl;
 	set<SV> &result = eval(this->root);
 	list<SV> solutions; equal_to<set<int> > eq;
 	set<int> clauses = this->root->getClauses();
-	mpz_class sum = 0; set<set<int> > models;
+	mpz_class sum = 0; SolutionSet models;
 
 	for(set<SV>::iterator it = result.begin(); it != result.end(); ++it)
 	{
@@ -163,10 +162,10 @@ pair<mpz_class, set<set<int> > > SharpEnumMinSAT::evaluate() const
 	for(list<SV>::iterator it = solutions.begin(); it != solutions.end(); ++it)
 	{
 		sum += it->value;
-		models.insert(it->solutions.begin(), it->solutions.end());
+		models.insert(it->solutionSet->solutions().begin(), it->solutionSet->solutions().end());
 	}
 
-	return pair<mpz_class, set<set<int> > >(sum, models);
+	return pair<mpz_class, SolutionSet>(sum, models);
 }
 
 set<SV> &SharpEnumMinSAT::eval(ExtendedHypertree *node) const
@@ -187,8 +186,6 @@ set<SV> &SharpEnumMinSAT::eval(ExtendedHypertree *node) const
 set<SV> &SharpEnumMinSAT::evalLeaf(ExtendedHypertree *node) const
 {
 	//TODO
-
-	cout << "LEAFA" << endl;
 
         set<SV> &svs = *new set<SV>();
 
@@ -213,13 +210,15 @@ set<SV> &SharpEnumMinSAT::evalLeaf(ExtendedHypertree *node) const
 		sv.assignmentClauses = trueClauses(sv.assignmentVariables, apart.second[i], node->getClauses());
 
 		sv.value = 1;
-		sv.solutions.insert(set<int>(apart.first[i]));
+		SolutionSet *ss = new SolutionSet();
+		ss->insert(Solution(apart.first[i]));
+		sv.solutionSet = new LazySolutionSet(*ss);
+		//sv.solutions.insert(set<int>(apart.first[i]));
 
 		svs.insert(sv);
 	}
 
-	cout << "LEAFE" << endl;
-	printSharpValues(svs);
+	//printSharpValues(svs, node);
 
         return svs;	
 }
@@ -228,11 +227,9 @@ set<SV> &SharpEnumMinSAT::evalBranch(ExtendedHypertree *node) const
 {
 	//TODO
 
-
 	set<SV> &left = eval(node->firstChild()), &right = eval(node->secondChild());
 	set<SV> &svs = *new set<SV>();
 	equal_to<set<int> > eq;
-	cout << "BRA" << endl;
 
 	for(set<SV>::iterator lit = left.begin(); lit != left.end(); ++lit)
 		for(set<SV>::iterator rit = right.begin(); rit != right.end(); ++rit)
@@ -250,7 +247,7 @@ set<SV> &SharpEnumMinSAT::evalBranch(ExtendedHypertree *node) const
 				sv.guards.insert(g);
 			}
 
-			lit->guards.insert(Atom(lit->assignmentVariables, lit->assignmentClauses));
+			//lit->guards.insert(Atom(lit->assignmentVariables, lit->assignmentClauses));
 
 			for(set<Atom>::iterator glit = lit->guards.begin(); glit != lit->guards.end(); ++glit)
 				for(set<Atom>::iterator grit = rit->guards.begin(); grit != rit->guards.end(); ++grit)
@@ -262,30 +259,42 @@ set<SV> &SharpEnumMinSAT::evalBranch(ExtendedHypertree *node) const
 					sv.guards.insert(g);
 				}
 
+			for(set<Atom>::iterator grit = rit->guards.begin(); grit != rit->guards.end(); ++grit)
+			{
+				if(!eq(lit->assignmentVariables, grit->first)) continue;
+				Atom g; g.first = lit->assignmentVariables;
+				g.second = lit->assignmentClauses;
+				g.second.insert(grit->second.begin(), grit->second.end());
+				sv.guards.insert(g);
+			}
+
 			sv.assignmentVariables = lit->assignmentVariables;
 			sv.assignmentClauses = lit->assignmentClauses;
 			sv.assignmentClauses.insert(rit->assignmentClauses.begin(), rit->assignmentClauses.end());
-			
+
 			sv.value = lit->value * rit->value;
+
+			sv.solutionSet = new LazySolutionSet(LazyCrossJoin, *lit->solutionSet, *rit->solutionSet);
 			
+			/*
 			for(set<set<int> >::iterator i = lit->solutions.begin(); i != lit->solutions.end(); ++i)
 				for(set<set<int> >::iterator j = rit->solutions.begin(); j != rit->solutions.end(); ++j)
 				{
 					set<int> ns = *i;
 					ns.insert(j->begin(), j->end());
 					sv.solutions.insert(ns);
-				}
+				}*/
 
 			pair<set<SV>::iterator, bool> result = svs.insert(sv);
 			if(!result.second)
 			{
 				result.first->value += sv.value;
-				result.first->solutions.insert(sv.solutions.begin(), sv.solutions.end());
+				result.first->solutionSet = new LazySolutionSet(LazyUnion, *result.first->solutionSet, *sv.solutionSet);
+				//result.first->solutions.insert(sv.solutions.begin(), sv.solutions.end());
 			}
 		}
 
-	cout << "BRE" << endl;
-	printSharpValues(svs);
+	//printSharpValues(svs, node);
 
 	delete &left;
 	delete &right;
@@ -297,10 +306,8 @@ set<SV> &SharpEnumMinSAT::evalVariableIntroduction(ExtendedHypertree *node) cons
 {
 	//TODO
 
-
 	set<SV> &base = eval(node->firstChild());
 	set<SV> &svs = *new set<SV>();
-	cout << "VIA" << endl;
 
 	set<int> var; var.insert(node->getDifference());
 	set<int> trueN = trueClauses(set<int>(), var, node->getClauses());
@@ -321,9 +328,17 @@ set<SV> &SharpEnumMinSAT::evalVariableIntroduction(ExtendedHypertree *node) cons
 
 		svt.value = svf.value = it->value;
 
-		svf.solutions = it->solutions;
+		svf.solutionSet = it->solutionSet;
+
+		svt.solutionSet = new LazySolutionSet(*it->solutionSet, node->getDifference());
+
+		/*
 		for(set<set<int> >::iterator sit = it->solutions.begin(); sit != it->solutions.end(); ++sit)
-		{ set<int> temp(*sit); temp.insert(node->getDifference()); svt.solutions.insert(temp); }
+		{ 
+			set<int> temp(*sit); 
+			temp.insert(node->getDifference()); 
+			svt.solutions.insert(temp); 
+		}*/
 
 		for(set<Atom>::iterator git = it->guards.begin(); git != it->guards.end(); ++git)
 		{
@@ -343,19 +358,20 @@ set<SV> &SharpEnumMinSAT::evalVariableIntroduction(ExtendedHypertree *node) cons
 		if(!result.second)
 		{
 			result.first->value += svt.value;
-			result.first->solutions.insert(svt.solutions.begin(), svt.solutions.end());
+			result.first->solutionSet = new LazySolutionSet(LazyUnion, *result.first->solutionSet, *svt.solutionSet);
+			//result.first->solutions.insert(svt.solutions.begin(), svt.solutions.end());
 		}
 
 		result = svs.insert(svf);
 		if(!result.second)
 		{
 			result.first->value += svf.value;
-			result.first->solutions.insert(svf.solutions.begin(), svf.solutions.end());
+			result.first->solutionSet = new LazySolutionSet(LazyUnion, *result.first->solutionSet, *svf.solutionSet);
+			//result.first->solutions.insert(svf.solutions.begin(), svf.solutions.end());
 		}
 	}
 
-	cout << "VIE" << endl;
-	printSharpValues(svs);
+	//printSharpValues(svs, node);
 
 	delete &base;
 	return svs;
@@ -365,10 +381,8 @@ set<SV> &SharpEnumMinSAT::evalVariableRemoval(ExtendedHypertree *node) const
 {
 	//TODO
 
-
 	set<SV> &base = eval(node->firstChild());
 	set<SV> &svs = *new set<SV>();
-	cout << "VRA" << endl;
 
 	for(set<SV>::iterator it = base.begin(); it != base.end(); ++it)
 	{
@@ -378,7 +392,7 @@ set<SV> &SharpEnumMinSAT::evalVariableRemoval(ExtendedHypertree *node) const
 		
 		sv.assignmentClauses = it->assignmentClauses;
 		sv.value = it->value;
-		sv.solutions = it->solutions;
+		sv.solutionSet = it->solutionSet;
 
 		for(set<Atom>::iterator git = it->guards.begin(); git != it->guards.end(); ++git)
 		{
@@ -392,13 +406,12 @@ set<SV> &SharpEnumMinSAT::evalVariableRemoval(ExtendedHypertree *node) const
 		if(!result.second)
 		{
 			result.first->value += sv.value;
-			result.first->solutions.insert(sv.solutions.begin(), sv.solutions.end());
+			result.first->solutionSet = new LazySolutionSet(LazyUnion, *result.first->solutionSet, *sv.solutionSet);
+			//result.first->solutions.insert(sv.solutions.begin(), sv.solutions.end());
 		}
 	}
 
-	cout << "VRE" << endl;
-	printSharpValues(svs);
-
+	//printSharpValues(svs, node);
 
 	delete &base;
 	return svs;
@@ -411,7 +424,6 @@ set<SV> &SharpEnumMinSAT::evalClauseIntroduction(ExtendedHypertree *node) const
 
 	set<SV> &base = eval(node->firstChild());
 	set<SV> &svs = *new set<SV>();
-	cout << "CIA" << endl;
 
 	for(set<SV>::iterator it = base.begin(); it != base.end(); ++it)
 	{
@@ -421,7 +433,7 @@ set<SV> &SharpEnumMinSAT::evalClauseIntroduction(ExtendedHypertree *node) const
 		if(isTrue(sv.assignmentVariables, node->getVariables(), node->getDifference())) sv.assignmentClauses.insert(node->getDifference());
 
 		sv.value = it->value;
-		sv.solutions = it->solutions;
+		sv.solutionSet = it->solutionSet;
 
 		for(set<Atom>::iterator git = it->guards.begin(); git != it->guards.end(); ++git)
 		{
@@ -435,12 +447,12 @@ set<SV> &SharpEnumMinSAT::evalClauseIntroduction(ExtendedHypertree *node) const
 		if(!result.second)
 		{
 			result.first->value += sv.value;
-			result.first->solutions.insert(sv.solutions.begin(), sv.solutions.end());
+			result.first->solutionSet = new LazySolutionSet(LazyUnion, *result.first->solutionSet, *sv.solutionSet);
+			//result.first->solutions.insert(sv.solutions.begin(), sv.solutions.end());
 		}
 	}
 
-	cout << "CIE" << endl;
-	printSharpValues(svs);
+	//printSharpValues(svs, node);
 
 	delete &base;
 	return svs;	
@@ -452,7 +464,6 @@ set<SV> &SharpEnumMinSAT::evalClauseRemoval(ExtendedHypertree *node) const
 
 	set<SV> &base = eval(node->firstChild());
 	set<SV> &svs = *new set<SV>();
-	cout << "CRA" << endl;
 
 	for(set<SV>::iterator it = base.begin(); it != base.end(); ++it)
 	{
@@ -461,10 +472,10 @@ set<SV> &SharpEnumMinSAT::evalClauseRemoval(ExtendedHypertree *node) const
 		SV sv; sv.assignmentVariables = it->assignmentVariables;
 		
 		for(set<int>::iterator cit = it->assignmentClauses.begin(); cit != it->assignmentClauses.end(); ++cit)
-			if(*cit != node->getDifference()) sv.assignmentVariables.insert(*cit);
+			if(*cit != node->getDifference()) sv.assignmentClauses.insert(*cit);
 
 		sv.value = it->value;
-		sv.solutions = it->solutions;
+		sv.solutionSet = it->solutionSet;
 
 		for(set<Atom>::iterator git = it->guards.begin(); git != it->guards.end(); ++git)
 		{
@@ -480,12 +491,12 @@ set<SV> &SharpEnumMinSAT::evalClauseRemoval(ExtendedHypertree *node) const
 		if(!result.second)
 		{
 			result.first->value += sv.value;
-			result.first->solutions.insert(sv.solutions.begin(), sv.solutions.end());
+			result.first->solutionSet = new LazySolutionSet(LazyUnion, *result.first->solutionSet, *sv.solutionSet);
+			//result.first->solutions.insert(sv.solutions.begin(), sv.solutions.end());
 		}
 	}
 
-	cout << "CRE" << endl;
-	printSharpValues(svs);
+	//printSharpValues(svs, node);
 
 	delete &base;
 	return svs;

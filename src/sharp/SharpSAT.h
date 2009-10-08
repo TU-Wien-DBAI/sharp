@@ -29,13 +29,13 @@ struct PartitionValue
 class SharpSAT
 {
 public:
-	SharpSAT(ExtendedHypertree *root, signmap &signs);
+	SharpSAT(ExtendedHypertree *root, SignMap &signs);
 	virtual ~SharpSAT();
 	virtual string evaluate() const;
 
 protected:
 	ExtendedHypertree *root;
-	signmap &signs;
+	SignMap &signs;
 
 private:
 	set<PartitionValue> &eval(ExtendedHypertree *node) const;

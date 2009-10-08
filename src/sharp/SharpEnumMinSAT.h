@@ -13,9 +13,8 @@ using namespace std;
 
 #include "../Global.h"
 #include "ExtendedHypertree.h"
+#include "LazySolutionSet.h"
 
-typedef pair<vector<set<int> >, vector<set<int> > > Partition;
-typedef pair<set<int>, set<int> > Atom;
 
 struct SharpValue
 {
@@ -25,7 +24,7 @@ struct SharpValue
 	mutable set<Atom> guards;
 
 	mutable mpz_class value;
-	mutable set<set<int> > solutions;
+	mutable LazySolutionSet *solutionSet;
 
 	bool operator<(const SharpValue &other) const;
 };
@@ -33,13 +32,13 @@ struct SharpValue
 class SharpEnumMinSAT
 {
 public:
-	SharpEnumMinSAT(ExtendedHypertree *root, signmap &signs);
+	SharpEnumMinSAT(ExtendedHypertree *root, SignMap &signs);
 	virtual ~SharpEnumMinSAT();
-	virtual pair<mpz_class, set<set<int> > > evaluate() const;
+	virtual pair<mpz_class, SolutionSet> evaluate() const;
 
 protected:
 	ExtendedHypertree *root;
-	signmap &signs;
+	SignMap &signs;
 
 	set<SharpValue> &eval(ExtendedHypertree *node) const;
 

@@ -59,7 +59,7 @@ bool PartitionValue::operator<(const PartitionValue &other) const
 	return false;
 }
 
-SharpSAT::SharpSAT(ExtendedHypertree *root, signmap &signs) : signs(signs)
+SharpSAT::SharpSAT(ExtendedHypertree *root, SignMap &signs) : signs(signs)
 {
 	this->root = root;
 }

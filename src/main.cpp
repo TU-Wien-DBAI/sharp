@@ -41,7 +41,7 @@ void print(ExtendedHypertree *foo)
 	else print(foo->firstChild());
 }
 
-void printSignMap(signmap &foo)
+void printSignMap(SignMap &foo)
 {
 	for(map<int, map<int, bool> >::iterator it = foo.begin(); it != foo.end(); ++it)
 	{
@@ -104,6 +104,7 @@ int main(int argc, char **argv)
 	SharpSAT *ss = new SharpSAT(eht, dhg.getSignMap());
 	SharpEnumMinSAT *sems = new SharpEnumMinSAT(eht, dhg.getSignMap());
 
+	cout << ss->evaluate() << endl;
 	cout << sems->evaluate().first << endl;
 
 	if(bBenchmark) { tEnd = clock(); cout << "done! (took " << (double)(tEnd - tStart)/CLOCKS_PER_SEC << " seconds)" << endl; }
