@@ -11,7 +11,7 @@ Partition Helper::partition(const set<Variable> &variables)
 	typedef set<Variable> set_t;
         typedef set_t::iterator iter_t;
 
-	int size = int(pow(2, variables.size()));
+	int size = int(pow(2.0f, (int)variables.size()));
 
         vector<set_t> positives, negatives; positives.reserve(size); negatives.reserve(size);
         vector<iter_t> elements;
