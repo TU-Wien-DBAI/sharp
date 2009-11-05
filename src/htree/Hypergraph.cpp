@@ -84,7 +84,7 @@ Comments:
 ------------------------------------------------------------------------------------------------
 */
 
-void Hypergraph::buildHypergraph(Parser *P)
+int Hypergraph::buildHypergraph(Parser *P)
 {
     int i, j;
 
@@ -128,6 +128,8 @@ void Hypergraph::buildHypergraph(Parser *P)
 		for(j=0; j < P->getNbrOfVarNeighbours(i); j++)
 			MyNodes[i]->insNeighbour(MyNodes[P->getNextVarNeighbour()], j);
 	}
+
+	return 0;
 }
 
 

@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstring>
+#include <iostream>
 
 #include "../support/support.h"
 
@@ -8,14 +9,19 @@
 #include "../htree/Node.h"
 #include "../htree/Hyperedge.h"
 
-static Node **aClauses = NULL;
-static Node **aVariables = NULL;
+#undef yyFlexLexer
+#define yyFlexLexer DIMACSFlexLexer
+#include <FlexLexer.h>
 
-DIMACSHypergraph::DIMACSHypergraph() : Hypergraph(), DIMACSParser(NULL)
+using namespace std;
+
+DIMACSHypergraph::DIMACSHypergraph() 
+	: AbstractHypergraph(), DIMACSParser(new DIMACSFlexLexer(), NULL)
 {
 }
 
-DIMACSHypergraph::DIMACSHypergraph(istream *in) : Hypergraph(), DIMACSParser(in)
+DIMACSHypergraph::DIMACSHypergraph(istream *in) 
+	: AbstractHypergraph(), DIMACSParser(new DIMACSFlexLexer(), in)
 {
 }
 
@@ -23,75 +29,16 @@ DIMACSHypergraph::~DIMACSHypergraph()
 {
 }
 
-void DIMACSHypergraph::buildHypergraph(Parser *p)
+void DIMACSHypergraph::addVariable(int clause, int variable, bool negative)
 {
-	if(p != NULL)
-	{
-		Hypergraph::buildHypergraph(p);
-		return;
-	}
+	char n[256];
+	snprintf(n, 256, "%d", variable);
 
-	this->yyparse();
-
-	delete [] aClauses;
-	delete [] aVariables;
-
-	for(int i = 0; i < (int)this->MyNodes.size(); ++i)
-		this->MyNodes[i]->updateNeighbourhood();
-
-	for(int i = 0; i < (int)this->MyEdges.size(); ++i)
-		this->MyEdges[i]->updateNeighbourhood();
-
-	this->iMyMaxNbrOfNodes = this->MyNodes.size();
-	this->iMyMaxNbrOfEdges = this->MyEdges.size();
+	AbstractHypergraph::addVariable(clause, n, negative);
 }
 
-void DIMACSHypergraph::addVariable(int iClause, int iVariable, bool bNegative)
+int DIMACSHypergraph::parseInput()
 {
-	static int iEdgeID = 0, iNodeID = 0;
-
-	if(signs.find(iClause) == signs.end()) signs.insert(SignMap::value_type(iClause, map<int, bool>()));
-	signs[iClause].insert(map<int, bool>::value_type(iVariable, bNegative));
-
-	Node *c, *v;
-	Hyperedge *e;
-	char str[256];
-
-	if(aClauses == NULL)
-	{
-		CNULL(aClauses = new Node *[this->getClauseCount()+1]);
-		for(int i = 0; i < this->getClauseCount(); ++i) aClauses[i] = NULL;
-		CNULL(aVariables = new Node *[this->getVariableCount()+1]);
-		for(int i = 0; i < this->getVariableCount()+1; ++i) aVariables[i] = NULL;
-	}
-
-	CNEG(snprintf(str, 256, "E%d", iEdgeID));
-	CNULL(e = new Hyperedge(iEdgeID++, strdup(str)));
-	this->MyEdges.push_back(e);
-
-	if((c = aClauses[iClause]) == NULL)
-	{
-		CNEG(snprintf(str, 256, "c%d", iClause));
-		CNULL(c = new Node(iNodeID++, strdup(str)));
-		this->MyNodes.push_back(c);
-		aClauses[iClause] = c;
-	}
-
-	if((v = aVariables[iVariable]) == NULL)
-	{
-		CNEG(snprintf(str, 256, "v%d", iVariable));
-		CNULL(v = new Node(iNodeID++, strdup(str)));
-		this->MyNodes.push_back(v);
-		aVariables[iVariable] = v;
-	}
-
-	e->insNode(c);
-	e->insNode(v);
-	c->insEdge(e);
-	v->insEdge(e);
+	return this->yyparse();
 }
 
-SignMap &DIMACSHypergraph::getSignMap()
-{
-	return this->signs;
-}

@@ -49,6 +49,9 @@ sharp: $(OBJS) $(USER_OBJS)
 	@echo ' '
 
 # Other Targets
+verbose: COMP_FLAGS = -DVERBOSE
+verbose: all
+
 clean:
 	-$(RM) $(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) sharp
 	-@echo ' '

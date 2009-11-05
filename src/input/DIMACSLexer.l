@@ -1,9 +1,9 @@
 %option c++
 %option noyywrap
 %option yylineno
+%option prefix="DIMACS"
 
 %{
-#undef yyFlexLexer
 #include "DIMACSParser.h"
 %}
 

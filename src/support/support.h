@@ -19,6 +19,15 @@
 
 /*
  ============================================================================
+ Variable    : sProgramName
+ Description : A string that stores the program name (argv[0])
+ Date        : 2007-11-07
+ ============================================================================
+ */
+extern char sProgramName[];
+
+/*
+ ============================================================================
  Function    : InitializeErrorHandling
  Description : Initializes the variables needed for the error handling
                routines defined here.
@@ -38,7 +47,7 @@ void InitializeErrorHandling(const char *programName);
  ============================================================================
  */
 #ifdef DEBUG
-    void _printError(int line, char *file, const char *message);
+    void _printError(int line, const char *file, const char *message);
     #define PrintError(MESSAGE) _printError(__LINE__, __FILE__, (MESSAGE))
 #else
     void _printError(const char *message);
@@ -57,6 +66,6 @@ void InitializeErrorHandling(const char *programName);
 #define CPOS(CMD)     		CHECK(CMD, > 0)
 #define CNOT0(CMD)    		CHECK(CMD, != 0)
 #define CNOTNULL(CMD) 		CHECK(CMD, != NULL)
-#define CEOF(CMD)  			CHECK(CMD, == EOF)
+#define CEOF(CMD)  		CHECK(CMD, == EOF)
     
 #endif /*SUPPORT_H_*/

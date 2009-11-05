@@ -42,7 +42,7 @@ public:
 	virtual~Hypergraph();
 
 	// Read hypergraph from file and construct internal representation
-	virtual void buildHypergraph(Parser *P);
+	virtual int buildHypergraph(Parser *P);
 
 	// Returns the number of edges in the hypergraph
 	int getNbrOfEdges();

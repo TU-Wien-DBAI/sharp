@@ -4,39 +4,45 @@
 #include <list>
 #include <set>
 
-using namespace std;
-
 #include "../htree/Hypertree.h"
 
+enum TreeNodeType
+{
+	Unevaluated = -1,
+	Leaf = 1, 
+	Branch = 2, 
+	VariableRemoval = 3, 
+	RuleRemoval = 4, 
+	VariableIntroduction = 5, 
+	RuleIntroduction = 6 
+};
+	
 class ExtendedHypertree : public Hypertree
 {
 public:
-	enum { LEAF = 1, BRANCH = 2, VARREM = 3, CLREM = 4, VARINTR = 5, CLINTR = 6 };
-	
-public:
 	ExtendedHypertree(Hypertree *node);
-	ExtendedHypertree(set<int> clauses, set<int> variables);
+	ExtendedHypertree(std::set<int> &rules, std::set<int> &variables);
 	virtual ~ExtendedHypertree();
 	void normalize();
 	int getType() const;
 	int getDifference() const;
 	bool isRoot() const;
-	const set<int> &getClauses() const;
-	const set<int> &getVariables() const;
+	const std::set<int> &getRules() const;
+	const std::set<int> &getVariables() const;
 	ExtendedHypertree *parent() const;
 	ExtendedHypertree *firstChild() const;
 	ExtendedHypertree *secondChild() const;
 
 private:
-	int type;
+	TreeNodeType type;
 	int difference;
 	
-	set<int> clauses;
-	set<int> variables;
+	std::set<int> rules;
+	std::set<int> variables;
 
 	void adapt();
-	int calculateType();
+	TreeNodeType calculateType();
 
-	static ExtendedHypertree *createChild(ExtendedHypertree *child, set<int> clauses, set<int> variables);
+	static ExtendedHypertree *createChild(ExtendedHypertree *child, std::set<int> rules, std::set<int> variables);
 };
 #endif

@@ -10,6 +10,13 @@ debug:
 	@echo "Done building."
 	@echo " "
 
+debug-verbose:
+	@echo "Building for debug..."
+	@cd ./debug/ ; make verbose
+	@cp -u ./debug/sharp .
+	@echo "Done building."
+	@echo " "
+
 release:
 	@echo "Building for release..."
 	@cd ./release/ ; make all
@@ -20,6 +27,6 @@ release:
 clean:
 	@cd ./debug/ ; make clean
 	@cd ./release/ ; make clean
-	-$(RM) src/input/DIMACSParser.cpp src/input/DIMACSParser.h src/input/DIMACSLexer.cpp sharp
+	-$(RM) src/input/DIMACSParser.cpp src/input/DIMACSParser.h src/input/DIMACSLexer.cpp src/input/DatalogParser.cpp src/input/DatalogParser.h src/input/DatalogLexer.cpp sharp src/input/DatalogLexer.yy src/input/DIMACSLexer.yy
 
-.PHONY: all release debug clean
+.PHONY: all release debug debug-verbose clean

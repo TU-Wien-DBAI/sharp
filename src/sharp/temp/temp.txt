@@ -1,39 +1,6 @@
-#include <iostream>
-
-#include "../support/support.h"
-
-#include "LazySolutionSet.h"
-
-LazySolutionSet::LazySolutionSet(LazySolutionSetType type, LazySolutionSet& left, LazySolutionSet &right)
-{
-	C0((type == LazyCrossJoin || type == LazyUnion));
-
-	this->type = type;
-	this->leftArgument = &left;
-	this->rightArgument = &right;
-}
-
-LazySolutionSet::LazySolutionSet(SolutionSet &value)
-{
-	this->type = Value;
-	this->value = &value;
-}
-
-LazySolutionSet::LazySolutionSet(LazySolutionSet &original, int differenceVariable)
-{
-	this->type = LazyAddDifference;
-	this->leftArgument = &original;
-}
-
-SolutionSet &LazySolutionSet::solutions()
-{
-	//TODO
-
-	switch(this->type)
+switch(this->type)
 	{
-		case LazyCrossJoin:
-			this->type = Value;
-
+		case LazySolutionSetType::LazyCrossJoin:
 			this->value = new SolutionSet();
 			
 			for(SolutionSet::iterator i = this->leftArgument->solutions().begin(); i != this->leftArgument->solutions().end(); ++i)
@@ -71,10 +38,9 @@ SolutionSet &LazySolutionSet::solutions()
 			break;
 
 		default:
+			CNULL(NULL);
 			break;
 	}
-
-	return *this->value;
 }
 
 

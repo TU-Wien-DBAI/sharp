@@ -1,6 +1,6 @@
 /*
  ============================================================================
- Name        : support.c
+ Name        : support.cpp
  Author      : Michael Morak
  Version     : 1.0
  Description : Error handling routines.
@@ -14,8 +14,6 @@
 #include <cstring>
 
 using namespace std;
-
-#include "support.h"
 
 #define MAX_LENGTH 4096
 
@@ -46,7 +44,7 @@ void InitializeErrorHandling(const char *programName)
     else
     {
         strncpy(sProgramName, programName, MAX_LENGTH);
-        sProgramName[MAX_LENGTH-1] = '\0';
+        sProgramName[MAX_LENGTH - 1] = '\0';
     }
 }
 
@@ -61,19 +59,19 @@ void InitializeErrorHandling(const char *programName)
  ============================================================================
  */
 #ifdef DEBUG
-void _printError(int line, char *file, const char *message)
+void _printError(int line, const char *file, const char *message)
 {
     if(errno == 0)
-    	cerr << sProgramName << ": " << file << ":" << line << " - " << message << endl;
+    	cerr << sProgramName << ": " << file << ":" << line << ": " << message << endl;
     else
-    	cerr << sProgramName << ": " << file << ":" << line << " - " << message << " " << strerror(errno) << endl;
+    	cerr << sProgramName << ": " << file << ":" << line << ": " << message << " - " << strerror(errno) << endl;
 #else
 void _printError(const char *message)
 {
     if(errno == 0)
     	cerr << sProgramName << ": " << message << endl;
     else
-    	cerr << sProgramName << ": " << message << " " << strerror(errno) << endl; 
+    	cerr << sProgramName << ": " << message << " - " << strerror(errno) << endl; 
 #endif
     exit(EXIT_FAILURE);
 }

@@ -2,19 +2,18 @@
 #include <cstdlib>
 #include <string>
 #include <algorithm>
-
 #include <iostream>
-
-using namespace std;
 
 #include "../Global.h"
 
 #include "ExtendedHypertree.h"
 #include "../htree/Node.h"
 
+using namespace std;
+
 ExtendedHypertree::ExtendedHypertree(Hypertree *node) : Hypertree()
 {
-	this->type = -1;
+	this->type = Unevaluated;
 	this->difference = -1;
 	
 	this->MyParent = node->getParent();
@@ -29,13 +28,13 @@ ExtendedHypertree::ExtendedHypertree(Hypertree *node) : Hypertree()
 		for(set<Node *>::iterator i = node->getChi()->begin(); i != node->getChi()->end(); ++i)
 		{
 			string name((*i)->getName());
-			if(*name.begin() == 'c') this->clauses.insert(atoi(name.substr(1).c_str()));
+			if(*name.begin() == 'r') this->rules.insert(atoi(name.substr(1).c_str()));
 			else if(*name.begin() == 'v') this->variables.insert(atoi(name.substr(1).c_str()));
 		}
 	}
 	else
 	{
-		this->clauses = ((ExtendedHypertree *)node)->clauses;
+		this->rules = ((ExtendedHypertree *)node)->rules;
 		this->variables = ((ExtendedHypertree *)node)->variables;
 	}
 
@@ -44,20 +43,20 @@ ExtendedHypertree::ExtendedHypertree(Hypertree *node) : Hypertree()
 	delete node;
 }
 
-ExtendedHypertree::ExtendedHypertree(set<int> clauses, set<int> variables) : Hypertree()
+ExtendedHypertree::ExtendedHypertree(set<int> &rules, set<int> &variables) : Hypertree()
 {
 	this->variables = variables;
-	this->clauses = clauses;
-	this->type = -1;
+	this->rules = rules;
+	this->type = Unevaluated;
 	this->difference = -1;
 }
 
 ExtendedHypertree::~ExtendedHypertree() { }
 
-ExtendedHypertree *ExtendedHypertree::createChild(ExtendedHypertree *child, set<int> clauses, set<int> variables)
+ExtendedHypertree *ExtendedHypertree::createChild(ExtendedHypertree *child, set<int> rules, set<int> variables)
 {
 	ExtendedHypertree *parent = child->parent();
-	ExtendedHypertree *newChild = new ExtendedHypertree(clauses, variables);
+	ExtendedHypertree *newChild = new ExtendedHypertree(rules, variables);
 
 	parent->remChild(child);
 	newChild->insChild(child);
@@ -68,10 +67,10 @@ ExtendedHypertree *ExtendedHypertree::createChild(ExtendedHypertree *child, set<
 	return child;
 }
 
-int ExtendedHypertree::calculateType()
+TreeNodeType ExtendedHypertree::calculateType()
 {
-	if(this->MyChildren.size() == 0) return ExtendedHypertree::LEAF;
-	if(this->MyChildren.size() == 2) return ExtendedHypertree::BRANCH;
+	if(this->MyChildren.size() == 0) return Leaf;
+	if(this->MyChildren.size() == 2) return Branch;
 
 	ExtendedHypertree *child = this->firstChild();
 	vector<int> diff(1);
@@ -80,31 +79,31 @@ int ExtendedHypertree::calculateType()
 	{
 		set_difference(child->variables.begin(), child->variables.end(), this->variables.begin(), this->variables.end(), diff.begin());
 		this->difference = diff[0];
-		return ExtendedHypertree::VARREM;
+		return VariableRemoval;
 	}
 
-	if(child->clauses.size() != this->clauses.size() && containsAll(child->clauses, this->clauses))
+	if(child->rules.size() != this->rules.size() && containsAll(child->rules, this->rules))
 	{
-		set_difference(child->clauses.begin(), child->clauses.end(), this->clauses.begin(), this->clauses.end(), diff.begin());
+		set_difference(child->rules.begin(), child->rules.end(), this->rules.begin(), this->rules.end(), diff.begin());
 		this->difference = diff[0];
-		return ExtendedHypertree::CLREM;
+		return RuleRemoval;
 	}
 	
 	if(this->variables.size() != child->variables.size() && containsAll(this->variables, child->variables))
 	{
 		set_difference(this->variables.begin(), this->variables.end(), child->variables.begin(), child->variables.end(), diff.begin());
 		this->difference = diff[0];
-		return ExtendedHypertree::VARINTR;
+		return VariableIntroduction;
 	}
 
-	if(this->clauses.size() != child->clauses.size() && containsAll(this->clauses, child->clauses))
+	if(this->rules.size() != child->rules.size() && containsAll(this->rules, child->rules))
 	{
-		set_difference(this->clauses.begin(), this->clauses.end(), child->clauses.begin(), child->clauses.end(), diff.begin());
+		set_difference(this->rules.begin(), this->rules.end(), child->rules.begin(), child->rules.end(), diff.begin());
 		this->difference = diff[0];
-		return ExtendedHypertree::CLINTR;
+		return RuleIntroduction;
 	}
 
-	return -1;
+	return Unevaluated;
 }
 
 int ExtendedHypertree::getType() const
@@ -126,8 +125,8 @@ void ExtendedHypertree::normalize()
 {	
 	if(this->MyChildren.size() > 1)
 	{
-		ExtendedHypertree *l = new ExtendedHypertree(this->clauses, this->variables);
-		ExtendedHypertree *r = new ExtendedHypertree(this->clauses, this->variables);
+		ExtendedHypertree *l = new ExtendedHypertree(this->rules, this->variables);
+		ExtendedHypertree *r = new ExtendedHypertree(this->rules, this->variables);
 		
 		l->insChild(*this->MyChildren.begin()); this->remChild(*this->MyChildren.begin());
 		for(list<Hypertree *>::iterator i = this->MyChildren.begin(); i != this->MyChildren.end(); ++i)
@@ -159,57 +158,57 @@ void ExtendedHypertree::adapt()
 
 	unsigned int changes;
 
-	list<int> currentClauses(this->parent()->clauses.begin(), this->parent()->clauses.end());
+	list<int> currentRules(this->parent()->rules.begin(), this->parent()->rules.end());
 	list<int> currentVariables(this->parent()->variables.begin(), this->parent()->variables.end());
 
-	vector<int> redClauses(currentClauses.size());
+	vector<int> redRules(currentRules.size());
 	vector<int> redVariables(currentVariables.size());
-	vector<int> greenClauses(this->clauses.size());
+	vector<int> greenRules(this->rules.size());
 	vector<int> greenVariables(this->variables.size());
 
-	vector<int>::iterator it = set_difference(this->parent()->clauses.begin(), this->parent()->clauses.end(), 
-							this->clauses.begin(), this->clauses.end(), redClauses.begin());
-	redClauses.resize(it - redClauses.begin());
+	vector<int>::iterator it = set_difference(this->parent()->rules.begin(), this->parent()->rules.end(), 
+							this->rules.begin(), this->rules.end(), redRules.begin());
+	redRules.resize(it - redRules.begin());
 
 	it = set_difference(this->parent()->variables.begin(), this->parent()->variables.end(),
 				this->variables.begin(), this->variables.end(), redVariables.begin());
 	redVariables.resize(it - redVariables.begin());
 
-	it = set_difference(this->clauses.begin(), this->clauses.end(),
-				this->parent()->clauses.begin(), this->parent()->clauses.end(), greenClauses.begin());
-	greenClauses.resize(it - greenClauses.begin());
+	it = set_difference(this->rules.begin(), this->rules.end(),
+				this->parent()->rules.begin(), this->parent()->rules.end(), greenRules.begin());
+	greenRules.resize(it - greenRules.begin());
 
 	it = set_difference(this->variables.begin(), this->variables.end(),
 				this->parent()->variables.begin(), this->parent()->variables.end(), greenVariables.begin());
 	greenVariables.resize(it - greenVariables.begin());
 
-	changes = redClauses.size() + greenClauses.size() + redVariables.size() + greenVariables.size();
+	changes = redRules.size() + greenRules.size() + redVariables.size() + greenVariables.size();
 
-	for(it = redClauses.begin(); changes > 1 && it != redClauses.end(); ++it)
+	for(it = redRules.begin(); changes > 1 && it != redRules.end(); ++it)
 	{
-		currentClauses.remove(*it);
-		createChild(this, set<int>(currentClauses.begin(), currentClauses.end()), set<int>(currentVariables.begin(), currentVariables.end()));
+		currentRules.remove(*it);
+		createChild(this, set<int>(currentRules.begin(), currentRules.end()), set<int>(currentVariables.begin(), currentVariables.end()));
 		--changes;
 	}
 
 	for(it = redVariables.begin(); changes > 1 && it != redVariables.end(); ++it)
 	{
 		currentVariables.remove(*it);
-		createChild(this, set<int>(currentClauses.begin(), currentClauses.end()), set<int>(currentVariables.begin(), currentVariables.end()));
+		createChild(this, set<int>(currentRules.begin(), currentRules.end()), set<int>(currentVariables.begin(), currentVariables.end()));
 		--changes;
 	}
 
-	for(it = greenClauses.begin(); changes > 1 && it != greenClauses.end(); ++it)
+	for(it = greenRules.begin(); changes > 1 && it != greenRules.end(); ++it)
 	{
-		currentClauses.push_back(*it);
-		createChild(this, set<int>(currentClauses.begin(), currentClauses.end()), set<int>(currentVariables.begin(), currentVariables.end()));
+		currentRules.push_back(*it);
+		createChild(this, set<int>(currentRules.begin(), currentRules.end()), set<int>(currentVariables.begin(), currentVariables.end()));
 		--changes;
 	}
 	
 	for(it = greenVariables.begin(); changes > 1 && it != greenVariables.end(); ++it)
 	{
 		currentVariables.push_back(*it);
-		createChild(this, set<int>(currentClauses.begin(), currentClauses.end()), set<int>(currentVariables.begin(), currentVariables.end()));
+		createChild(this, set<int>(currentRules.begin(), currentRules.end()), set<int>(currentVariables.begin(), currentVariables.end()));
 		--changes;
 	}
 }
@@ -229,5 +228,5 @@ ExtendedHypertree *ExtendedHypertree::secondChild() const
 	return dynamic_cast<ExtendedHypertree *>(*++this->MyChildren.begin());
 }
 
-const set<int> &ExtendedHypertree::getClauses() const { return this->clauses; }
+const set<int> &ExtendedHypertree::getRules() const { return this->rules; }
 const set<int> &ExtendedHypertree::getVariables() const { return this->variables; }

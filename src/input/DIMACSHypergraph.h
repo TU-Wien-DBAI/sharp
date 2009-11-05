@@ -2,31 +2,27 @@
 #define DIMACSHYPERGRAPH_H_
 
 #include <fstream>
-#include <map>
-#include <list>
 
 using namespace std;
 
 #include "../Global.h"
 #include "DIMACSParser.h"
 
+#include "AbstractHypergraph.h"
+
 class Hypergraph;
 class Parser;
 
-class DIMACSHypergraph : public Hypergraph, public DIMACSParser
+class DIMACSHypergraph : public AbstractHypergraph, public DIMACSParser
 {
 public:
 	DIMACSHypergraph();
 	DIMACSHypergraph(istream *in);
 	virtual ~DIMACSHypergraph();
-	virtual void buildHypergraph(Parser *p = NULL);
-	SignMap &getSignMap();
 
 protected:
-	virtual void addVariable(int iClause, int iVariable, bool bNegative = false);
-
-protected:
-	SignMap signs;
+	virtual void addVariable(int clause, int variable, bool negative = false);
+	virtual int parseInput();
 };
 
 #endif
