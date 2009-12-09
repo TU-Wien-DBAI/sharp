@@ -200,9 +200,13 @@ int main(int argc, char **argv)
 	else if(algorithm == ASP) { alg = new AnswerSetAlgorithm(inst, eht, hg->getSignMap(), hg->getHeadMap(), hg->getNameMap()); }
 	delete hg;
 
-	if(bOpt) { cout << "Evaluating formula... " << flush; t.start(); }
+	if(bOpt) { cout << "Evaluating formula... " << endl; t.start(); }
 
-	SolutionContent *sc = alg->evaluate()->getContent();
+	Solution *temp = alg->evaluate();
+
+	if(bOpt) { cout << "\tEvaluation took " << flush; printTime(t.stop()); cout << " seconds..." << flush; }
+	
+	SolutionContent *sc = temp->getContent();
 
 	if(bOpt) { cout << "done! (took "; printTime(t.stop()); cout << " seconds)" << endl; }
 
