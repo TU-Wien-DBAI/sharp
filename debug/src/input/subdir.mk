@@ -35,18 +35,15 @@ CPP_DEPS += \
 	@echo 'Finished building: $<'
 	@echo ' '
 
-../src/input/%Lexer.yy: ../src/input/%Lexer.l ../src/input/%Parser.h
+../src/input/%Lexer.cpp: ../src/input/%Lexer.l ../src/input/%Parser.h
 	@echo 'Building file: $<'
 	@echo 'Invoking: Flex++ Lexical Analyzer'
-	flex++ -d -o"$@" "$<"
-	@echo 'Finished building: $<'
-	@echo ' '
-
-../src/input/%Lexer.cpp: ../src/input/%Lexer.yy
-	@echo 'Renaming lexer class in file: $<'
+	flex++ -d -o"$(@:%.cpp=%.yy)" "$<"
+	@echo 'Renaming lexer class in file: $(@:%.cpp=%.yy)'
 	@echo 'Invoking: sed - stream editor'
-	sed 's/yyFlexLexer/$*FlexLexer/g' "$<" | sed 's/define $*FlexLexer/define yyFlexLexer/g' > "$@"
-	@echo 'Finished renaming lexer class in file: $<'
+	sed 's/yyFlexLexer/$*FlexLexer/g' "$(@:%.cpp=%.yy)" | sed 's/define $*FlexLexer/define yyFlexLexer/g' > "$@"
+	@echo 'Finished renaming lexer class in file: $(@:%.cpp=%.yy)'
+	@echo 'Finished building: $<'
 	@echo ' '
 
 src/input/%.o: ../src/input/%.cpp

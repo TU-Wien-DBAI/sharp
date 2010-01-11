@@ -14,6 +14,7 @@
 #include "sharp/ExtendedHypertree.h"
 #include "sharp/Circumscription.h"
 #include "sharp/AnswerSet.h"
+#include "sharp/HeadCycleFreeAnswerSet.h"
 #include "htree/H_BucketElim.h"
 
 using namespace std;
@@ -26,13 +27,14 @@ enum Algorithm
 	NoAlg,
 	SAT,
 	MinSAT,
-	ASP
+	ASP,
+	HCFASP
 };
 
 enum OutputType
 {
 	NoType,
-	YesNo,
+	Consistency,
 	Counting,
 	Enumeration
 };
@@ -75,6 +77,7 @@ int main(int argc, char **argv)
 			if(!strcmp(optarg, "sat")) algorithm = SAT;
 			else if(!strcmp(optarg, "minsat")) algorithm = MinSAT;
 			else if(!strcmp(optarg, "asp")) algorithm = ASP;
+			else if(!strcmp(optarg, "hcfasp")) algorithm = HCFASP;
 			else usage();
 			++argCount;
 			break;
@@ -89,7 +92,7 @@ int main(int argc, char **argv)
 			if(output || !optarg) usage();
 			if(!strcmp(optarg, "enum")) output = Enumeration;
 			else if(!strcmp(optarg, "count")) output = Counting;
-			else if(!strcmp(optarg, "yesno")) output = YesNo;
+			else if(!strcmp(optarg, "yesno")) output = Consistency;
 			else usage();
 			++argCount;
 			break;
@@ -148,7 +151,7 @@ int main(int argc, char **argv)
 		{
 			PrintError("Counting for the MinSAT algorithm is currently not implemented!");
 		}
-		else if(output == YesNo)
+		else if(output == Consistency)
 		{
 			PrintError("Consistency evaluation for the MinSAT algorithm is currently not implemented!");
 		}
@@ -164,9 +167,25 @@ int main(int argc, char **argv)
 		{
 			PrintError("Counting for the AnswerSet algorithm is currently not implemented!");
 		}
-		else if(output == YesNo)
+		else if(output == Consistency)
 		{
 			PrintError("Consistency evaluation for the AnswerSet algorithm is currently not implemented!");
+		}
+	}
+	else if(algorithm == HCFASP)
+	{
+		if(output == Consistency)
+		{
+			inst = new HeadCycleFreeAnswerSetConsistencyInstantiator();
+			hg = new DatalogHypergraph(stream);
+		}
+		else if(output == Counting)
+		{
+			PrintError("Counting for the HeadCycleFreeAnswerSet algorithm is currently not implemented!");
+		}
+		else if(output == Enumeration)
+		{
+			PrintError("Enumeration for the HeadCycleFreeAnswerSet algorithm is currently not implemented!");
 		}
 	}
 
@@ -195,9 +214,24 @@ int main(int argc, char **argv)
 	printSignMap(hg->getSignMap());
 #endif
 
-	if(algorithm == SAT) { }
-	else if(algorithm == MinSAT) { alg = new CircumscriptionAlgorithm(inst, eht, hg->getSignMap(), hg->getHeadMap(), hg->getNameMap()); }
-	else if(algorithm == ASP) { alg = new AnswerSetAlgorithm(inst, eht, hg->getSignMap(), hg->getHeadMap(), hg->getNameMap()); }
+	switch(algorithm)
+	{
+	case SAT:
+		break;
+	case MinSAT:
+		alg = new CircumscriptionAlgorithm(inst, eht, hg->getSignMap(), hg->getHeadMap(), hg->getNameMap());
+		break;
+	case ASP:
+		alg = new AnswerSetAlgorithm(inst, eht, hg->getSignMap(), hg->getHeadMap(), hg->getNameMap());
+		break;
+	case HCFASP:
+		alg = new HeadCycleFreeAnswerSetAlgorithm(inst, eht, hg->getSignMap(), hg->getHeadMap(), hg->getNameMap());
+		break;
+	default:
+		C0(0 /*ERROR: Invalid algorithm assignment*/);
+		break;
+	}
+
 	delete hg;
 
 	if(bOpt) { cout << "Evaluating formula... " << endl; t.start(); }
@@ -227,7 +261,7 @@ static void usage()
 		<< "\t-b\t\tprint benchmark information" << endl
 		<< "\t-s seed\t\tinitialize random number generator with <seed>." << endl
 		<< "\t-f file\t\tthe file to read from" << endl
-		<< "\t-a alg\t\talgorithm, one of {sat, minsat, asp}" << endl
+		<< "\t-a alg\t\talgorithm, one of {sat, minsat, asp, hcfasp}" << endl
 		<< "\t-o output\toutput type, one of {enum, count, yesno}" << endl
 		;
 

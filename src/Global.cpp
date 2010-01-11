@@ -1,4 +1,5 @@
 #include <set>
+#include <list>
 #include <vector>
 #include <algorithm>
 #include <iostream>
@@ -23,11 +24,33 @@ void printIntSet(const set<int> &toprint)
 {
 	const char *prefix = "";
 
-	for(set<int>::iterator it = toprint.begin(); it != toprint.end(); ++it)
+	for(set<int>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
 	{
 		cout << prefix << *it;
 		prefix = ", ";
 	}	
+}
+
+void printIntList(const list<int> &toprint)
+{
+	const char *prefix = "";
+	
+	for(list<int>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
+	{
+		cout << prefix << *it;
+		prefix = ", ";
+	}
+}
+
+void printBoolList(const list<bool> &toprint)
+{
+	const char *prefix = "";
+	
+	for(list<bool>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
+	{
+		cout << prefix << (*it ? "t" : "f");
+		prefix = ", ";
+	}
 }
 
 Timer::Timer() 
