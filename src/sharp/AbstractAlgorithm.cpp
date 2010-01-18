@@ -1,95 +1,348 @@
+#include <iostream>
+
 #include "../support/support.h"
 
 #include "AbstractAlgorithm.h"
 
 using namespace std;
 
-bool lessTuple(const Tuple *t1, const Tuple *t2)
-{
-	return *t1 < *t2;
-}
-
+/*********************************\
+|* CLASS: Tuple
+\*********************************/
 Tuple::Tuple() { }
 
 Tuple::~Tuple() { }
 
+/***********************************\
+|* CLASS: SolutionContent
+\***********************************/
 SolutionContent::SolutionContent() { }
+
+SolutionContent::SolutionContent(const std::set<Variable> &partition) { }
 
 SolutionContent::~SolutionContent() { }
 
-Solution::Solution() 
+/***********************************\
+|* CLASS: EnumerationSolutionContent
+\***********************************/
+EnumerationSolutionContent::EnumerationSolutionContent() { }
+
+EnumerationSolutionContent::EnumerationSolutionContent(const std::set<Variable> &partition) 
 { 
-	this->content = NULL;
+	this->enumerations.insert(partition);
 }
 
-Solution::Solution(SolutionContent *content) 
+EnumerationSolutionContent::~EnumerationSolutionContent() { }
+
+/***********************************\
+|* CLASS: CountingSolutionContent
+\***********************************/
+CountingSolutionContent::CountingSolutionContent() 
 {
-	this->content = content;
+	this->count = 0;
 }
 
-Solution::~Solution() 
-{	
-	if(this->content) delete this->content;
-}
-
-SolutionContent *Solution::getContent()
+CountingSolutionContent::CountingSolutionContent(const std::set<Variable> &partition) 
 {
-	return this->content;
+	this->count = 1;
 }
 
-LazySolution::LazySolution(Operation operation, Solution *left, Solution *right)
+CountingSolutionContent::~CountingSolutionContent() { }
+
+/***********************************\
+|* CLASS: ConsistencySolutionContent
+\***********************************/
+ConsistencySolutionContent::ConsistencySolutionContent() 
 {
-	C0(operation == LazyCrossJoin || operation == LazyUnion);
+	this->consistent = false;
+}
+
+ConsistencySolutionContent::ConsistencySolutionContent(const std::set<Variable> &partition) 
+{
+	this->consistent = true;
+}
+
+ConsistencySolutionContent::~ConsistencySolutionContent() { }
+
+/***********************************\
+|* CLASS: Solution
+\***********************************/
+Solution::Solution(Operation operation, Solution *left, Solution *right)
+{
+	C0(operation == CrossJoin || operation == Union);
 
 	this->operation = operation;
 	this->leftArgument = left;
 	this->rightArgument = right;
 }
 
-LazySolution::LazySolution(Solution *child, int difference)
+Solution::Solution(Solution *child, int difference)
 {
-	this->operation = LazyAddDifference;
+	this->operation = AddDifference;
 	this->difference = difference;
 	this->leftArgument = child;
 }
 
-LazySolution::~LazySolution()
+Solution::Solution(const std::set<Variable> &partition) 
 {
+	this->operation = Value;
+}
+
+Solution::Solution() 
+{
+	this->operation = Value;
+}
+
+Solution::~Solution() 
+{	
+	if(this->content) delete this->content;
 	if(this->leftArgument) delete this->leftArgument;
 	if(this->rightArgument)	delete this->rightArgument;
 }
 
-SolutionContent *LazySolution::getContent()
+SolutionContent *Solution::getContent()
 {
-	if(this->operation != Value) this->calculate();
+	if(this->operation != Value) this->forceCalculation();
 	return this->content;
 }
 
-inline void LazySolution::calculate()
+inline void Solution::forceCalculation()
 {
 	switch(this->operation)
 	{
-	case LazyCrossJoin:
+	case CrossJoin:
 		this->calculateCrossJoin();
 		break;
-	case LazyUnion:
+	case Union:
 		this->calculateUnion();
 		break;
-	case LazyAddDifference:
+	case AddDifference:
 		this->calculateAddDifference();
 		break;
+	case Value:
+		break;
 	default:
+		C0(0 /*invalid operation*/);
 		break;
 	}
 
 	this->operation = Value;
 }
 
+/***********************************\
+|* CLASS: EnumerationSolution
+\***********************************/
+EnumerationSolution::EnumerationSolution(Operation operation, Solution *left, Solution *right)
+	: Solution(operation, left, right) { }
+
+EnumerationSolution::EnumerationSolution(Solution *child, int difference)
+	: Solution(child, difference) { }
+
+EnumerationSolution::EnumerationSolution(const std::set<Variable> &partition)
+	: Solution(partition) 
+{
+	this->content = new EnumerationSolutionContent(partition);
+}
+
+EnumerationSolution::EnumerationSolution()
+	: Solution() 
+{
+	this->content = new EnumerationSolutionContent();
+}
+
+EnumerationSolution::~EnumerationSolution() { }
+
+void EnumerationSolution::calculateUnion()
+{
+	EnumerationSolutionContent 
+		*left = (EnumerationSolutionContent *)leftArgument->getContent(),
+		*right = (EnumerationSolutionContent *)rightArgument->getContent(),
+		*calc = new EnumerationSolutionContent();
+	
+	this->content = calc;
+
+	//FIXME: re-use the old instances
+	//FIXME: use swap instead
+	calc->enumerations = left->enumerations;
+	calc->enumerations.insert(right->enumerations.begin(), right->enumerations.end());
+}
+
+void EnumerationSolution::calculateCrossJoin()
+{
+	EnumerationSolutionContent 
+		*left = (EnumerationSolutionContent *)leftArgument->getContent(),
+		*right = (EnumerationSolutionContent *)rightArgument->getContent(),
+		*calc = new EnumerationSolutionContent();
+	
+	this->content = calc;
+			
+	//FIXME: re-use the old instances
+	for(set<set<Variable> >::iterator i = left->enumerations.begin(); 
+		i != left->enumerations.end(); ++i)
+	{
+		for(set<set<Variable> >::iterator j = right->enumerations.begin(); 
+			j != right->enumerations.end(); ++j)
+		{
+			set<Variable> sol = *i;
+			sol.insert(j->begin(), j->end());
+			calc->enumerations.insert(sol);
+		}
+	}
+}
+
+void EnumerationSolution::calculateAddDifference()
+{
+	EnumerationSolutionContent 
+		*child = (EnumerationSolutionContent *)leftArgument->getContent(),
+		*calc = new EnumerationSolutionContent();
+	
+	this->content = calc;
+
+	//FIXME: re-use the old instances
+	for(set<set<Variable> >::iterator i = child->enumerations.begin(); 
+		i != child->enumerations.end(); ++i)
+	{ 
+		//FIXME: use swap instead of copying...
+		set<Variable> sol = *i;
+		sol.insert(this->difference); 
+		calc->enumerations.insert(sol);
+	}
+}
+
+/***********************************\
+|* CLASS: CountingSolution
+\***********************************/
+CountingSolution::CountingSolution(Operation operation, Solution *left, Solution *right)
+	: Solution(operation, left, right) { }
+
+CountingSolution::CountingSolution(Solution *child, int difference)
+	: Solution(child, difference) { }
+
+CountingSolution::CountingSolution(const std::set<Variable> &partition)
+	: Solution(partition) 
+{
+	this->content = new CountingSolutionContent(partition);
+}
+
+CountingSolution::CountingSolution()
+	: Solution() 
+{
+	this->content = new CountingSolutionContent();
+}
+
+CountingSolution::~CountingSolution() { }
+
+void CountingSolution::calculateUnion()
+{
+	CountingSolutionContent 
+		*left = (CountingSolutionContent *)leftArgument->getContent(),
+		*right = (CountingSolutionContent *)rightArgument->getContent(),
+		*calc = new CountingSolutionContent();
+	
+	this->content = calc;
+
+	//FIXME: re-use the old instances
+	calc->count = left->count + right->count;
+}
+
+void CountingSolution::calculateCrossJoin()
+{
+	CountingSolutionContent 
+		*left = (CountingSolutionContent *)leftArgument->getContent(),
+		*right = (CountingSolutionContent *)rightArgument->getContent(),
+		*calc = new CountingSolutionContent();
+	
+	this->content = calc;
+		
+	//FIXME: re-use the old instances	
+	calc->count = left->count * right->count;
+}
+
+void CountingSolution::calculateAddDifference()
+{
+	CountingSolutionContent 
+		*child = (CountingSolutionContent *)leftArgument->getContent(),
+		*calc = new CountingSolutionContent();
+	
+	this->content = calc;
+
+	//FIXME: re-use the old instances
+	calc->count = child->count;
+}
+
+/***********************************\
+|* CLASS: ConsistencySolution
+\***********************************/
+ConsistencySolution::ConsistencySolution(Operation operation, Solution *left, Solution *right)
+	: Solution(operation, left, right) { }
+
+ConsistencySolution::ConsistencySolution(Solution *child, int difference)
+	: Solution(child, difference) { }
+
+ConsistencySolution::ConsistencySolution(const std::set<Variable> &partition)
+	: Solution(partition) 
+{
+	this->content = new ConsistencySolutionContent(partition);
+}
+
+ConsistencySolution::ConsistencySolution()
+	: Solution() 
+{
+	this->content = new ConsistencySolutionContent();
+}
+
+ConsistencySolution::~ConsistencySolution() { }
+
+void ConsistencySolution::calculateUnion()
+{
+	ConsistencySolutionContent 
+		*left = (ConsistencySolutionContent *)leftArgument->getContent(),
+		*right = (ConsistencySolutionContent *)rightArgument->getContent(),
+		*calc = new ConsistencySolutionContent();
+	
+	this->content = calc;
+
+	//FIXME: re-use the old instances
+	calc->consistent = left->consistent || right->consistent;
+}
+
+void ConsistencySolution::calculateCrossJoin()
+{
+	ConsistencySolutionContent 
+		*left = (ConsistencySolutionContent *)leftArgument->getContent(),
+		*right = (ConsistencySolutionContent *)rightArgument->getContent(),
+		*calc = new ConsistencySolutionContent();
+	
+	this->content = calc;
+		
+	//FIXME: re-use the old instances	
+	calc->consistent = left->consistent || right->consistent;
+}
+
+void ConsistencySolution::calculateAddDifference()
+{
+	ConsistencySolutionContent 
+		*child = (ConsistencySolutionContent *)leftArgument->getContent(),
+		*calc = new ConsistencySolutionContent();
+	
+	this->content = calc;
+
+	//FIXME: re-use the old instances
+	calc->consistent = child->consistent;
+}
+
+/***********************************\
+|* CLASS: Instantiator
+\***********************************/
 Instantiator::Instantiator() { }
 
 Instantiator::~Instantiator() { }
 
-AbstractAlgorithm::AbstractAlgorithm(const Instantiator *instantiator, const ExtendedHypertree *root, const SignMap &signMap, const HeadMap &headMap, const NameMap &nameMap)
+/***********************************\
+|* CLASS: AbstractAlgorithm
+\***********************************/
+AbstractAlgorithm::AbstractAlgorithm(const Instantiator *instantiator, const ExtendedHypertree *root, 
+	const SignMap &signMap, const HeadMap &headMap, const NameMap &nameMap)
 {
 	this->instantiator = instantiator;
 	this->root = root;
@@ -127,8 +380,7 @@ TupleSet *AbstractAlgorithm::evaluateNode(const ExtendedHypertree *node)
         case RuleIntroduction: 
 		return this->evaluateRuleIntroductionNode(node);
 	default:
-		CNULL(NULL);
-		return NULL;
+		C0(0 /*invalid node type*/); return NULL;
         }
 }
 

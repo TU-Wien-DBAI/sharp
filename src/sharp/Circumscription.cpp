@@ -7,8 +7,8 @@ using namespace std;
 #if defined(VERBOSE) && defined(DEBUG)
 static void printSolution(Solution *solution)
 {
-	CircumscriptionEnumSolutionContent *s = 
-		(CircumscriptionEnumSolutionContent *)solution->getContent();
+	EnumerationSolutionContent *s = 
+		(EnumerationSolutionContent *)solution->getContent();
 
 	cout << "[";	
 	for(set<set<Variable> >::iterator it = s->enumerations.begin(); 
@@ -42,81 +42,6 @@ static void printTuples(TupleSet *svals, const ExtendedHypertree *node)
 }
 #endif
 
-CircumscriptionEnumSolutionContent::CircumscriptionEnumSolutionContent() { }
-
-CircumscriptionEnumSolutionContent::CircumscriptionEnumSolutionContent(const set<Variable> &partition) 
-{
-	this->enumerations.insert(partition);
-}
-
-CircumscriptionEnumSolutionContent::~CircumscriptionEnumSolutionContent() { }
-
-LazyCircumscriptionEnumSolution::LazyCircumscriptionEnumSolution
-	(Operation operation, Solution *left, Solution *right)
-	: LazySolution(operation, left, right)
-{ }
-
-LazyCircumscriptionEnumSolution::LazyCircumscriptionEnumSolution
-	(Solution *child, int difference)
-	: LazySolution(child, difference)
-{ }
-
-LazyCircumscriptionEnumSolution::~LazyCircumscriptionEnumSolution() { }
-
-void LazyCircumscriptionEnumSolution::calculateUnion()
-{
-	CircumscriptionEnumSolutionContent 
-		*left = (CircumscriptionEnumSolutionContent *)leftArgument->getContent(),
-		*right = (CircumscriptionEnumSolutionContent *)rightArgument->getContent(),
-		*calc = new CircumscriptionEnumSolutionContent();
-	
-	this->content = calc;
-
-	//FIXME: use swap instead of copying...
-	calc->enumerations = left->enumerations;
-	calc->enumerations.insert(right->enumerations.begin(), right->enumerations.end());
-}
-
-void LazyCircumscriptionEnumSolution::calculateCrossJoin()
-{
-	CircumscriptionEnumSolutionContent 
-		*left = (CircumscriptionEnumSolutionContent *)leftArgument->getContent(),
-		*right = (CircumscriptionEnumSolutionContent *)rightArgument->getContent(),
-		*calc = new CircumscriptionEnumSolutionContent();
-	
-	this->content = calc;
-
-	for(set<set<Variable> >::iterator i = left->enumerations.begin(); 
-		i != left->enumerations.end(); ++i)
-	{
-		for(set<set<Variable> >::iterator j = right->enumerations.begin(); 
-			j != right->enumerations.end(); ++j)
-		{
-			set<Variable> sol = *i;
-			sol.insert(j->begin(), j->end());
-			calc->enumerations.insert(sol);
-		}
-	}
-}
-
-void LazyCircumscriptionEnumSolution::calculateAddDifference()
-{
-	CircumscriptionEnumSolutionContent 
-		*child = (CircumscriptionEnumSolutionContent *)leftArgument->getContent(),
-		*calc = new CircumscriptionEnumSolutionContent();
-	
-	this->content = calc;
-
-	for(set<set<Variable> >::iterator i = child->enumerations.begin(); 
-		i != child->enumerations.end(); ++i)
-	{ 
-		//FIXME: use swap instead of copying...
-		set<Variable> sol = *i;
-		sol.insert(this->difference); 
-		calc->enumerations.insert(sol);
-	}
-}
-
 CircumscriptionTuple::CircumscriptionTuple() { }
 
 CircumscriptionTuple::~CircumscriptionTuple() { }
@@ -145,32 +70,6 @@ int CircumscriptionTuple::hash() const
 {
 	//TODO
 	return -1;
-}
-
-CircumscriptionEnumInstantiator::CircumscriptionEnumInstantiator() { }
-
-CircumscriptionEnumInstantiator::~CircumscriptionEnumInstantiator() { }
-
-Solution *CircumscriptionEnumInstantiator::createEmptySolution() const
-{
-	return new Solution(new CircumscriptionEnumSolutionContent());
-}
-
-Solution *CircumscriptionEnumInstantiator::createLeafSolution(const set<Variable> &partition) const
-{
-	return new Solution(new CircumscriptionEnumSolutionContent(partition));
-}
-
-Solution *CircumscriptionEnumInstantiator::combine(Operation operation, 
-	Solution *left, Solution *right) const
-{
-	return new LazyCircumscriptionEnumSolution(operation, left, right);
-}
-
-Solution *CircumscriptionEnumInstantiator::addDifference(Solution *child, 
-	int difference) const
-{
-	return new LazyCircumscriptionEnumSolution(child, difference);
 }
 
 CircumscriptionAlgorithm::CircumscriptionAlgorithm
@@ -209,7 +108,7 @@ Solution *CircumscriptionAlgorithm::selectSolution(TupleSet *tuples)
 			}
 		}
 
-		if(!filter) s = this->instantiator->combine(LazyUnion, s, it->second);
+		if(!filter) s = this->instantiator->combine(Union, s, it->second);
 	}
 
 	return s;
@@ -259,8 +158,8 @@ TupleSet *CircumscriptionAlgorithm::evaluateLeafNode(const ExtendedHypertree *no
 
 TupleSet *CircumscriptionAlgorithm::evaluateBranchNode(const ExtendedHypertree *node)
 {
-	TupleSet *left = evaluateNode(node->firstChild()), 
-		*right = evaluateNode(node->secondChild());
+	TupleSet *left = this->evaluateNode(node->firstChild()), 
+		*right = this->evaluateNode(node->secondChild());
 	TupleSet *ts = new TupleSet();
 	equal_to<set<Variable> > eq;
 
@@ -310,7 +209,7 @@ TupleSet *CircumscriptionAlgorithm::evaluateBranchNode(const ExtendedHypertree *
 			cet.rules = l.rules;
 			cet.rules.insert(r.rules.begin(), r.rules.end());
 
-			Solution *s = this->instantiator->combine(LazyCrossJoin, 
+			Solution *s = this->instantiator->combine(CrossJoin, 
 								  lit->second, 
 								  rit->second);
 
@@ -322,7 +221,7 @@ TupleSet *CircumscriptionAlgorithm::evaluateBranchNode(const ExtendedHypertree *
 				Solution *orig = result.first->second;
 				ts->erase(result.first);
 				ts->insert(TupleSet::value_type(&cet, 
-					this->instantiator->combine(LazyUnion, orig, s)));
+					this->instantiator->combine(Union, orig, s)));
 			}
 		}
 	}
@@ -339,7 +238,7 @@ TupleSet *CircumscriptionAlgorithm::evaluateBranchNode(const ExtendedHypertree *
 
 TupleSet *CircumscriptionAlgorithm::evaluateVariableIntroductionNode(const ExtendedHypertree *node)
 {
-	TupleSet *base = evaluateNode(node->firstChild());
+	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
 	set<Variable> var; var.insert(node->getDifference());
@@ -386,7 +285,7 @@ TupleSet *CircumscriptionAlgorithm::evaluateVariableIntroductionNode(const Exten
 			Solution *orig = result.first->second;
 			ts->erase(result.first);
 			ts->insert(TupleSet::value_type(&cetf, 
-				this->instantiator->combine(LazyUnion, orig, it->second)));
+				this->instantiator->combine(Union, orig, it->second)));
 		}
 
 		Solution *s = this->instantiator->addDifference(it->second, node->getDifference());		
@@ -397,7 +296,7 @@ TupleSet *CircumscriptionAlgorithm::evaluateVariableIntroductionNode(const Exten
 			Solution *orig = result.first->second;
 			ts->erase(result.first);
 			ts->insert(TupleSet::value_type(&cett, 
-				this->instantiator->combine(LazyUnion, orig, it->second)));
+				this->instantiator->combine(Union, orig, it->second)));
 		}
 	}
 
@@ -412,7 +311,7 @@ TupleSet *CircumscriptionAlgorithm::evaluateVariableIntroductionNode(const Exten
 
 TupleSet *CircumscriptionAlgorithm::evaluateVariableRemovalNode(const ExtendedHypertree *node)
 {
-	TupleSet *base = evaluateNode(node->firstChild());
+	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
@@ -447,7 +346,7 @@ TupleSet *CircumscriptionAlgorithm::evaluateVariableRemovalNode(const ExtendedHy
 			Solution *orig = result.first->second;
 			ts->erase(result.first);
 			ts->insert(TupleSet::value_type(&cet, 
-				this->instantiator->combine(LazyUnion, orig, it->second)));
+				this->instantiator->combine(Union, orig, it->second)));
 		}
 	}
 
@@ -462,7 +361,7 @@ TupleSet *CircumscriptionAlgorithm::evaluateVariableRemovalNode(const ExtendedHy
 
 TupleSet *CircumscriptionAlgorithm::evaluateRuleIntroductionNode(const ExtendedHypertree *node)
 {
-	TupleSet *base = evaluateNode(node->firstChild());
+	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
@@ -501,7 +400,7 @@ TupleSet *CircumscriptionAlgorithm::evaluateRuleIntroductionNode(const ExtendedH
 			Solution *orig = result.first->second;
 			ts->erase(result.first);
 			ts->insert(TupleSet::value_type(&cet, 
-				this->instantiator->combine(LazyUnion, orig, it->second)));
+				this->instantiator->combine(Union, orig, it->second)));
 		}
 	}
 
@@ -516,7 +415,7 @@ TupleSet *CircumscriptionAlgorithm::evaluateRuleIntroductionNode(const ExtendedH
 
 TupleSet *CircumscriptionAlgorithm::evaluateRuleRemovalNode(const ExtendedHypertree *node)
 {
-	TupleSet *base = evaluateNode(node->firstChild());
+	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
@@ -558,7 +457,7 @@ TupleSet *CircumscriptionAlgorithm::evaluateRuleRemovalNode(const ExtendedHypert
 			Solution *orig = result.first->second;
 			ts->erase(result.first);
 			ts->insert(TupleSet::value_type(&cet, 
-				this->instantiator->combine(LazyUnion, orig, it->second)));
+				this->instantiator->combine(Union, orig, it->second)));
 		}
 	}
 

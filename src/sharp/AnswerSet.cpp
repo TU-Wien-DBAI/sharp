@@ -5,21 +5,6 @@
 using namespace std;
 
 #if defined(VERBOSE) && defined(DEBUG)
-static void printSolution(Solution *solution)
-{
-	AnswerSetEnumSolutionContent *s = 
-		(AnswerSetEnumSolutionContent *)solution->getContent();
-
-	cout << "[";	
-	for(set<set<Variable> >::iterator it = s->enumerations.begin(); 
-		it != s->enumerations.end(); ++it)
-        {
-                cout << "["; printIntSet(*it);
-                cout << "]";
-        }
-	cout << "]";
-}
-
 static void printTuples(TupleSet *svals, const ExtendedHypertree *node)
 {
         cout << "SVALS: " << svals->size() << " for node " << node << endl;
@@ -35,89 +20,10 @@ static void printTuples(TupleSet *svals, const ExtendedHypertree *node)
 			cout << "<|>"; printIntSet(i->second); 
 			cout << "<]";
 		}
-		cout << ", sol: ";
-		printSolution(it->second);
 		cout << endl;
         }
 }
 #endif
-
-AnswerSetEnumSolutionContent::AnswerSetEnumSolutionContent() { }
-
-AnswerSetEnumSolutionContent::AnswerSetEnumSolutionContent(const set<Variable> &partition) 
-{
-	this->enumerations.insert(partition);
-}
-
-AnswerSetEnumSolutionContent::~AnswerSetEnumSolutionContent() { }
-
-LazyAnswerSetEnumSolution::LazyAnswerSetEnumSolution
-	(Operation operation, Solution *left, Solution *right)
-	: LazySolution(operation, left, right)
-{ }
-
-LazyAnswerSetEnumSolution::LazyAnswerSetEnumSolution
-	(Solution *child, int difference)
-	: LazySolution(child, difference)
-{ }
-
-LazyAnswerSetEnumSolution::~LazyAnswerSetEnumSolution() 
-{
-}
-
-void LazyAnswerSetEnumSolution::calculateUnion()
-{
-	AnswerSetEnumSolutionContent 
-		*left = (AnswerSetEnumSolutionContent *)leftArgument->getContent(),
-		*right = (AnswerSetEnumSolutionContent *)rightArgument->getContent(),
-		*calc = new AnswerSetEnumSolutionContent();
-	
-	this->content = calc;
-
-	//FIXME: use swap instead of copying...
-	calc->enumerations = left->enumerations;
-	calc->enumerations.insert(right->enumerations.begin(), right->enumerations.end());
-}
-
-void LazyAnswerSetEnumSolution::calculateCrossJoin()
-{
-	AnswerSetEnumSolutionContent 
-		*left = (AnswerSetEnumSolutionContent *)leftArgument->getContent(),
-		*right = (AnswerSetEnumSolutionContent *)rightArgument->getContent(),
-		*calc = new AnswerSetEnumSolutionContent();
-	
-	this->content = calc;
-			
-	for(set<set<Variable> >::iterator i = left->enumerations.begin(); 
-		i != left->enumerations.end(); ++i)
-	{
-		for(set<set<Variable> >::iterator j = right->enumerations.begin(); 
-			j != right->enumerations.end(); ++j)
-		{
-			set<Variable> sol = *i;
-			sol.insert(j->begin(), j->end());
-			calc->enumerations.insert(sol);
-		}
-	}
-}
-
-void LazyAnswerSetEnumSolution::calculateAddDifference()
-{
-	AnswerSetEnumSolutionContent 
-		*child = (AnswerSetEnumSolutionContent *)leftArgument->getContent(),
-		*calc = new AnswerSetEnumSolutionContent();
-	
-	this->content = calc;
-
-	for(set<set<Variable> >::iterator i = child->enumerations.begin(); 
-		i != child->enumerations.end(); ++i)
-	{ 
-		//FIXME: use swap instead of copying...
-		set<Variable> sol = *i;
-		sol.insert(this->difference); 
-		calc->enumerations.insert(sol);
-	}
-}
 
 AnswerSetTuple::AnswerSetTuple() { }
 
@@ -147,32 +53,6 @@ int AnswerSetTuple::hash() const
 {
 	//TODO
 	return -1;
-}
-
-AnswerSetEnumInstantiator::AnswerSetEnumInstantiator() { }
-
-AnswerSetEnumInstantiator::~AnswerSetEnumInstantiator() { }
-
-Solution *AnswerSetEnumInstantiator::createEmptySolution() const
-{
-	return new Solution(new AnswerSetEnumSolutionContent());
-}
-
-Solution *AnswerSetEnumInstantiator::createLeafSolution(const set<Variable> &partition) const
-{
-	return new Solution(new AnswerSetEnumSolutionContent(partition));
-}
-
-Solution *AnswerSetEnumInstantiator::combine(Operation operation, 
-	Solution *left, Solution *right) const
-{
-	return new LazyAnswerSetEnumSolution(operation, left, right);
-}
-
-Solution *AnswerSetEnumInstantiator::addDifference(Solution *child, 
-	int difference) const
-{
-	return new LazyAnswerSetEnumSolution(child, difference);
 }
 
 AnswerSetAlgorithm::AnswerSetAlgorithm
@@ -211,7 +91,7 @@ Solution *AnswerSetAlgorithm::selectSolution(TupleSet *tuples)
 			}
 		}
 
-		if(!filter) s = this->instantiator->combine(LazyUnion, s, it->second);
+		if(!filter) s = this->instantiator->combine(Union, s, it->second);
 	}
 
 	return s;
@@ -263,8 +143,8 @@ TupleSet *AnswerSetAlgorithm::evaluateLeafNode(const ExtendedHypertree *node)
 
 TupleSet *AnswerSetAlgorithm::evaluateBranchNode(const ExtendedHypertree *node)
 {
-	TupleSet *left = evaluateNode(node->firstChild()), 
-		*right = evaluateNode(node->secondChild());
+	TupleSet *left = this->evaluateNode(node->firstChild()), 
+		*right = this->evaluateNode(node->secondChild());
 	TupleSet *ts = new TupleSet();
 	equal_to<set<Variable> > eq;
 
@@ -314,7 +194,7 @@ TupleSet *AnswerSetAlgorithm::evaluateBranchNode(const ExtendedHypertree *node)
 			ast.rules = l.rules;
 			ast.rules.insert(r.rules.begin(), r.rules.end());
 
-			Solution *s = this->instantiator->combine(LazyCrossJoin, 
+			Solution *s = this->instantiator->combine(CrossJoin, 
 								  lit->second, 
 								  rit->second);
 
@@ -326,7 +206,7 @@ TupleSet *AnswerSetAlgorithm::evaluateBranchNode(const ExtendedHypertree *node)
 				Solution *orig = result.first->second;
 				ts->erase(result.first);
 				ts->insert(TupleSet::value_type(&ast, 
-					this->instantiator->combine(LazyUnion, orig, s)));
+					this->instantiator->combine(Union, orig, s)));
 			}
 		}
 	}
@@ -343,7 +223,7 @@ TupleSet *AnswerSetAlgorithm::evaluateBranchNode(const ExtendedHypertree *node)
 
 TupleSet *AnswerSetAlgorithm::evaluateVariableIntroductionNode(const ExtendedHypertree *node)
 {
-	TupleSet *base = evaluateNode(node->firstChild());
+	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
 	set<Variable> var; var.insert(node->getDifference());
@@ -401,7 +281,7 @@ TupleSet *AnswerSetAlgorithm::evaluateVariableIntroductionNode(const ExtendedHyp
 			Solution *orig = result.first->second;
 			ts->erase(result.first);
 			ts->insert(TupleSet::value_type(&astf, 
-				this->instantiator->combine(LazyUnion, orig, it->second)));
+				this->instantiator->combine(Union, orig, it->second)));
 		}
 
 		Solution *s = this->instantiator->addDifference(it->second, node->getDifference());		
@@ -413,7 +293,7 @@ TupleSet *AnswerSetAlgorithm::evaluateVariableIntroductionNode(const ExtendedHyp
 			Solution *orig = result.first->second;
 			ts->erase(result.first);
 			ts->insert(TupleSet::value_type(&astt, 
-				this->instantiator->combine(LazyUnion, orig, it->second)));
+				this->instantiator->combine(Union, orig, it->second)));
 		}
 	}
 
@@ -428,7 +308,7 @@ TupleSet *AnswerSetAlgorithm::evaluateVariableIntroductionNode(const ExtendedHyp
 
 TupleSet *AnswerSetAlgorithm::evaluateVariableRemovalNode(const ExtendedHypertree *node)
 {
-	TupleSet *base = evaluateNode(node->firstChild());
+	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
@@ -463,7 +343,7 @@ TupleSet *AnswerSetAlgorithm::evaluateVariableRemovalNode(const ExtendedHypertre
 			Solution *orig = result.first->second;
 			ts->erase(result.first);
 			ts->insert(TupleSet::value_type(&ast, 
-				this->instantiator->combine(LazyUnion, orig, it->second)));
+				this->instantiator->combine(Union, orig, it->second)));
 		}
 	}
 
@@ -478,7 +358,7 @@ TupleSet *AnswerSetAlgorithm::evaluateVariableRemovalNode(const ExtendedHypertre
 
 TupleSet *AnswerSetAlgorithm::evaluateRuleIntroductionNode(const ExtendedHypertree *node)
 {
-	TupleSet *base = evaluateNode(node->firstChild());
+	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
@@ -519,7 +399,7 @@ TupleSet *AnswerSetAlgorithm::evaluateRuleIntroductionNode(const ExtendedHypertr
 			Solution *orig = result.first->second;
 			ts->erase(result.first);
 			ts->insert(TupleSet::value_type(&ast, 
-				this->instantiator->combine(LazyUnion, orig, it->second)));
+				this->instantiator->combine(Union, orig, it->second)));
 		}
 	}
 
@@ -534,7 +414,7 @@ TupleSet *AnswerSetAlgorithm::evaluateRuleIntroductionNode(const ExtendedHypertr
 
 TupleSet *AnswerSetAlgorithm::evaluateRuleRemovalNode(const ExtendedHypertree *node)
 {
-	TupleSet *base = evaluateNode(node->firstChild());
+	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
@@ -576,7 +456,7 @@ TupleSet *AnswerSetAlgorithm::evaluateRuleRemovalNode(const ExtendedHypertree *n
 			Solution *orig = result.first->second;
 			ts->erase(result.first);
 			ts->insert(TupleSet::value_type(&ast, 
-				this->instantiator->combine(LazyUnion, orig, it->second)));
+				this->instantiator->combine(Union, orig, it->second)));
 		}
 	}
 

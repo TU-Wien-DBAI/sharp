@@ -3,20 +3,6 @@
 
 #include "AbstractAlgorithm.h"
 
-#include <gmp.h>
-#include <gmpxx.h>
-
-class HeadCycleFreeAnswerSetConsistencySolutionContent : public SolutionContent
-{
-public:
-	HeadCycleFreeAnswerSetConsistencySolutionContent();
-	HeadCycleFreeAnswerSetConsistencySolutionContent(const std::set<Variable> &enumeration);
-	virtual ~HeadCycleFreeAnswerSetConsistencySolutionContent();
-	
-public:
-	bool consistent;
-};
-
 class HeadCycleFreeAnswerSetTuple : public Tuple
 {
 public:
@@ -39,19 +25,6 @@ public:
 	virtual int hash() const;
 };
 
-class HeadCycleFreeAnswerSetConsistencyInstantiator : public Instantiator
-{
-public:
-	HeadCycleFreeAnswerSetConsistencyInstantiator();
-	virtual ~HeadCycleFreeAnswerSetConsistencyInstantiator();
-
-public:
-	virtual Solution *createEmptySolution() const;
-	virtual Solution *createLeafSolution(const std::set<Variable> &partition) const;
-	virtual Solution *combine(Operation operation, Solution *left, Solution *right) const;
-	virtual Solution *addDifference(Solution *child, int difference) const;
-};
-
 class HeadCycleFreeAnswerSetAlgorithm : public AbstractAlgorithm
 {
 public:
@@ -67,7 +40,7 @@ protected:
 	virtual TupleSet *evaluateVariableIntroductionNode(const ExtendedHypertree *node);
 	virtual TupleSet *evaluateVariableRemovalNode(const ExtendedHypertree *node);
 	virtual TupleSet *evaluateRuleIntroductionNode(const ExtendedHypertree *node);
-	virtual TupleSet *evaluateRuleRemovalNode(const ExtendedHypertree *node);	
+	virtual TupleSet *evaluateRuleRemovalNode(const ExtendedHypertree *node);
 };
 
 #endif

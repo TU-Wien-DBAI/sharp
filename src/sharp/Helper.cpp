@@ -308,26 +308,46 @@ OrderCombinations Helper::combineOrder(	const Order &original,
 					bool separatorType)
 {
 	//TODO
-	OrderCombinations leftcomb, rightcomb, combinations;
+	OrderCombinations leftcomb, rightcomb, leftsingle, rightsingle, combinations;
 	Order leftinit, rightinit;
 	OrderTypes lefttypes, righttypes;
 
 	Order::const_iterator oit = original.begin();
 	OrderTypes::const_iterator tit = types.begin();
 
+	set<Rule> lset(left), rset(right);
+
+	bool sepfound = false;
 	if(original.size() > 0)
 	{
-		while(*oit != separator || *tit != separatorType) 
-		{ leftinit.push_back(*oit++); lefttypes.push_back(*tit++); }
-		while(++oit != original.end() && ++tit != types.end()) 
-		{ rightinit.push_back(*oit); righttypes.push_back(*tit); }
+		while(oit != original.end() && !(*oit == separator && *tit == separatorType))
+		{ 
+			leftinit.push_back(*oit++); lefttypes.push_back(*tit++); 
+			if(*tit) { lset.erase(leftinit.back()); rset.erase(leftinit.back()); }
+		}
+
+		if(oit != original.end())
+		{
+			sepfound = true;
+			while(++oit != original.end() && ++tit != types.end()) 
+			{ 
+				rightinit.push_back(*oit); righttypes.push_back(*tit); 
+				if(*tit) { lset.erase(rightinit.back()); rset.erase(rightinit.back()); }
+			}
+		}
 	}
 	
 	leftcomb.push_back(make_pair(leftinit, lefttypes));
 	rightcomb.push_back(make_pair(rightinit, righttypes));
 
+	if(!sepfound)
+	{
+		leftsingle.push_back(make_pair(Order(), OrderTypes()));
+		rightsingle.push_back(make_pair(Order(), OrderTypes()));
+	}
+
 	//left loop
-	for(set<Rule>::const_iterator lit = left.begin(); lit != left.end(); ++lit)
+	for(set<Rule>::const_iterator lit = lset.begin(); lit != lset.end(); ++lit)
 	{
 		OrderCombinations temp;
 		for(OrderCombinations::iterator it = leftcomb.begin(); it != leftcomb.end(); ++it)
@@ -339,7 +359,7 @@ OrderCombinations Helper::combineOrder(	const Order &original,
 	}
 
 	//right loop
-	for(set<Rule>::const_iterator rit = right.begin(); rit != right.end(); ++rit)
+	for(set<Rule>::const_iterator rit = rset.begin(); rit != rset.end(); ++rit)
 	{
 		OrderCombinations temp;
 		for(OrderCombinations::iterator it = rightcomb.begin(); it != rightcomb.end(); ++it)
@@ -350,17 +370,73 @@ OrderCombinations Helper::combineOrder(	const Order &original,
 		rightcomb.swap(temp);
 	}
 
+	//loop again without external variables
+	if(!sepfound)
+	{
+		//left loop
+        	for(set<Rule>::const_iterator lit = lset.begin(); lit != lset.end(); ++lit)
+        	{
+                	OrderCombinations temp;
+                	for(OrderCombinations::iterator it = leftsingle.begin(); it != leftsingle.end(); ++it)
+                	{
+       	        	        OrderCombinations noref = combineOrder(it->first, it->second, *lit, true);
+       	        	        temp.splice(temp.end(), noref);
+       	        	}
+       	        	leftsingle.swap(temp);
+	        }
+	
+	        //right loop
+	        for(set<Rule>::const_iterator rit = rset.begin(); rit != rset.end(); ++rit)
+        	{
+                	OrderCombinations temp;
+                	for(OrderCombinations::iterator it = rightsingle.begin(); it != rightsingle.end(); ++it)
+                	{
+                        	OrderCombinations noref = combineOrder(it->first, it->second, *rit, true);
+                        	temp.splice(temp.end(), noref);
+               		}
+               		rightsingle.swap(temp);
+        	}
+	}
+	
 	//merge loops
-	for(OrderCombinations::iterator lit = leftcomb.begin(); lit != leftcomb.end(); ++lit)
-		for(OrderCombinations::iterator rit = rightcomb.begin(); rit != rightcomb.end(); ++rit)
-		{
-			Order neworder(lit->first); 
-			neworder.insert(neworder.end(), rit->first.begin(), rit->first.end());
-			OrderTypes newtypes(lit->second);
-			newtypes.insert(newtypes.end(), rit->second.begin(), rit->second.end());
+	if(sepfound)
+		for(OrderCombinations::iterator lit = leftcomb.begin(); lit != leftcomb.end(); ++lit)
+			for(OrderCombinations::iterator rit = rightcomb.begin(); rit != rightcomb.end(); ++rit)
+			{
+				Order neworder(lit->first); 
+				neworder.insert(neworder.end(), rit->first.begin(), rit->first.end());
+				OrderTypes newtypes(lit->second);
+				newtypes.insert(newtypes.end(), rit->second.begin(), rit->second.end());
+	
+				combinations.push_back(make_pair(neworder, newtypes));
+			}
+	else
+	{
+		for(OrderCombinations::iterator lit = leftcomb.begin(); lit != leftcomb.end(); ++lit)
+			for(OrderCombinations::iterator rit = rightsingle.begin(); rit != rightsingle.end(); ++rit)
+			{
+				Order neworder(lit->first); 
+				neworder.insert(neworder.end(), rit->first.begin(), rit->first.end());
+				OrderTypes newtypes(lit->second);
+				newtypes.insert(newtypes.end(), rit->second.begin(), rit->second.end());
+	
+				combinations.push_back(make_pair(neworder, newtypes));
+			}
 
-			combinations.push_back(make_pair(neworder, newtypes));
-		}
+		
+		for(OrderCombinations::iterator lit = leftsingle.begin(); lit != leftsingle.end(); ++lit)
+			for(OrderCombinations::iterator rit = rightcomb.begin(); rit != rightcomb.end(); ++rit)
+			{
+				Order neworder(lit->first); 
+				neworder.insert(neworder.end(), rit->first.begin(), rit->first.end());
+				OrderTypes newtypes(lit->second);
+				newtypes.insert(newtypes.end(), rit->second.begin(), rit->second.end());
+	
+				combinations.push_back(make_pair(neworder, newtypes));
+			}
+
+		combinations.unique();
+	}
 
 	return combinations;
 }
@@ -377,6 +453,9 @@ OrderCombinations Helper::combineOrder(	const Order &original,
 
 	do
 	{
+		if(*oit == toInsert && *tit == insertType) 
+			return OrderCombinations(1, make_pair(original, types));
+
 		Order neworder(original.begin(), oit);
 		OrderTypes newtypes(types.begin(), tit);
 

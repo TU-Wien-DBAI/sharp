@@ -31,17 +31,6 @@ static void printTuples(TupleSet *svals, const ExtendedHypertree *node)
 }
 #endif
 
-HeadCycleFreeAnswerSetConsistencySolutionContent
-	::HeadCycleFreeAnswerSetConsistencySolutionContent() { }
-
-HeadCycleFreeAnswerSetConsistencySolutionContent
-	::HeadCycleFreeAnswerSetConsistencySolutionContent(const set<Variable> &partition) 
-{
-}
-
-HeadCycleFreeAnswerSetConsistencySolutionContent
-	::~HeadCycleFreeAnswerSetConsistencySolutionContent() { }
-
 HeadCycleFreeAnswerSetTuple::HeadCycleFreeAnswerSetTuple() { }
 
 HeadCycleFreeAnswerSetTuple::~HeadCycleFreeAnswerSetTuple() { }
@@ -83,34 +72,6 @@ int HeadCycleFreeAnswerSetTuple::hash() const
 	return -1;
 }
 
-HeadCycleFreeAnswerSetConsistencyInstantiator
-	::HeadCycleFreeAnswerSetConsistencyInstantiator() { }
-
-HeadCycleFreeAnswerSetConsistencyInstantiator
-	::~HeadCycleFreeAnswerSetConsistencyInstantiator() { }
-
-Solution *HeadCycleFreeAnswerSetConsistencyInstantiator::createEmptySolution() const
-{
-	return new Solution(new HeadCycleFreeAnswerSetConsistencySolutionContent());
-}
-
-Solution *HeadCycleFreeAnswerSetConsistencyInstantiator::createLeafSolution(const set<Variable> &partition) const
-{
-	return NULL;
-}
-
-Solution *HeadCycleFreeAnswerSetConsistencyInstantiator::combine(Operation operation, 
-	Solution *left, Solution *right) const
-{
-	return NULL;
-}
-
-Solution *HeadCycleFreeAnswerSetConsistencyInstantiator::addDifference(Solution *child, 
-	int difference) const
-{
-	return NULL;
-}
-
 HeadCycleFreeAnswerSetAlgorithm::HeadCycleFreeAnswerSetAlgorithm
 	(const Instantiator *instantiator, const ExtendedHypertree *root, 
 		const SignMap &signMap, const HeadMap &headMap, const NameMap &nameMap)
@@ -126,7 +87,7 @@ Solution *HeadCycleFreeAnswerSetAlgorithm::selectSolution(TupleSet *tuples)
 
 	//TODO
 
-/*	equal_to<set<int> > eq;
+	equal_to<set<int> > eq;
 	set<Rule> rules = this->root->getRules();
 
 	for(TupleSet::iterator it = tuples->begin(); it != tuples->end(); ++it)
@@ -136,22 +97,14 @@ Solution *HeadCycleFreeAnswerSetAlgorithm::selectSolution(TupleSet *tuples)
 		if(!eq(rules, x.rules)) continue;
 
 		bool filter = false;
-		for(set<Atom>::iterator git = x.guards.begin(); 
+		for(map<Variable, set<Rule> >::iterator git = x.guards.begin(); 
 			!filter && git != x.guards.end(); ++git)
 		{
-			if(git->second.size() >= rules.size()) { filter = true; continue; }
-			
-			set<Rule>::iterator rit = rules.begin();
-			for(set<Rule>::iterator rgit = git->second.begin(); 
-				!filter && rgit != git->second.end(); ++rgit)
-			{
-				while(rit != rules.end() && *rit < *rgit) ++rit;
-				if(rit == rules.end() || *rit != *rgit) filter = true;
-			}
+			if(git->second.size() == 0) filter = true;
 		}
 
-		if(!filter) s = this->instantiator->combine(LazyUnion, s, it->second);
-	}*/
+		if(!filter) s = this->instantiator->combine(Union, s, it->second);
+	}
 
 	return s;
 
@@ -216,8 +169,8 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateLeafNode(const ExtendedHypert
 
 TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateBranchNode(const ExtendedHypertree *node)
 {
-	TupleSet *left = evaluateNode(node->firstChild()), 
-		*right = evaluateNode(node->secondChild());
+	TupleSet *left = this->evaluateNode(node->firstChild()), 
+		*right = this->evaluateNode(node->secondChild());
 	TupleSet *ts = new TupleSet();
 	equal_to<set<Variable> > eq;
 
@@ -306,7 +259,7 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateBranchNode(const ExtendedHype
 	
 				if(insert)
 				{
-					Solution *s = this->instantiator->combine(LazyCrossJoin, 
+					Solution *s = this->instantiator->combine(CrossJoin, 
 										  lit->second, 
 										  rit->second);
 		
@@ -318,7 +271,7 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateBranchNode(const ExtendedHype
 						Solution *orig = result.first->second;
 						ts->erase(result.first);
 						ts->insert(TupleSet::value_type(&ast, 
-							this->instantiator->combine(LazyUnion, 
+							this->instantiator->combine(Union, 
 								orig, s)));
 					}
 				}
@@ -338,7 +291,7 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateBranchNode(const ExtendedHype
 
 TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateVariableIntroductionNode(const ExtendedHypertree *node)
 {
-	TupleSet *base = evaluateNode(node->firstChild());
+	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
 	set<Variable> var; var.insert(node->getDifference());
@@ -404,7 +357,7 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateVariableIntroductionNode(cons
 				Solution *orig = result.first->second;
 				ts->erase(result.first);
 				ts->insert(TupleSet::value_type(&astf, 
-					this->instantiator->combine(LazyUnion, orig, it->second)));
+					this->instantiator->combine(Union, orig, it->second)));
 			}
 		}
 
@@ -482,7 +435,7 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateVariableIntroductionNode(cons
 					Solution *orig = result.first->second;
 					ts->erase(result.first);
 					ts->insert(TupleSet::value_type(&astt, 
-						this->instantiator->combine(LazyUnion, 
+						this->instantiator->combine(Union, 
 							orig, it->second)));
 				}
 			}			
@@ -500,7 +453,7 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateVariableIntroductionNode(cons
 
 TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateVariableRemovalNode(const ExtendedHypertree *node)
 {
-	TupleSet *base = evaluateNode(node->firstChild());
+	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
@@ -561,7 +514,7 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateVariableRemovalNode(const Ext
 				Solution *orig = result.first->second;
 				ts->erase(result.first);
 				ts->insert(TupleSet::value_type(&ast, 
-					this->instantiator->combine(LazyUnion, orig, it->second)));
+					this->instantiator->combine(Union, orig, it->second)));
 			}
 		}
 	}
@@ -577,7 +530,7 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateVariableRemovalNode(const Ext
 
 TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateRuleIntroductionNode(const ExtendedHypertree *node)
 {
-	TupleSet *base = evaluateNode(node->firstChild());
+	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
@@ -626,7 +579,7 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateRuleIntroductionNode(const Ex
 			Solution *orig = result.first->second;
 			ts->erase(result.first);
 			ts->insert(TupleSet::value_type(&ast, 
-				this->instantiator->combine(LazyUnion, orig, it->second)));
+				this->instantiator->combine(Union, orig, it->second)));
 		}
 	}
 
@@ -641,7 +594,7 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateRuleIntroductionNode(const Ex
 
 TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateRuleRemovalNode(const ExtendedHypertree *node)
 {
-	TupleSet *base = evaluateNode(node->firstChild());
+	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
@@ -702,7 +655,7 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateRuleRemovalNode(const Extende
 			Solution *orig = result.first->second;
 			ts->erase(result.first);
 			ts->insert(TupleSet::value_type(&ast, 
-				this->instantiator->combine(LazyUnion, orig, it->second)));
+				this->instantiator->combine(Union, orig, it->second)));
 		}
 	}
 

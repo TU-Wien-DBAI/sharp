@@ -42,7 +42,7 @@ enum OutputType
 static void usage();
 static Hypertree *decompose(Hypergraph *);
 static void printTime(pair<double, double>);
-static void printSolution(SolutionContent *, Algorithm, OutputType, NameMap &);
+static void printSolution(SolutionContent *, OutputType, NameMap &);
 
 #ifdef DEBUG
 static void print(ExtendedHypertree *);
@@ -132,62 +132,20 @@ int main(int argc, char **argv)
 
 	Hypertree *ht;
 	ExtendedHypertree *eht;
-	AbstractHypergraph *hg;
 	Instantiator *inst;
+	AbstractHypergraph *hg;
 	AbstractAlgorithm *alg;
 
-	if(algorithm == SAT)
-	{
-		PrintError("The SAT algorithm is currently not implemented!");
-	}
-	else if(algorithm == MinSAT)
-	{
-		if(output == Enumeration)
-		{
-			inst = new CircumscriptionEnumInstantiator();
-			hg = new DIMACSHypergraph(stream);
-		}
-		else if(output == Counting)
-		{
-			PrintError("Counting for the MinSAT algorithm is currently not implemented!");
-		}
-		else if(output == Consistency)
-		{
-			PrintError("Consistency evaluation for the MinSAT algorithm is currently not implemented!");
-		}
-	}
-	else if(algorithm == ASP)
-	{
-		if(output == Enumeration)
-		{
-			inst = new AnswerSetEnumInstantiator();
-			hg = new DatalogHypergraph(stream);
-		}
-		else if(output == Counting)
-		{
-			PrintError("Counting for the AnswerSet algorithm is currently not implemented!");
-		}
-		else if(output == Consistency)
-		{
-			PrintError("Consistency evaluation for the AnswerSet algorithm is currently not implemented!");
-		}
-	}
-	else if(algorithm == HCFASP)
-	{
-		if(output == Consistency)
-		{
-			inst = new HeadCycleFreeAnswerSetConsistencyInstantiator();
-			hg = new DatalogHypergraph(stream);
-		}
-		else if(output == Counting)
-		{
-			PrintError("Counting for the HeadCycleFreeAnswerSet algorithm is currently not implemented!");
-		}
-		else if(output == Enumeration)
-		{
-			PrintError("Enumeration for the HeadCycleFreeAnswerSet algorithm is currently not implemented!");
-		}
-	}
+	if(algorithm == SAT) hg = new DIMACSHypergraph(stream);
+	else if(algorithm == MinSAT) hg = new DIMACSHypergraph(stream);
+	else if(algorithm == ASP) hg = new DatalogHypergraph(stream);
+	else if(algorithm == HCFASP) hg = new DatalogHypergraph(stream);
+
+	if(output == Consistency) inst = new GenericInstantiator<ConsistencySolution>(false);
+	else if(output == Counting) inst = new GenericInstantiator<CountingSolution>(false);
+	else if(output == Enumeration) inst = new GenericInstantiator<EnumerationSolution>(true);
+
+	if(bOpt) { cout << "Using seed: " << seed << endl; }
 
 	if(bOpt) { cout << "Parsing input and building Hypergraph..." << flush; t.start(); }
 
@@ -217,6 +175,7 @@ int main(int argc, char **argv)
 	switch(algorithm)
 	{
 	case SAT:
+		PrintError("The SAT algorithm is currently not implemented!");
 		break;
 	case MinSAT:
 		alg = new CircumscriptionAlgorithm(inst, eht, hg->getSignMap(), hg->getHeadMap(), hg->getNameMap());
@@ -244,7 +203,7 @@ int main(int argc, char **argv)
 
 	if(bOpt) { cout << "done! (took "; printTime(t.stop()); cout << " seconds)" << endl; }
 
-	printSolution(sc, algorithm, output, alg->getNameMap());
+	printSolution(sc, output, alg->getNameMap());
 
 	delete sc;
 	delete alg;
@@ -306,27 +265,39 @@ static Hypertree *decompose(Hypergraph *hg)
         return ht;
 }
 
-static void printSolution(SolutionContent *sc, Algorithm algorithm, OutputType output, NameMap &nameMap)
+static void printSolution(SolutionContent *sc, OutputType output, NameMap &nameMap)
 {
-	//TODO: implement correctly for all algorithm/output variation
-	AnswerSetEnumSolutionContent *sol = (AnswerSetEnumSolutionContent *)sc;
-
-	cout << "Solutions: " << sol->enumerations.size() << endl;
-	cout << "{";
-	string osep = "";
-	for(set<set<int> >::iterator oit = sol->enumerations.begin(); oit != sol->enumerations.end(); ++oit)
+	if(output == Enumeration)
 	{
-		cout << osep << "{";
-		string isep = "";
-		for(set<int>::iterator iit = oit->begin(); iit != oit->end(); ++iit)
+		EnumerationSolutionContent *sol = (EnumerationSolutionContent *)sc;
+	
+		cout << "Solutions: " << sol->enumerations.size() << endl;
+		cout << "{";
+		string osep = "";
+		for(set<set<int> >::iterator oit = sol->enumerations.begin(); oit != sol->enumerations.end(); ++oit)
 		{
-			cout << isep << nameMap[*iit];
-			isep = ",";
+			cout << osep << "{";
+			string isep = "";
+			for(set<int>::iterator iit = oit->begin(); iit != oit->end(); ++iit)
+			{
+				cout << isep << nameMap[*iit];
+				isep = ",";
+			}
+			cout << "}" << flush;
+			osep = ",";
 		}
-		cout << "}" << flush;
-		osep = ",";
+		cout << "}" << endl;
 	}
-	cout << "}" << endl;
+	else if(output == Counting)
+	{
+		CountingSolutionContent *sol = (CountingSolutionContent *)sc;
+		cout << "Solutions: " << sol->count << endl;
+	}
+	else if(output == Consistency)
+	{
+		ConsistencySolutionContent *sol = (ConsistencySolutionContent *)sc;
+		cout << (sol->consistent ? "" : "NOT ") << "CONSISTENT" << endl;
+	}
 }
 
 static void printTime(pair<double, double> time)
