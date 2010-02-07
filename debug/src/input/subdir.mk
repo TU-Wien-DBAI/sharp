@@ -26,23 +26,22 @@ CPP_DEPS += \
 ./src/input/DIMACSLexer.d \
 ./src/input/DIMACSHypergraph.d
 
-../src/input/%Parser.h: ../src/input/%Parser.cpp
+../src/input/%Lexer.cpp: ../src/input/%Lexer.l ../src/input/%Parser.cpp
+	@echo 'Building file: $<'
+	@echo 'Invoking: Flex++ Lexical Analyzer'
+	flex++ -d -o"$(@:%.cpp=%.ll)" "$<"
+	@echo 'Renaming lexer class in file: $(@:%.cpp=%.ll)'
+	@echo 'Invoking: sed - stream editor'
+	sed 's/yyFlexLexer/$*FlexLexer/g' "$(@:%.cpp=%.ll)" | sed 's/define $*FlexLexer/define yyFlexLexer/g' > "$@"
+	$(RM) $(@:%.cpp=%.ll)
+	@echo 'Finished renaming lexer class in file: $(@:%.cpp=%.ll)'
+	@echo 'Finished building: $<'
+	@echo ' '
 
 ../src/input/%Parser.cpp: ../src/input/%Parser.y
 	@echo 'Building file: $<'
 	@echo 'Invoking: Bison++ Parser Generator'
 	bison++ -d -h"$(@:%.cpp=%.h)" -o"$@" "$<"
-	@echo 'Finished building: $<'
-	@echo ' '
-
-../src/input/%Lexer.cpp: ../src/input/%Lexer.l ../src/input/%Parser.h
-	@echo 'Building file: $<'
-	@echo 'Invoking: Flex++ Lexical Analyzer'
-	flex++ -d -o"$(@:%.cpp=%.yy)" "$<"
-	@echo 'Renaming lexer class in file: $(@:%.cpp=%.yy)'
-	@echo 'Invoking: sed - stream editor'
-	sed 's/yyFlexLexer/$*FlexLexer/g' "$(@:%.cpp=%.yy)" | sed 's/define $*FlexLexer/define yyFlexLexer/g' > "$@"
-	@echo 'Finished renaming lexer class in file: $(@:%.cpp=%.yy)'
 	@echo 'Finished building: $<'
 	@echo ' '
 

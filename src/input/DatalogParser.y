@@ -59,7 +59,8 @@ rules		: rule					{ }
 		;
 
 rule		: head ENTAILS body END			{ ++this->currentRule; }
-		| body END				{ ++this->currentRule; }
+		| ENTAILS body END			{ ++this->currentRule; }
+		| head END				{ ++this->currentRule; }
 		;
 
 head		: ATOM OR head				{ this->addVariable(this->currentRule, $1, false, true); }

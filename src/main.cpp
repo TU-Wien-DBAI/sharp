@@ -47,6 +47,7 @@ static void printSolution(SolutionContent *, OutputType, NameMap &);
 #ifdef DEBUG
 static void print(ExtendedHypertree *);
 static void printSignMap(SignMap &);
+static void printNameMap(NameMap &);
 #endif
 
 int main(int argc, char **argv)
@@ -130,11 +131,11 @@ int main(int argc, char **argv)
 
 	/* Algorithm Selection */
 
-	Hypertree *ht;
-	ExtendedHypertree *eht;
-	Instantiator *inst;
-	AbstractHypergraph *hg;
-	AbstractAlgorithm *alg;
+	Hypertree *ht = NULL;
+	ExtendedHypertree *eht = NULL;
+	Instantiator *inst = NULL;
+	AbstractHypergraph *hg = NULL;
+	AbstractAlgorithm *alg = NULL;
 
 	if(algorithm == SAT) hg = new DIMACSHypergraph(stream);
 	else if(algorithm == MinSAT) hg = new DIMACSHypergraph(stream);
@@ -170,6 +171,7 @@ int main(int argc, char **argv)
 #ifdef DEBUG
 	print(eht);
 	printSignMap(hg->getSignMap());
+	printNameMap(hg->getNameMap());
 #endif
 
 	switch(algorithm)
@@ -335,6 +337,13 @@ static void printSignMap(SignMap &eht)
                 for(map<int, bool>::iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
                         cout << (sit->second ? "-" : "\0") << sit->first << ", "; cout << "END" << endl;
         }
+}
+
+static void printNameMap(NameMap &eht)
+{
+	for(unsigned int i = 0; i < eht.size(); ++i)
+		cout << "|" << i << "->" << eht[i];
+	cout << endl;
 }
 #endif
 

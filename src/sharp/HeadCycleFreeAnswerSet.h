@@ -41,6 +41,50 @@ protected:
 	virtual TupleSet *evaluateVariableRemovalNode(const ExtendedHypertree *node);
 	virtual TupleSet *evaluateRuleIntroductionNode(const ExtendedHypertree *node);
 	virtual TupleSet *evaluateRuleRemovalNode(const ExtendedHypertree *node);
+
+public:
+	static std::set<Rule> trueRules(const std::set<Variable> &positives,
+					const std::set<Variable> &all,
+					const std::set<Rule> &rules,
+					Variable variable,
+					const Order &order,
+					const OrderTypes &ordertypes,
+					const SignMap &signs,
+					const HeadMap &heads);
+
+	static std::set<Rule> trueRules(const std::set<Variable> &positives,
+					const std::set<Variable> &all,
+					const std::set<Rule> &rules,
+					const Order &order,
+					const OrderTypes &ordertypes,
+					const SignMap &signs,
+					const HeadMap &heads);
+
+	static bool trueRule(	const std::set<Variable> &positives,
+				const std::set<Variable> &all,
+				Rule rule,
+				Variable variable,
+				const Order &order,
+				const OrderTypes &ordertypes,
+				const SignMap &signs,
+				const HeadMap &heads);
+
+	static OrderCombinations combineOrder(	const Order &original,
+						const OrderTypes &types,
+						const std::set<Rule> &left,
+						const std::set<Rule> &right,
+						int separator,
+						bool separatorType);
+
+	static OrderCombinations combineOrder(	const Order &original,
+						const OrderTypes &types,
+						int toInsert,
+						bool insertType);
+
+	static OrderCombinations combineOrder(	const Order &left,
+						const OrderTypes &lefttypes,
+						const Order &right,
+						const OrderTypes &righttypes);
 };
 
 #endif

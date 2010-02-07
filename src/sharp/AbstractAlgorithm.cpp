@@ -106,7 +106,7 @@ SolutionContent *Solution::getContent()
 	return this->content;
 }
 
-inline void Solution::forceCalculation()
+void Solution::forceCalculation()
 {
 	switch(this->operation)
 	{

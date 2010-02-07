@@ -567,7 +567,7 @@ Comments:
 Hypertree *H_BucketElim::buildHypertree(Hypergraph *HGraph, Node **VarOrder, bool bDual)
 {
 	int iNbrOfBuckets, i;
-	Hypertree *HTree, *HTreeD;
+	Hypertree *HTree = NULL, *HTreeD = NULL;
 	CompSet **Buckets;
 
 	iNbrOfBuckets = HGraph->getNbrOfNodes();
@@ -654,7 +654,7 @@ Comments:
 Hypertree *H_BucketElim::buildHypertree(Hypergraph *HGraph, int iHeuristic, bool bDual)
 {
 	Hypertree *HTree;
-	Node **VarOrder;
+	Node **VarOrder = NULL;
 
 	if(bDual)
 		HGraph->makeDual();
