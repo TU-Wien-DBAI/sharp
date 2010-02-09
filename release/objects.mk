@@ -1,3 +1,3 @@
 USER_OBJS :=
 
-LIBS := -lgmp -lgmpxx
+LIBS := -lgmpxx -lgmp

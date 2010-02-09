@@ -10,7 +10,9 @@
 #include "Global.h"
 
 #include "input/DIMACSHypergraph.h"
+#define YY_DatalogParser_LTYPE yyltype /* otherwise double definition */ 
 #include "input/DatalogHypergraph.h"
+
 #include "sharp/ExtendedHypertree.h"
 #include "sharp/Circumscription.h"
 #include "sharp/AnswerSet.h"

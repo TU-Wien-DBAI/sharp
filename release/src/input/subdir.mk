@@ -29,7 +29,7 @@ CPP_DEPS += \
 ../src/input/%Lexer.cpp: ../src/input/%Lexer.l ../src/input/%Parser.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: Flex++ Lexical Analyzer'
-	flex++ -d -o"$(@:%.cpp=%.ll)" "$<"
+	flex -+ -d -o"$(@:%.cpp=%.ll)" "$<"
 	@echo 'Renaming lexer class in file: $(@:%.cpp=%.ll)'
 	@echo 'Invoking: sed - stream editor'
 	sed 's/yyFlexLexer/$*FlexLexer/g' "$(@:%.cpp=%.ll)" | sed 's/define $*FlexLexer/define yyFlexLexer/g' > "$@"
@@ -48,7 +48,7 @@ CPP_DEPS += \
 src/input/%.o: ../src/input/%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -O3 -Wall -c -ansi -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
+	g++ -O3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
