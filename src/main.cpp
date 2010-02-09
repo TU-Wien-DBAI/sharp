@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 
 	int arg, argCount = 1;
 	char *sEnd = NULL;
-	bool sOpt = false, fOpt = false;
+	bool sOpt = false, fOpt = false, tOpt = false;
 	unsigned int seed = (unsigned int)time(NULL);
 	Algorithm algorithm = NoAlg;
 	OutputType output = NoType;
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
 
 	if(argc < 5) usage();
 
-	while((arg = getopt(argc, argv, "a:bs:o:f:")) != EOF)
+	while((arg = getopt(argc, argv, "a:bs:o:f:t")) != EOF)
 	{
 		++argCount;
 		switch(arg)
@@ -88,6 +88,10 @@ int main(int argc, char **argv)
 			if(*sEnd) usage();
 			sOpt = true;
 			++argCount;
+			break;
+		case 't':
+			if(tOpt) usage();
+			tOpt = true;
 			break;
 		case 'o':
 			if(output || !optarg) usage();
@@ -111,7 +115,7 @@ int main(int argc, char **argv)
 			usage();
 			break;
 		default:
-			CNULL(NULL);
+			C0(0);
 			break;
 		}
 	}
@@ -159,7 +163,7 @@ int main(int argc, char **argv)
 
 	ht = decompose(hg);
 
-	if(bOpt) { cout << "done! (took "; printTime(t.stop()); cout << " seconds)" << endl; }
+	if(bOpt) { cout << "done! (hypertree width: " << ht->getHTreeWidth() << " - took "; printTime(t.stop()); cout << " seconds)" << endl; }
 
 	if(bOpt) { cout << "Normalizing hypergraph... " << flush; t.start(); }
 
@@ -167,6 +171,8 @@ int main(int argc, char **argv)
 	eht->normalize();
 
 	if(bOpt) { cout << "done! (took "; printTime(t.stop()); cout << " seconds)" << endl; }
+
+	if(tOpt) { exit(EXIT_SUCCESS); }
 
 #ifdef DEBUG
 	print(eht);
@@ -195,11 +201,11 @@ int main(int argc, char **argv)
 
 	delete hg;
 
-	if(bOpt) { cout << "Evaluating formula... " << endl; t.start(); }
+	if(bOpt) { cout << "Calculating formula... " << endl; t.start(); }
 
 	Solution *temp = alg->evaluate();
 
-	if(bOpt) { cout << "\tEvaluation took " << flush; printTime(t.stop()); cout << " seconds..." << flush; }
+	if(bOpt) { cout << "\ttree-evaluation took " << flush; printTime(t.stop()); cout << " seconds..." << endl; }
 	
 	SolutionContent *sc = temp->getContent();
 
@@ -210,7 +216,6 @@ int main(int argc, char **argv)
 	delete sc;
 	delete alg;
 
-
 	exit(EXIT_SUCCESS);
 }
 
@@ -218,8 +223,9 @@ static void usage()
 {
 	cout 	<< "Usage: " 
 		<< sProgramName 
-		<< " [-b] [-s <seed>] [-f <file>] -a <alg> -o <output>" << endl 
+		<< " [-b] [-t] [-s <seed>] [-f <file>] -a <alg> -o <output>" << endl 
 		<< "\t-b\t\tprint benchmark information" << endl
+		<< "\t-t\t\tperform only hypertree decomposition step" << endl
 		<< "\t-s seed\t\tinitialize random number generator with <seed>." << endl
 		<< "\t-f file\t\tthe file to read from" << endl
 		<< "\t-a alg\t\talgorithm, one of {sat, minsat, asp, hcfasp}" << endl

@@ -62,16 +62,16 @@ void InitializeErrorHandling(const char *programName)
 void _printError(int line, const char *file, const char *message)
 {
     if(errno == 0)
-    	cerr << sProgramName << ": " << file << ":" << line << ": " << message << endl;
+    	cerr << sProgramName << ": " << file << ":" << line << ": ERROR - " << message << endl;
     else
-    	cerr << sProgramName << ": " << file << ":" << line << ": " << message << " - " << strerror(errno) << endl;
+    	cerr << sProgramName << ": " << file << ":" << line << ": ERROR - " << message << " - " << strerror(errno) << endl;
 #else
 void _printError(const char *message)
 {
     if(errno == 0)
-    	cerr << sProgramName << ": " << message << endl;
+    	cerr << sProgramName << ": ERROR - " << message << endl;
     else
-    	cerr << sProgramName << ": " << message << " - " << strerror(errno) << endl; 
+    	cerr << sProgramName << ": ERROR - " << message << " - " << strerror(errno) << endl; 
 #endif
     exit(EXIT_FAILURE);
 }

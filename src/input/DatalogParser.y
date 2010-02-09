@@ -20,7 +20,7 @@
 
 %define LEX_BODY { int r = lexer->yylex(); yylval.yytext = strdup(lexer->YYText()); return r; }
 
-%define ERROR_BODY { cerr << "Parser error - line: " << lexer->lineno() << ", at word: " << lexer->YYText() << endl; }
+%define ERROR_BODY { cerr << endl << "Parser error - line: " << lexer->lineno() << ", at word: " << lexer->YYText() << endl; }
 
 %header{
 #include <fstream>
