@@ -393,14 +393,21 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateVariableIntroductionNode(cons
 									this->getHeadMap());
 			}
 
-			astt.guards[node->getDifference()] = trueRules(astt.variables,
-									node->getVariables(),
-									trueP,
-									node->getDifference(),
-									astt.order,
-									astt.ordertypes,
-									this->getSignMap(),
-									this->getHeadMap());
+			set<Rule> diffg, truediffg;
+
+			truediffg =  trueRules(	astt.variables,
+						node->getVariables(),
+						node->getRules(),
+						node->getDifference(),
+						astt.order,
+						astt.ordertypes,
+						this->getSignMap(),
+						this->getHeadMap());
+
+			set_difference(truediffg.begin(), truediffg.end(), x.rules.begin(), x.rules.end(),
+						inserter(diffg, diffg.begin()));
+
+			astt.guards[node->getDifference()] = diffg;
 	
 			for(set<set<Rule> >::iterator git = x.guardsdown.begin();
 				git != x.guardsdown.end();
@@ -466,7 +473,7 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateVariableRemovalNode(const Ext
 			else l2 = git->second;
 		}
 
-		for(set<Rule>::iterator rit = x.rules.begin(); rit != x.rules.end(); ++rit)
+		for(set<Rule>::iterator rit = node->getRules().begin(); rit != node->getRules().end(); ++rit)
 		{
 			map<Variable, bool>::iterator rulesigns;
 			if((rulesigns = this->signMap[*rit].find(node->getDifference())) 
@@ -725,13 +732,22 @@ set<Rule> HeadCycleFreeAnswerSetAlgorithm::trueRules(	const set<Variable> &posit
         set_difference(all.begin(), all.end(), positives.begin(), positives.end(),
                                         inserter(negatives, negatives.begin()));
 
+	cout << "trueRules(" << variable << "): ";
+        cout << "pos: "; printIntSet(positives);
+        cout << ", neg: "; printIntSet(negatives);
+	cout << ", rul: "; printIntSet(rules);
+	cout << ", ord: "; printIntList(order);
+	cout << ", typ: "; printBoolList(ordertypes); cout<<endl;
+
         for(set<Rule>::const_iterator r = rules.begin(); r != rules.end(); ++r)
         {
+		intersect.clear();
+
                 //FIXME danger: linear in the size of the head of the rule... how to??
                 set_intersection(heads[*r].begin(), heads[*r].end(),
                                 positives.begin(), positives.end(),
                                 inserter(intersect, intersect.begin()));
-                bool add = (intersect.size() == 1 && *intersect.begin() == variable);
+                bool add = (intersect.size() == 1 && *intersect.begin() == variable);cout<<"Rule "<< *r << ": "; printIntSet(heads[*r]); cout<<" - "; printIntSet(intersect); cout<<" - "<<add;
 
                 SignMap::const_iterator posneg = signs.find(*r);
 
@@ -741,15 +757,15 @@ set<Rule> HeadCycleFreeAnswerSetAlgorithm::trueRules(	const set<Variable> &posit
                         add && var != positives.end(); ++var)
                 {
                         map<Variable, bool>::const_iterator it = posneg->second.find(*var);
-                        add = it == posneg->second.end() || !it->second;
-                }
+			set<Variable>::const_iterator hit = heads[*r].find(*var);
+                        add = hit != heads[*r].end() || it == posneg->second.end() || it->second;
+                }cout<<add;
                 for(set<Variable>::const_iterator var = negatives.begin();
                         add && var != negatives.end(); ++var)
                 {
                         map<Variable, bool>::const_iterator it = posneg->second.find(*var);
-			set<Variable>::const_iterator hit = heads[*r].find(*var);
-                        add = hit != heads[*r].end() || it == posneg->second.end() || it->second;
-                }
+                        add = it == posneg->second.end() || !it->second;
+                }cout<<add;
 
                 bool seen = false;
                 OrderTypes::const_iterator otit = ordertypes.begin();
@@ -761,10 +777,10 @@ set<Rule> HeadCycleFreeAnswerSetAlgorithm::trueRules(	const set<Variable> &posit
 			else if(!*currtype)
 			{
 				map<Variable, bool>::const_iterator it = posneg->second.find(*oit);
-				add = it == posneg->second.end() || it->second; //FIXME check head?
+				add = it == posneg->second.end() || !it->second;
 			}
 			else if(*oit == *r) { add = false; }
-		}
+		}cout<<add<<endl;
 		
 		if(add) truerules.insert(*r);
 	}
@@ -803,15 +819,15 @@ set<Rule> HeadCycleFreeAnswerSetAlgorithm::trueRules(	const set<Variable> &posit
                 for(set<Variable>::const_iterator var = positives.begin();
                         add && var != positives.end(); ++var)
                 {
-                        map<Variable, bool>::const_iterator it = posneg->second.find(*var);
-                        add = it == posneg->second.end() || it->second;
+			map<Variable, bool>::const_iterator it = posneg->second.find(*var);
+			set<Variable>::const_iterator hit = heads[*r].find(*var);
+                        add = hit != heads[*r].end() || it == posneg->second.end() || it->second;
                 }
                 for(set<Variable>::const_iterator var = negatives.begin();
                         add && var != negatives.end(); ++var)
                 {
                         map<Variable, bool>::const_iterator it = posneg->second.find(*var);
-			set<Variable>::const_iterator hit = heads[*r].find(*var);
-                        add = hit != heads[*r].end() || it == posneg->second.end() || !it->second;
+                        add = it == posneg->second.end() || !it->second;
                 }
 
                 bool seen = false;
@@ -824,7 +840,7 @@ set<Rule> HeadCycleFreeAnswerSetAlgorithm::trueRules(	const set<Variable> &posit
                         else if(!*currtype)
                         {
                                 map<Variable, bool>::const_iterator it = posneg->second.find(*oit);
-                                add = it == posneg->second.end() || it->second; //FIXME: check head?
+				add = it == posneg->second.end() || !it->second;
                         }
 		}
 		

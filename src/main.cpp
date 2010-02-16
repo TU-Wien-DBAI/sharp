@@ -350,7 +350,7 @@ static void printSignMap(SignMap &eht)
 static void printNameMap(NameMap &eht)
 {
 	for(unsigned int i = 0; i < eht.size(); ++i)
-		cout << "|" << i << "->" << eht[i];
+		cout << "(" << i << "=" << eht[i] << ")";
 	cout << endl;
 }
 #endif
