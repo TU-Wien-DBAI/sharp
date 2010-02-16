@@ -732,13 +732,6 @@ set<Rule> HeadCycleFreeAnswerSetAlgorithm::trueRules(	const set<Variable> &posit
         set_difference(all.begin(), all.end(), positives.begin(), positives.end(),
                                         inserter(negatives, negatives.begin()));
 
-	cout << "trueRules(" << variable << "): ";
-        cout << "pos: "; printIntSet(positives);
-        cout << ", neg: "; printIntSet(negatives);
-	cout << ", rul: "; printIntSet(rules);
-	cout << ", ord: "; printIntList(order);
-	cout << ", typ: "; printBoolList(ordertypes); cout<<endl;
-
         for(set<Rule>::const_iterator r = rules.begin(); r != rules.end(); ++r)
         {
 		intersect.clear();
@@ -747,7 +740,7 @@ set<Rule> HeadCycleFreeAnswerSetAlgorithm::trueRules(	const set<Variable> &posit
                 set_intersection(heads[*r].begin(), heads[*r].end(),
                                 positives.begin(), positives.end(),
                                 inserter(intersect, intersect.begin()));
-                bool add = (intersect.size() == 1 && *intersect.begin() == variable);cout<<"Rule "<< *r << ": "; printIntSet(heads[*r]); cout<<" - "; printIntSet(intersect); cout<<" - "<<add;
+                bool add = (intersect.size() == 1 && *intersect.begin() == variable);
 
                 SignMap::const_iterator posneg = signs.find(*r);
 
@@ -759,13 +752,13 @@ set<Rule> HeadCycleFreeAnswerSetAlgorithm::trueRules(	const set<Variable> &posit
                         map<Variable, bool>::const_iterator it = posneg->second.find(*var);
 			set<Variable>::const_iterator hit = heads[*r].find(*var);
                         add = hit != heads[*r].end() || it == posneg->second.end() || it->second;
-                }cout<<add;
+                }
                 for(set<Variable>::const_iterator var = negatives.begin();
                         add && var != negatives.end(); ++var)
                 {
                         map<Variable, bool>::const_iterator it = posneg->second.find(*var);
                         add = it == posneg->second.end() || !it->second;
-                }cout<<add;
+                }
 
                 bool seen = false;
                 OrderTypes::const_iterator otit = ordertypes.begin();
@@ -780,7 +773,7 @@ set<Rule> HeadCycleFreeAnswerSetAlgorithm::trueRules(	const set<Variable> &posit
 				add = it == posneg->second.end() || !it->second;
 			}
 			else if(*oit == *r) { add = false; }
-		}cout<<add<<endl;
+		}
 		
 		if(add) truerules.insert(*r);
 	}
