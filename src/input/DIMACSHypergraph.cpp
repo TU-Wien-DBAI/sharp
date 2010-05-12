@@ -29,12 +29,12 @@ DIMACSHypergraph::~DIMACSHypergraph()
 {
 }
 
-void DIMACSHypergraph::addVariable(int clause, int variable, bool negative)
+void DIMACSHypergraph::addVariable(int clause, int variable, bool positive)
 {
 	char n[256];
 	snprintf(n, 256, "%d", variable);
 
-	AbstractHypergraph::addVariable(clause, n, negative);
+	AbstractHypergraph::addVariable(clause, n, positive);
 }
 
 int DIMACSHypergraph::parseInput()

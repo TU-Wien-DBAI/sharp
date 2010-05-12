@@ -21,7 +21,7 @@ public:
 	virtual ~DatalogHypergraph();
 
 protected:
-	virtual void addVariable(int rule, const char *name, bool negative = false, bool head = false);
+	virtual void addVariable(int rule, const char *name, bool positive = false, bool head = false);
 	virtual int parseInput();
 };
 

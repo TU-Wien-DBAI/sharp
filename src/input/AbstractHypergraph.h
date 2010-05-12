@@ -23,7 +23,7 @@ public:
 	HeadMap &getHeadMap();
 
 protected:
-	virtual void addVariable(int rule, const char *name, bool negative = false, bool head = false);
+	virtual void addVariable(int rule, const char *name, bool positive = false, bool head = false);
 	virtual int parseInput() = 0;
 
 protected:
@@ -32,7 +32,9 @@ protected:
 	HeadMap heads;
 
 private:
-	int storeVariable(const char *name, bool &alreadyPresent);
+	int storeVariable(const char *name);
+	int createTemporaryVariable();
+	void moveToHypergraph();
 
 private:
 	map<string, int> reverseNames;

@@ -26,9 +26,9 @@ DatalogHypergraph::~DatalogHypergraph()
 {
 }
 
-void DatalogHypergraph::addVariable(int rule, const char *name, bool negative, bool head)
+void DatalogHypergraph::addVariable(int rule, const char *name, bool positive, bool head)
 {
-	AbstractHypergraph::addVariable(rule, name, negative, head);
+	AbstractHypergraph::addVariable(rule, name, positive, head);
 }
 
 int DatalogHypergraph::parseInput()

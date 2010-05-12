@@ -21,7 +21,7 @@ public:
 	virtual ~DIMACSHypergraph();
 
 protected:
-	virtual void addVariable(int clause, int variable, bool negative = false);
+	virtual void addVariable(int clause, int variable, bool positive = false);
 	virtual int parseInput();
 };
 
