@@ -1,25 +1,25 @@
 
-RM := rm -rf
+CC := g++
 
 all: release
 
 debug:
 	@echo "Building for debug..."
-	@cd ./debug/ ; make all
+	@cd ./debug/ ; make all CC="$(CC)"
 	@cp -u ./debug/sharp .
 	@echo "Done building."
 	@echo " "
 
 debug-verbose:
 	@echo "Building for debug..."
-	@cd ./debug/ ; make verbose
+	@cd ./debug/ ; make verbose CC="$(CC)"
 	@cp -u ./debug/sharp .
 	@echo "Done building."
 	@echo " "
 
 release:
 	@echo "Building for release..."
-	@cd ./release/ ; make all
+	@cd ./release/ ; make all CC="$(CC)"
 	@cp -u ./release/sharp .
 	@echo "Done building."
 	@echo " "

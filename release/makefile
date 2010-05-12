@@ -1,7 +1,5 @@
 -include ../makefile.init
 
-RM := rm -rf
-
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir.mk
@@ -43,8 +41,8 @@ all: sharp
 # Tool invocations
 sharp: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
-	@echo 'Invoking: GCC C++ Linker'
-	g++  -o"sharp" $(OBJS) $(USER_OBJS) $(LIBS)
+	@echo 'Invoking Linker'
+	$(CC) -o"sharp" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
