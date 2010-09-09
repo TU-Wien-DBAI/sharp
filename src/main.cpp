@@ -26,7 +26,6 @@ static Timer t;
 
 enum Algorithm
 {
-	NoAlg,
 	SAT,
 	MinSAT,
 	ASP,
@@ -35,7 +34,6 @@ enum Algorithm
 
 enum OutputType
 {
-	NoType,
 	Consistency,
 	Counting,
 	Enumeration
@@ -60,15 +58,13 @@ int main(int argc, char **argv)
 
 	int arg, argCount = 1;
 	char *sEnd = NULL;
-	bool sOpt = false, fOpt = false, tOpt = false;
+	bool sOpt = false, fOpt = false, tOpt = false, oOpt = false, aOpt = false;
 	unsigned int seed = (unsigned int)time(NULL);
-	Algorithm algorithm = NoAlg;
-	OutputType output = NoType;
+	Algorithm algorithm = ASP;
+	OutputType output = Enumeration;
 	char *filename = NULL;
 	ifstream file;
 	istream *stream = &std::cin;
-
-	if(argc < 5) usage();
 
 	while((arg = getopt(argc, argv, "a:bs:o:f:t")) != EOF)
 	{
@@ -76,13 +72,14 @@ int main(int argc, char **argv)
 		switch(arg)
 		{
 		case 'a':
-			if(algorithm || !optarg) usage();
+			if(aOpt || !optarg) usage();
 			if(!strcmp(optarg, "sat")) algorithm = SAT;
 			else if(!strcmp(optarg, "minsat")) algorithm = MinSAT;
 			else if(!strcmp(optarg, "asp")) algorithm = ASP;
 			else if(!strcmp(optarg, "hcfasp")) algorithm = HCFASP;
 			else usage();
 			++argCount;
+			aOpt = true;
 			break;
 		case 's':
 			if(sOpt || !optarg) usage();
@@ -96,12 +93,13 @@ int main(int argc, char **argv)
 			tOpt = true;
 			break;
 		case 'o':
-			if(output || !optarg) usage();
+			if(oOpt || !optarg) usage();
 			if(!strcmp(optarg, "enum")) output = Enumeration;
 			else if(!strcmp(optarg, "count")) output = Counting;
 			else if(!strcmp(optarg, "yesno")) output = Consistency;
 			else usage();
 			++argCount;
+			oOpt = true;
 			break;
 		case 'b':
 			if(bOpt) usage();
@@ -154,20 +152,20 @@ int main(int argc, char **argv)
 
 	if(bOpt) { cout << "Using seed: " << seed << endl; }
 
-	if(bOpt) { cout << "Parsing input and building Hypergraph..." << flush; t.start(); }
+	if(bOpt) { cout << "Parsing input and building graph..." << flush; t.start(); }
 
 	CNOT0(hg->buildHypergraph());
 	hg->reduce();
 
 	if(bOpt) { cout << " done! (took "; printTime(t.stop()); cout << " seconds)" << endl; }
 
-	if(bOpt) { cout << "Decomposing hypergraph:" << endl; t.start(); }
+	if(bOpt) { cout << "Decomposing graph... "; t.start(); }
 
 	ht = decompose(hg);
 
-	if(bOpt) { cout << "done! (hypertree width: " << ht->getHTreeWidth() << " - took "; printTime(t.stop()); cout << " seconds)" << endl; }
+	if(bOpt) { cout << "done! (tree width: " << ht->getHTreeWidth() << " - took "; printTime(t.stop()); cout << " seconds)" << endl; }
 
-	if(bOpt) { cout << "Normalizing hypergraph... " << flush; t.start(); }
+	if(bOpt) { cout << "Normalizing graph... " << flush; t.start(); }
 
 	eht = new ExtendedHypertree(ht); ht = NULL;
 	eht->normalize();
@@ -203,11 +201,11 @@ int main(int argc, char **argv)
 
 	delete hg;
 
-	if(bOpt) { cout << "Calculating formula... " << endl; t.start(); }
+	if(bOpt) { cout << "Calculating... " << endl; t.start(); }
 
 	Solution *temp = alg->evaluate();
 
-	if(bOpt) { cout << "\ttree-evaluation took " << flush; printTime(t.stop()); cout << " seconds..." << endl; }
+	if(bOpt) { cout << "\tevaluation took " << flush; printTime(t.stop()); cout << " seconds..." << endl; }
 	
 	SolutionContent *sc = temp->getContent();
 
@@ -225,13 +223,13 @@ static void usage()
 {
 	cout 	<< "Usage: " 
 		<< sProgramName 
-		<< " [-b] [-t] [-s <seed>] [-f <file>] -a <alg> -o <output>" << endl 
+		<< " [-b] [-t] [-s <seed>] [-f <file>] [-a <alg>] [-o <output>]" << endl 
 		<< "\t-b\t\tprint benchmark information" << endl
-		<< "\t-t\t\tperform only hypertree decomposition step" << endl
+		<< "\t-t\t\tperform only tree decomposition step" << endl
 		<< "\t-s seed\t\tinitialize random number generator with <seed>." << endl
 		<< "\t-f file\t\tthe file to read from" << endl
-		<< "\t-a alg\t\talgorithm, one of {sat, minsat, asp, hcfasp}" << endl
-		<< "\t-o output\toutput type, one of {enum, count, yesno}" << endl
+		<< "\t-a alg\t\talgorithm, one of {sat, minsat, asp (default), hcfasp}" << endl
+		<< "\t-o output\toutput type, one of {enum (default), count, yesno}" << endl
 		;
 
 	exit(EXIT_FAILURE);
@@ -240,33 +238,10 @@ static void usage()
 static Hypertree *decompose(Hypergraph *hg)
 {
         Timer local;
-        Hypertree *ht, *temp;
+        Hypertree *ht;
         H_BucketElim be;
 
-        if(bOpt) { cout << "\tBuilding hypertree with BE[MCS] heuristics... " << flush; local.start(); }
-
-        ht = be.buildHypertree(hg, BE_MCS_ORDER);
-
-        if(bOpt) { cout << "done! (took "; printTime(local.stop()); cout << " seconds, "
-			<< "width: " << ht->getHTreeWidth() << " [" << ht->getTreeWidth() << "])" << endl; }
-
-        if(bOpt) { cout << "\tBuilding hypertree with BE[MIW] heuristics... " << flush; local.start(); }
-
-        temp = be.buildHypertree(hg, BE_MIW_ORDER);
-	if(temp->getHTreeWidth() < ht->getHTreeWidth()) { delete ht; ht = temp; }
-	else delete temp;
-
-        if(bOpt) { cout << "done! (took "; printTime(local.stop()); cout << " seconds, "
-			<< "width: " << ht->getHTreeWidth() << " [" << ht->getTreeWidth() << "])" << endl; }
-
-        if(bOpt) { cout << "\tBuilding hypertree with BE[MF] heuristics... " << flush; local.start(); }
-
-        temp = be.buildHypertree(hg, BE_MF_ORDER);
-	if(temp->getHTreeWidth() < ht->getHTreeWidth()) { delete ht; ht = temp; }
-	else delete temp;
-
-        if(bOpt) { cout << "done! (took "; printTime(local.stop()); cout << " seconds, "
-			<< "width: " << ht->getHTreeWidth() << " [" << ht->getTreeWidth() << "])" << endl; }
+        ht = be.buildHypertree(hg, BE_MIW_ORDER);
 
         ht->swapChiLambda();
         ht->shrink(true);
