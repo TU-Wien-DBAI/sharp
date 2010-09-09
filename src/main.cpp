@@ -155,11 +155,11 @@ int main(int argc, char **argv)
 	if(bOpt) { cout << "Parsing input and building graph..." << flush; t.start(); }
 
 	CNOT0(hg->buildHypergraph());
-	hg->reduce();
+	//hg->reduce(); TODO: check if this is neede
 
 	if(bOpt) { cout << " done! (took "; printTime(t.stop()); cout << " seconds)" << endl; }
 
-	if(bOpt) { cout << "Decomposing graph... "; t.start(); }
+	if(bOpt) { cout << "Decomposing graph... " << flush; t.start(); }
 
 	ht = decompose(hg);
 
@@ -252,6 +252,8 @@ static Hypertree *decompose(Hypergraph *hg)
 
 static void printSolution(SolutionContent *sc, OutputType output, NameMap &nameMap)
 {
+	if(!sc) return;
+
 	if(output == Enumeration)
 	{
 		EnumerationSolutionContent *sol = (EnumerationSolutionContent *)sc;
