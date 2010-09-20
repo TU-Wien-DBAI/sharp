@@ -14,11 +14,11 @@
 //////////////////////////////////////////////////////////////////////
 
 
-Component::Component(int ID, char *cName, int iSize, int iNbrOfNeighbours)
+Component::Component(int ID, int name, int iSize, int iNbrOfNeighbours)
 {
 	int i;
 	iMyID = ID;
-	cMyName = cName;
+	this->name = name;
   
 	MyComponents.reserve(iSize);
 	for(i=0; i < iSize; i++)
@@ -34,10 +34,10 @@ Component::Component(int ID, char *cName, int iSize, int iNbrOfNeighbours)
 	bMySpecial = false;
 }
 
-Component::Component(int ID, char *cName)
+Component::Component(int ID, int name)
 {
 	iMyID = ID;
-	cMyName = cName;
+	this->name = name;
 
 	iMyMaxSize = iMyMaxNbrOfNeighbours = 0;
 }
@@ -61,9 +61,9 @@ int Component::getID()
 
 
 // Returns the name of the component
-char *Component::getName()
+int Component::getName()
 {
-	return cMyName;
+	return name;
 }
 
 
@@ -385,7 +385,7 @@ Component *Component::clone()
 	list<int>::iterator ListIter;
 
 	// Create clone
-	Clone = new Component(iMyID, cMyName, iMyMaxSize, 0);
+	Clone = new Component(iMyID, name, iMyMaxSize, 0);
 	if(Clone == NULL)
 		writeErrorMsg("Error assigning memory.", "Component::clone");
 

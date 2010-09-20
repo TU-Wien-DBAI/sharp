@@ -17,7 +17,7 @@ public:
 	AbstractHypergraph();
 	AbstractHypergraph(istream *in);
 	virtual ~AbstractHypergraph();
-	virtual int buildHypergraph(Parser *p = NULL);
+	virtual int buildHypergraph();
 	SignMap &getSignMap();
 	NameMap &getNameMap();
 	HeadMap &getHeadMap();

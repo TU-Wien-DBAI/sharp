@@ -11,11 +11,11 @@
 //////////////////////////////////////////////////////////////////////
 
 
-Hyperedge::Hyperedge(int ID, char *cName, int iSize, int iNbrOfNeighbours) : Component(ID, cName, iSize, iNbrOfNeighbours)
+Hyperedge::Hyperedge(int ID, int name, int iSize, int iNbrOfNeighbours) : Component(ID, name, iSize, iNbrOfNeighbours)
 {
 }
 
-Hyperedge::Hyperedge(int ID, char *cName) : Component(ID, cName)
+Hyperedge::Hyperedge(int ID, int name) : Component(ID, name)
 {
 }
 

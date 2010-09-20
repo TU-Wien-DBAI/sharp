@@ -55,20 +55,39 @@ int AnswerSetTuple::hash() const
 	return -1;
 }
 
-AnswerSetAlgorithm::AnswerSetAlgorithm
-	(const Instantiator *instantiator, const ExtendedHypertree *root, 
-		const SignMap &signMap, const HeadMap &headMap, const NameMap &nameMap)
-	: AbstractAlgorithm(instantiator, root, signMap, headMap, nameMap)
+AnswerSetAlgorithm::AnswerSetAlgorithm(Problem *problem)
+	: AbstractAlgorithm(problem)
 {
+	this->problem = (DatalogProblem *)problem;
 }
 
 AnswerSetAlgorithm::~AnswerSetAlgorithm() { }
 
-Solution *AnswerSetAlgorithm::selectSolution(TupleSet *tuples)
+VariableSet AnswerSetAlgorithm::getVariables(const ExtendedHypertree *node)
+{
+	VariableSet variables;
+	for(VertexSet::iterator it = node->getVertices().begin();
+			it != node->getVertices().end();
+			++it)
+		if(this->problem->isVariable(*it)) variables.insert(*it);
+	return variables;
+}
+
+RuleSet AnswerSetAlgorithm::getRules(const ExtendedHypertree *node)
+{
+	RuleSet rules;
+	for(VertexSet::iterator it = node->getVertices().begin();
+			it != node->getVertices().end();
+			++it)
+		if(this->problem->isRule(*it)) rules.insert(*it);
+	return rules;
+}
+
+Solution *AnswerSetAlgorithm::selectSolution(TupleSet *tuples, const ExtendedHypertree *root)
 {
 	Solution *s = this->instantiator->createEmptySolution();
 	equal_to<set<int> > eq;
-	set<Rule> rules = this->root->getRules();
+	RuleSet rules = getRules(root);
 
 	for(TupleSet::iterator it = tuples->begin(); it != tuples->end(); ++it)
 	{
@@ -101,7 +120,8 @@ TupleSet *AnswerSetAlgorithm::evaluateLeafNode(const ExtendedHypertree *node)
 {
 	TupleSet *ts = new TupleSet();
 
-	Partition apart = Helper::partition(node->getVariables());
+	RuleSet nodeRules = getRules(node);
+	Partition apart = Helper::partition(getVariables(node));
 
         for(unsigned int i = 0; i < apart.first.size(); ++i)
 	{
@@ -118,17 +138,17 @@ TupleSet *AnswerSetAlgorithm::evaluateLeafNode(const ExtendedHypertree *node)
 						       Helper::trueRules(apart.first[i],
 								gpart.first[j], 
 								gpart.second[j], 
-								node->getRules(),
-								this->signMap,
-								this->headMap)));
+								nodeRules,
+								this->problem->getSignMap(),
+								this->problem->getHeadMap())));
 			}
 
 		//FIXME: use swap instead of copying...
 		ast.variables = apart.first[i];
 		ast.rules = Helper::trueRules(apart.first[i], 
 					      apart.second[i], 
-					      node->getRules(),
-					      this->signMap);
+					      nodeRules,
+					      this->problem->getSignMap());
 
 		ts->insert(TupleSet::value_type(&ast, 
 			this->instantiator->createLeafSolution(apart.first[i])));
@@ -221,20 +241,36 @@ TupleSet *AnswerSetAlgorithm::evaluateBranchNode(const ExtendedHypertree *node)
 	return ts;
 }
 
+TupleSet *AnswerSetAlgorithm::evaluateIntroductionNode(const ExtendedHypertree *node)
+{
+	if(this->problem->isRule(node->getDifference()))
+		return evaluateRuleIntroductionNode(node);
+	return evaluateVariableIntroductionNode(node);
+}
+
+TupleSet *AnswerSetAlgorithm::evaluateRemovalNode(const ExtendedHypertree *node)
+{
+	if(this->problem->isRule(node->getDifference()))
+		return evaluateRuleRemovalNode(node);
+	return evaluateVariableRemovalNode(node);
+}
+
 TupleSet *AnswerSetAlgorithm::evaluateVariableIntroductionNode(const ExtendedHypertree *node)
 {
 	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
+	RuleSet nodeRules = getRules(node);
+
 	set<Variable> var; var.insert(node->getDifference());
 	set<Rule> trueN = Helper::trueRules(set<Variable>(), var, 
-				node->getRules(), this->signMap);
+				nodeRules, this->problem->getSignMap());
 	set<Rule> trueNR = Helper::trueRules(var, set<Variable>(), var, 
-				node->getRules(), this->signMap, this->headMap);
+				nodeRules, this->problem->getSignMap(), this->problem->getHeadMap());
 	set<Rule> trueP = Helper::trueRules(var, set<Variable>(), 
-				node->getRules(), this->signMap);
+				nodeRules, this->problem->getSignMap());
 	set<Rule> truePR = Helper::trueRules(var, var, set<Variable>(),
-				node->getRules(), this->signMap, this->headMap);
+				nodeRules, this->problem->getSignMap(), this->problem->getHeadMap());
 
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
 	{
@@ -361,32 +397,32 @@ TupleSet *AnswerSetAlgorithm::evaluateRuleIntroductionNode(const ExtendedHypertr
 	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
+	VariableSet nodeVariables = getVariables(node);
+
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
 	{
 		AnswerSetTuple &x = *(AnswerSetTuple *)it->first;
 		AnswerSetTuple &ast = *new AnswerSetTuple();
-		
 		//FIXME: use swap instead of copying...
 		ast.variables = x.variables;
 
 		//FIXME: use swap instead of copying...
 		ast.rules = x.rules;
 		if(Helper::trueRule(ast.variables, 
-				    node->getVariables(), 
+				    nodeVariables, 
 				    node->getDifference(),
-				    this->signMap)) 
+				    this->problem->getSignMap())) 
 			ast.rules.insert(node->getDifference());
-
 		for(set<Atom>::iterator git = x.guards.begin(); git != x.guards.end(); ++git)
 		{
 			//FIXME: use swap instead of copying...
 			Atom temp(git->first, git->second);
 			if(Helper::trueRule(x.variables,
 					    temp.first, 
-					    node->getVariables(), 
+					    nodeVariables,
 					    node->getDifference(),
-					    this->signMap,
-					    this->headMap)) 
+					    this->problem->getSignMap(),
+					    this->problem->getHeadMap())) 
 				temp.second.insert(node->getDifference());
 			ast.guards.insert(temp);
 		}

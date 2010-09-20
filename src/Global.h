@@ -10,7 +10,22 @@
 
 #include <sys/resource.h>
 
+#include "support/support.h"
+
 bool containsAll(const std::set<int> &a, const std::set<int> &b);
+
+typedef int Vertex;
+#define VERTEXNOTFOUND (-1)
+
+typedef std::set<Vertex> VertexSet;
+typedef std::set<std::pair<Vertex, Vertex> > EdgeSet;
+
+typedef std::vector<std::string> NameMap;
+typedef std::map<std::string, Vertex> ReverseNameMap;
+
+
+//old---------
+
 void printIntSet(const std::set<int> &toprint);
 void printIntList(const std::list<int> &toprint);
 void printBoolList(const std::list<bool> &toprint);

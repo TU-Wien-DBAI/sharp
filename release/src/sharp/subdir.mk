@@ -1,7 +1,6 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../src/sharp/Helper.cpp \
-../src/sharp/ExtendedHypertree.cpp \
 ../src/sharp/AbstractAlgorithm.cpp \
 ../src/sharp/AnswerSet.cpp \
 ../src/sharp/HeadCycleFreeAnswerSet.cpp \
@@ -10,7 +9,6 @@ CPP_SRCS += \
 
 OBJS += \
 ./src/sharp/Helper.o \
-./src/sharp/ExtendedHypertree.o \
 ./src/sharp/AbstractAlgorithm.o \
 ./src/sharp/AnswerSet.o \
 ./src/sharp/HeadCycleFreeAnswerSet.o \
@@ -19,7 +17,6 @@ OBJS += \
 
 CPP_DEPS += \
 ./src/sharp/Helper.d \
-./src/sharp/ExtendedHypertree.d \
 ./src/sharp/AbstractAlgorithm.d \
 ./src/sharp/AnswerSet.d \
 ./src/sharp/HeadCycleFreeAnswerSet.d \

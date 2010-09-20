@@ -10,7 +10,8 @@ CPP_SRCS += \
 ../src/htree/Node.cpp \
 ../src/htree/Parser.cpp \
 ../src/htree/SetCover.cpp \
-../src/htree/SpecialHEdge.cpp 
+../src/htree/SpecialHEdge.cpp \
+../src/htree/ExtendedHypertree.cpp
 
 OBJS += \
 ./src/htree/CompSet.o \
@@ -23,7 +24,8 @@ OBJS += \
 ./src/htree/Node.o \
 ./src/htree/Parser.o \
 ./src/htree/SetCover.o \
-./src/htree/SpecialHEdge.o 
+./src/htree/SpecialHEdge.o \
+./src/htree/ExtendedHypertree.o
 
 CPP_DEPS += \
 ./src/htree/CompSet.d \
@@ -36,7 +38,8 @@ CPP_DEPS += \
 ./src/htree/Node.d \
 ./src/htree/Parser.d \
 ./src/htree/SetCover.d \
-./src/htree/SpecialHEdge.d 
+./src/htree/SpecialHEdge.d \
+./src/htree/ExtendedHypertree.d
 
 
 # Each subdirectory must supply rules for building sources it contributes

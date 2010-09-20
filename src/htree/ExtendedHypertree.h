@@ -4,31 +4,33 @@
 #include <list>
 #include <set>
 
+#include "../Global.h"
+
 #include "../htree/Hypertree.h"
 
 enum TreeNodeType
 {
-	Unevaluated = -1,
+	Unevaluated = 0,
 	Leaf = 1, 
 	Branch = 2, 
-	VariableRemoval = 3, 
-	RuleRemoval = 4, 
-	VariableIntroduction = 5, 
-	RuleIntroduction = 6 
+	Removal = 3, 
+	Introduction = 4 
 };
 	
 class ExtendedHypertree : public Hypertree
 {
 public:
 	ExtendedHypertree(Hypertree *node);
-	ExtendedHypertree(std::set<int> &rules, std::set<int> &variables);
+	ExtendedHypertree(VertexSet &vertices);
 	virtual ~ExtendedHypertree();
+
 	void normalize();
+
+	const VertexSet &getVertices() const;
 	int getType() const;
 	int getDifference() const;
 	bool isRoot() const;
-	const std::set<int> &getRules() const;
-	const std::set<int> &getVariables() const;
+
 	ExtendedHypertree *parent() const;
 	ExtendedHypertree *firstChild() const;
 	ExtendedHypertree *secondChild() const;
@@ -36,13 +38,17 @@ public:
 private:
 	TreeNodeType type;
 	int difference;
-	
-	std::set<int> rules;
-	std::set<int> variables;
 
+	VertexSet vertices;
+	
 	void adapt();
 	TreeNodeType calculateType();
 
-	static ExtendedHypertree *createChild(ExtendedHypertree *child, std::set<int> rules, std::set<int> variables);
+	static ExtendedHypertree *createChild(ExtendedHypertree *child, VertexSet vertices);
+
+#ifdef DEBUG
+public: //PRINTING FUNCTIONS
+	void print();
+#endif
 };
 #endif

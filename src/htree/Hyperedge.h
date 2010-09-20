@@ -18,8 +18,8 @@ class Hyperedge : public Component
 {
 public:
 	// Constructor
-	Hyperedge(int ID, char *cName, int iSize, int iNbrOfNeighbours);
-	Hyperedge(int ID, char *cName);
+	Hyperedge(int ID, int name, int iSize, int iNbrOfNeighbours);
+	Hyperedge(int ID, int name);
 
 	// Destructor
 	virtual ~Hyperedge();

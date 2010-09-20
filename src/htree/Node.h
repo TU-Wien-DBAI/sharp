@@ -18,8 +18,8 @@ class Node : public Component
 {
 public:
 	// Constructor
-	Node(int ID, char *cName, int iSize, int iNbrOfNeighbours);
-	Node(int ID, char *cName);
+	Node(int ID, int name, int iSize, int iNbrOfNeighbours);
+	Node(int ID, int name);
 
 	// Destructor
 	virtual~Node();

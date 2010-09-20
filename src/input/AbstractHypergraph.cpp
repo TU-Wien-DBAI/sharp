@@ -24,11 +24,8 @@ AbstractHypergraph::~AbstractHypergraph()
 {
 }
 
-int AbstractHypergraph::buildHypergraph(Parser *p)
+int AbstractHypergraph::buildHypergraph()
 {
-	if(p != NULL)
-		return Hypergraph::buildHypergraph(p);
-
 	if(!this->parseInput())
 	{
 		this->reverseNames.clear();
@@ -60,25 +57,21 @@ void AbstractHypergraph::moveToHypergraph()
 
 		Node *r, *v;
 		Hyperedge *e;
-		char str[256];
-
-		CNEG(snprintf(str, 256, "r%d", rule));
-		CNULL(r = new Node(nodeID++, strdup(str)));
+		
+		CNULL(r = new Node(nodeID++, rule));
 		this->MyNodes.push_back(r);
 
 		for(map<Variable, bool>::iterator it = signs[rule].begin(); it != signs[rule].end(); ++it)
 		{
 			if(lookup.find(it->first) == lookup.end())
 			{
-				CNEG(snprintf(str, 256, "v%d", it->first));
-				CNULL(v = new Node(nodeID++, strdup(str)));
+				CNULL(v = new Node(nodeID++, it->first));
 				this->MyNodes.push_back(v);
 				lookup.insert(make_pair(it->first, v));
 			}
 			else v = lookup[it->first];
 
-			CNEG(snprintf(str, 256, "E%d", edgeID));
-			CNULL(e = new Hyperedge(edgeID++, strdup(str)));
+			CNULL(e = new Hyperedge(edgeID, edgeID)); ++edgeID;
 			this->MyEdges.push_back(e);
 
 			e->insNode(r);

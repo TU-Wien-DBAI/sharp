@@ -11,13 +11,16 @@ Class Hypergraph  models a hypergraph consisting of its edges and nodes.
 #include <vector>
 using namespace std;
 
-class Parser;
 class Hyperedge;
 class Node;
 class Hypertree;
 
+class Problem;
+
 class Hypergraph  
 {
+	friend class Problem;
+
 protected:
 	// Maximum number of edges contained in the hypergraph
 	int iMyMaxNbrOfEdges;
@@ -40,9 +43,6 @@ public:
 
 	// Destructor
 	virtual~Hypergraph();
-
-	// Read hypergraph from file and construct internal representation
-	virtual int buildHypergraph(Parser *P);
 
 	// Returns the number of edges in the hypergraph
 	int getNbrOfEdges();

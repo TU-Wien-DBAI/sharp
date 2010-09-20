@@ -2,6 +2,7 @@
 #define ANSWERSETPROGRAM_H_
 
 #include "AbstractAlgorithm.h"
+#include "../DatalogProblem.h"
 
 class AnswerSetTuple : public Tuple
 {
@@ -23,18 +24,27 @@ public:
 class AnswerSetAlgorithm : public AbstractAlgorithm
 {
 public:
-	AnswerSetAlgorithm(const Instantiator *instantiator, const ExtendedHypertree *root, const SignMap &signMap, const HeadMap &headMap, const NameMap &nameMap);
+	AnswerSetAlgorithm(Problem *problem);
 	virtual ~AnswerSetAlgorithm();
 
+	VariableSet getVariables(const ExtendedHypertree *node);
+	RuleSet getRules(const ExtendedHypertree *node);
+
 protected:
-	virtual Solution *selectSolution(TupleSet *tuples);
+	virtual Solution *selectSolution(TupleSet *tuples, const ExtendedHypertree *node);
 	
 	virtual TupleSet *evaluateLeafNode(const ExtendedHypertree *node);
 	virtual TupleSet *evaluateBranchNode(const ExtendedHypertree *node);
+	virtual TupleSet *evaluateIntroductionNode(const ExtendedHypertree *node);
+	virtual TupleSet *evaluateRemovalNode(const ExtendedHypertree *node);
+
 	virtual TupleSet *evaluateVariableIntroductionNode(const ExtendedHypertree *node);
 	virtual TupleSet *evaluateVariableRemovalNode(const ExtendedHypertree *node);
 	virtual TupleSet *evaluateRuleIntroductionNode(const ExtendedHypertree *node);
-	virtual TupleSet *evaluateRuleRemovalNode(const ExtendedHypertree *node);	
+	virtual TupleSet *evaluateRuleRemovalNode(const ExtendedHypertree *node);
+
+protected:
+	DatalogProblem *problem;
 };
 
 #endif

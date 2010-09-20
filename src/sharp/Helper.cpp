@@ -115,8 +115,6 @@ set<Rule> Helper::trueRules(	const set<Variable> &base,
 	return truerules;
 }
 
-
-
 bool Helper::trueRule(	const set<Variable> &positives, 
 			const set<Variable> &all, 
 			Rule rule, 

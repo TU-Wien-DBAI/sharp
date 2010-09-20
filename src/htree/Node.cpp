@@ -11,11 +11,11 @@
 //////////////////////////////////////////////////////////////////////
 
 
-Node::Node(int ID, char *cName, int iSize, int iNbrOfNeighbours) : Component(ID, cName, iSize, iNbrOfNeighbours)
+Node::Node(int ID, int name, int iSize, int iNbrOfNeighbours) : Component(ID, name, iSize, iNbrOfNeighbours)
 {
 }
 
-Node::Node(int ID, char *cName) : Component(ID, cName)
+Node::Node(int ID, int name) : Component(ID, name)
 {
 }
 

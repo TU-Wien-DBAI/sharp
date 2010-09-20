@@ -3,7 +3,6 @@ CPP_SRCS += \
 ../src/input/AbstractHypergraph.cpp \
 ../src/input/DatalogParser.cpp \
 ../src/input/DatalogLexer.cpp \
-../src/input/DatalogHypergraph.cpp \
 ../src/input/DIMACSParser.cpp \
 ../src/input/DIMACSLexer.cpp \
 ../src/input/DIMACSHypergraph.cpp 
@@ -12,7 +11,6 @@ OBJS += \
 ./src/input/AbstractHypergraph.o \
 ./src/input/DatalogParser.o \
 ./src/input/DatalogLexer.o \
-./src/input/DatalogHypergraph.o \
 ./src/input/DIMACSParser.o \
 ./src/input/DIMACSLexer.o \
 ./src/input/DIMACSHypergraph.o
@@ -21,7 +19,6 @@ CPP_DEPS += \
 ./src/input/AbstractHypergraph.d \
 ./src/input/DatalogParser.d \
 ./src/input/DatalogLexer.d \
-./src/input/DatalogHypergraph.d \
 ./src/input/DIMACSParser.d \
 ./src/input/DIMACSLexer.d \
 ./src/input/DIMACSHypergraph.d

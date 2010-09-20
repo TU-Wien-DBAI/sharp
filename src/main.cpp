@@ -11,12 +11,12 @@
 
 #include "input/DIMACSHypergraph.h"
 #define YY_DatalogParser_LTYPE yyltype /* otherwise double definition */ 
-#include "input/DatalogHypergraph.h"
 
-#include "sharp/ExtendedHypertree.h"
-#include "sharp/Circumscription.h"
+#include "DatalogProblem.h"
+
 #include "sharp/AnswerSet.h"
 #include "sharp/HeadCycleFreeAnswerSet.h"
+#include "htree/ExtendedHypertree.h"
 #include "htree/H_BucketElim.h"
 
 using namespace std;
@@ -42,11 +42,9 @@ enum OutputType
 static void usage();
 static Hypertree *decompose(Hypergraph *);
 static void printTime(pair<double, double>);
-static void printSolution(SolutionContent *, OutputType, NameMap &);
+static void printSolution(SolutionContent *, OutputType, Problem *);
 
 #ifdef DEBUG
-static void print(ExtendedHypertree *);
-static void printSignMap(SignMap &);
 static void printNameMap(NameMap &);
 #endif
 
@@ -133,88 +131,60 @@ int main(int argc, char **argv)
 
 	srand(seed);
 
+	if(bOpt) cout << "Using seed: " << seed << endl;
+
 	/* Algorithm Selection */
 
-	Hypertree *ht = NULL;
-	ExtendedHypertree *eht = NULL;
+	Problem *problem = NULL;
 	Instantiator *inst = NULL;
-	AbstractHypergraph *hg = NULL;
-	AbstractAlgorithm *alg = NULL;
 
-	if(algorithm == SAT) hg = new DIMACSHypergraph(stream);
-	else if(algorithm == MinSAT) hg = new DIMACSHypergraph(stream);
-	else if(algorithm == ASP) hg = new DatalogHypergraph(stream);
-	else if(algorithm == HCFASP) hg = new DatalogHypergraph(stream);
-
-	if(output == Consistency) inst = new GenericInstantiator<ConsistencySolution>(false);
-	else if(output == Counting) inst = new GenericInstantiator<CountingSolution>(false);
-	else if(output == Enumeration) inst = new GenericInstantiator<EnumerationSolution>(true);
-
-	if(bOpt) { cout << "Using seed: " << seed << endl; }
-
-	if(bOpt) { cout << "Parsing input and building graph..." << flush; t.start(); }
-
-	CNOT0(hg->buildHypergraph());
-	//hg->reduce(); TODO: check if this is neede
-
-	if(bOpt) { cout << " done! (took "; printTime(t.stop()); cout << " seconds)" << endl; }
-
-	if(bOpt) { cout << "Decomposing graph... " << flush; t.start(); }
-
-	ht = decompose(hg);
-
-	if(bOpt) { cout << "done! (tree width: " << ht->getHTreeWidth() << " - took "; printTime(t.stop()); cout << " seconds)" << endl; }
-
-	if(bOpt) { cout << "Normalizing graph... " << flush; t.start(); }
-
-	eht = new ExtendedHypertree(ht); ht = NULL;
-	eht->normalize();
-
-	if(bOpt) { cout << "done! (took "; printTime(t.stop()); cout << " seconds)" << endl; }
-
-	if(tOpt) { exit(EXIT_SUCCESS); }
-
-#ifdef DEBUG
-	print(eht);
-	printSignMap(hg->getSignMap());
-	printNameMap(hg->getNameMap());
-#endif
+	switch(output)
+	{
+	case Consistency:
+		inst = new GenericInstantiator<ConsistencySolutionContent>(false);
+		break;
+	case Counting:
+		inst = new GenericInstantiator<CountingSolutionContent>(false);
+		break;
+	case Enumeration:
+		inst = new GenericInstantiator<EnumerationSolutionContent>(true);
+		break;
+	default:
+		C0(0 /*ERROR: Invalid output method*/);
+		break;
+	}
 
 	switch(algorithm)
 	{
 	case SAT:
-		PrintError("The SAT algorithm is currently not implemented!");
+		PrintError("The SAT algorithm has not yet been ported and is not available ATM!");
 		break;
 	case MinSAT:
-		alg = new CircumscriptionAlgorithm(inst, eht, hg->getSignMap(), hg->getHeadMap(), hg->getNameMap());
+		PrintError("The MinSAT algorithm has not yet been ported and is not available ATM!");
 		break;
 	case ASP:
-		alg = new AnswerSetAlgorithm(inst, eht, hg->getSignMap(), hg->getHeadMap(), hg->getNameMap());
+		problem = new DatalogProblem(stream, false);
 		break;
 	case HCFASP:
-		alg = new HeadCycleFreeAnswerSetAlgorithm(inst, eht, hg->getSignMap(), hg->getHeadMap(), hg->getNameMap());
+		problem = new DatalogProblem(stream, true);
 		break;
 	default:
-		C0(0 /*ERROR: Invalid algorithm assignment*/);
+		C0(0 /*ERROR: Invalid algorithm selection*/);
 		break;
 	}
 
-	delete hg;
-
 	if(bOpt) { cout << "Calculating... " << endl; t.start(); }
 
-	Solution *temp = alg->evaluate();
+	Solution *solution = problem->calculateSolution(inst);
 
 	if(bOpt) { cout << "\tevaluation took " << flush; printTime(t.stop()); cout << " seconds..." << endl; }
 	
-	SolutionContent *sc = temp->getContent();
+	SolutionContent *sc = solution->getContent();
 
 	if(bOpt) { cout << "done! (took "; printTime(t.stop()); cout << " seconds)" << endl; }
 
-	printSolution(sc, output, alg->getNameMap());
-
-	delete sc;
-	delete alg;
+	//TODO: Benchmarking as before and output
+	printSolution(sc, output, problem);
 
 	exit(EXIT_SUCCESS);
 }
@@ -250,7 +220,7 @@ static Hypertree *decompose(Hypergraph *hg)
         return ht;
 }
 
-static void printSolution(SolutionContent *sc, OutputType output, NameMap &nameMap)
+static void printSolution(SolutionContent *sc, OutputType output, Problem *p)
 {
 	if(!sc) return;
 
@@ -267,7 +237,7 @@ static void printSolution(SolutionContent *sc, OutputType output, NameMap &nameM
 			string isep = "";
 			for(set<int>::iterator iit = oit->begin(); iit != oit->end(); ++iit)
 			{
-				cout << isep << nameMap[*iit];
+				cout << isep << p->getVertexName(*iit);
 				isep = ",";
 			}
 			cout << "}" << flush;
@@ -293,37 +263,6 @@ static void printTime(pair<double, double> time)
 }
 
 #ifdef DEBUG
-static void print(ExtendedHypertree *eht)
-{
-        if(eht->getParent() == NULL) cout << "root: " << eht << endl;
-        int type = eht->getType();
-
-        cout << "node " << eht << ", parent = " << eht->getParent() << ", type = " << type << flush;
-        if(type == Branch) cout << ", children: " << eht->firstChild() << " - " << eht->secondChild();
-        else if(type != Leaf) cout << ", child: " << eht->firstChild();
-
-        cout << ", vars: ";
-        for(set<int>::const_iterator it = eht->getVariables().begin(); it != eht->getVariables().end(); ++it) cout << *it << ", ";
-        cout << "clauses: ";
-        for(set<int>::const_iterator it = eht->getRules().begin(); it != eht->getRules().end(); ++it) cout << *it << ", ";
-        cout << "difference: " << eht->getDifference() << ", ";
-        cout << "END" << endl;
-
-        if(type == Branch) { print(eht->firstChild()); print(eht->secondChild()); }
-        else if(type == Leaf) {}
-        else print(eht->firstChild());
-}
-
-static void printSignMap(SignMap &eht)
-{
-        for(map<int, map<int, bool> >::iterator it = eht.begin(); it != eht.end(); ++it)
-        {
-                cout << "clause " << it->first << ": ";
-                for(map<int, bool>::iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
-                        cout << (sit->second ? "-" : "\0") << sit->first << ", "; cout << "END" << endl;
-        }
-}
-
 static void printNameMap(NameMap &eht)
 {
 	for(unsigned int i = 0; i < eht.size(); ++i)

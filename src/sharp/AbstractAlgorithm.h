@@ -10,7 +10,7 @@
 
 #include "../Global.h"
 #include "Helper.h"
-#include "ExtendedHypertree.h"
+#include "../htree/ExtendedHypertree.h"
 
 enum Operation
 {
@@ -24,27 +24,39 @@ class SolutionContent
 {
 public:
 	SolutionContent();
-	SolutionContent(const std::set<Variable> &partition);
+	SolutionContent(const VertexSet &partition);
 	virtual ~SolutionContent() = 0;
+
+	virtual SolutionContent *calculateUnion(SolutionContent *other) = 0;
+	virtual SolutionContent *calculateCrossJoin(SolutionContent *other) = 0;
+	virtual SolutionContent *calculateAddDifference(Vertex difference) = 0;
 };
 
 class EnumerationSolutionContent : public SolutionContent
 {
 public:
 	EnumerationSolutionContent();
-	EnumerationSolutionContent(const std::set<Variable> &partition);
+	EnumerationSolutionContent(const VertexSet &partition);
 	virtual ~EnumerationSolutionContent();
 
+	virtual SolutionContent *calculateUnion(SolutionContent *other);
+	virtual SolutionContent *calculateCrossJoin(SolutionContent *other);
+	virtual SolutionContent *calculateAddDifference(Vertex difference);
+
 public:
-	std::set<std::set<Variable> > enumerations;
+	std::set<VertexSet> enumerations;
 };
 
 class CountingSolutionContent : public SolutionContent
 {
 public:
 	CountingSolutionContent();
-	CountingSolutionContent(const std::set<Variable> &partition);
+	CountingSolutionContent(const VertexSet &partition);
 	virtual ~CountingSolutionContent();
+
+	virtual SolutionContent *calculateUnion(SolutionContent *other);
+	virtual SolutionContent *calculateCrossJoin(SolutionContent *other);
+	virtual SolutionContent *calculateAddDifference(Vertex difference);
 
 public:
 	mpz_class count;
@@ -54,8 +66,12 @@ class ConsistencySolutionContent : public SolutionContent
 {
 public:
 	ConsistencySolutionContent();
-	ConsistencySolutionContent(const std::set<Variable> &partition);
+	ConsistencySolutionContent(const VertexSet &partition);
 	~ConsistencySolutionContent();
+
+	virtual SolutionContent *calculateUnion(SolutionContent *other);
+	virtual SolutionContent *calculateCrossJoin(SolutionContent *other);
+	virtual SolutionContent *calculateAddDifference(Vertex difference);
 
 public:
 	bool consistent;
@@ -66,18 +82,17 @@ class Solution
 public:
 	Solution(Operation operation, Solution *left, Solution *right);
 	Solution(Solution *child, int difference);	
-	Solution(const std::set<Variable> &partition);
-	Solution();
-	virtual ~Solution();
+	Solution(SolutionContent *content);
+	~Solution();
 
 public:
-	virtual SolutionContent *getContent();
+	SolutionContent *getContent();
 	void forceCalculation();
 
 protected:
-	virtual void calculateUnion() = 0;
-	virtual void calculateCrossJoin() = 0;
-	virtual void calculateAddDifference() = 0;
+	void calculateUnion();
+	void calculateCrossJoin();
+	void calculateAddDifference();
 
 protected:
 	SolutionContent *content;
@@ -87,51 +102,6 @@ protected:
 
 private:
 	Operation operation;
-};
-
-class EnumerationSolution : public Solution
-{
-public:
-	EnumerationSolution(Operation operation, Solution *left, Solution *right);
-	EnumerationSolution(Solution *child, int difference);	
-	EnumerationSolution(const std::set<Variable> &partition);
-	EnumerationSolution();
-	virtual ~EnumerationSolution();
-
-protected:
-	virtual void calculateUnion();
-	virtual void calculateCrossJoin();
-	virtual void calculateAddDifference();
-};
-
-class CountingSolution : public Solution
-{
-public:
-	CountingSolution(Operation operation, Solution *left, Solution *right);
-	CountingSolution(Solution *child, int difference);	
-	CountingSolution(const std::set<Variable> &partition);
-	CountingSolution();
-	virtual ~CountingSolution();
-
-protected:
-	virtual void calculateUnion();
-	virtual void calculateCrossJoin();
-	virtual void calculateAddDifference();
-};
-
-class ConsistencySolution : public Solution
-{
-public:
-	ConsistencySolution(Operation operation, Solution *left, Solution *right);
-	ConsistencySolution(Solution *child, int difference);	
-	ConsistencySolution(const std::set<Variable> &partition);
-	ConsistencySolution();
-	virtual ~ConsistencySolution();
-
-protected:
-	virtual void calculateUnion();
-	virtual void calculateCrossJoin();
-	virtual void calculateAddDifference();
 };
 
 class Tuple
@@ -163,17 +133,20 @@ typedef std::map<Tuple *, Solution *, less<Tuple *> > TupleSet;
 class Instantiator
 {
 public:
-	Instantiator();
+	Instantiator(bool lazy);
 	virtual ~Instantiator();
 
 public:
 	virtual Solution *createEmptySolution() const = 0;
-	virtual Solution *createLeafSolution(const std::set<Variable> &partition) const = 0;
-	virtual Solution *combine(Operation operation, Solution *left, Solution *right) const = 0;
-	virtual Solution *addDifference(Solution *child, int difference) const = 0;
+	virtual Solution *createLeafSolution(const VertexSet &partition) const = 0;
+	virtual Solution *combine(Operation operation, Solution *left, Solution *right) const;
+	virtual Solution *addDifference(Solution *child, int difference) const;
+
+protected:
+	bool lazy;
 };
 
-template<class TSolution>
+template<class TSolutionContent>
 class GenericInstantiator : public Instantiator
 {
 public:
@@ -181,44 +154,33 @@ public:
 	virtual ~GenericInstantiator();
 
 public:
-	virtual TSolution *createEmptySolution() const;
-	virtual TSolution *createLeafSolution(const std::set<Variable> &partition) const;
-	virtual TSolution *combine(Operation operation, Solution *left, Solution *right) const;
-	virtual TSolution *addDifference(Solution *child, int difference) const;
-
-private:
-	bool lazy;
+	virtual Solution *createEmptySolution() const;
+	virtual Solution *createLeafSolution(const VertexSet &partition) const;
 };
+
+class Problem;
 
 class AbstractAlgorithm
 {
 public:
-	AbstractAlgorithm(const Instantiator *instantiator, const ExtendedHypertree *root, 
-		const SignMap &signMap, const HeadMap &headMap, const NameMap &nameMap);
+	AbstractAlgorithm(Problem *problem);
 	virtual ~AbstractAlgorithm();
 
 protected:
-	const Instantiator *instantiator;
-	const ExtendedHypertree *root;
-	SignMap signMap;
-	HeadMap headMap;
-	NameMap nameMap;
+	Instantiator *instantiator;
+	Problem *problem;
 
 public:
-	virtual Solution *evaluate();
-	SignMap &getSignMap();
-	HeadMap &getHeadMap();
-	NameMap &getNameMap();
+	void setInstantiator(Instantiator *instantiator);
+	Solution *evaluate(const ExtendedHypertree *root);
 
 protected:
-	virtual Solution *selectSolution(TupleSet *tuples) = 0;
+	virtual Solution *selectSolution(TupleSet *tuples, const ExtendedHypertree *root) = 0;
 
 	virtual TupleSet *evaluateLeafNode(const ExtendedHypertree *node) = 0;
 	virtual TupleSet *evaluateBranchNode(const ExtendedHypertree *node) = 0;
-	virtual TupleSet *evaluateVariableIntroductionNode(const ExtendedHypertree *node) = 0;
-	virtual TupleSet *evaluateVariableRemovalNode(const ExtendedHypertree *node) = 0;
-	virtual TupleSet *evaluateRuleIntroductionNode(const ExtendedHypertree *node) = 0;
-	virtual TupleSet *evaluateRuleRemovalNode(const ExtendedHypertree *node) = 0;
+	virtual TupleSet *evaluateIntroductionNode(const ExtendedHypertree *node) = 0;
+	virtual TupleSet *evaluateRemovalNode(const ExtendedHypertree *node) = 0;
 
 	TupleSet *evaluateNode(const ExtendedHypertree *node);	
 };

@@ -4,18 +4,22 @@
 
 %define MEMBERS \
 	public: \
-		virtual ~DatalogParser(); \
+		~DatalogParser(); \
+		DatalogProblem *getProblem(); \
 	private: \
 		FlexLexer *lexer; \
 		int currentRule; \
-	protected: \
-		virtual void addVariable(int rule, const char* name, bool negative = false, bool head = false) = 0;
+		DatalogProblem *problem; \
+		 \
+		void nextRule(); \
+		void nextVariable(const char *name, bool positive, bool head);
 
-%define CONSTRUCTOR_PARAM FlexLexer *lexer, istream *in
+%define CONSTRUCTOR_PARAM FlexLexer *lexer, istream *in, DatalogProblem *problem
 
 %define CONSTRUCTOR_CODE \
 	this->lexer = lexer; \
-	this->currentRule = 0; \
+	this->problem = problem; \
+	this->currentRule = this->problem->addNewRule(); \
 	if(in != NULL) lexer->switch_streams(in, NULL);
 
 %define LEX_BODY { int r = lexer->yylex(); yylval.yytext = strdup(lexer->YYText()); return r; }
@@ -34,7 +38,9 @@
 
 using namespace std;
 
-#include "../htree/Hypergraph.h"
+#include "../Global.h"
+#include "../DatalogProblem.h"
+
 %}
 
 %union{
@@ -58,13 +64,13 @@ rules		: rule					{ }
 		| rule rules				{ }
 		;
 
-rule		: head ENTAILS body END			{ ++this->currentRule; }
-		| ENTAILS body END			{ ++this->currentRule; }
-		| head END				{ ++this->currentRule; }
+rule		: head ENTAILS body END			{ this->nextRule(); }
+		| ENTAILS body END			{ this->nextRule(); }
+		| head END				{ this->nextRule(); }
 		;
 
-head		: ATOM OR head				{ this->addVariable(this->currentRule, $1, false, true); }
-		| ATOM					{ this->addVariable(this->currentRule, $1, false, true); }
+head		: ATOM OR head				{ this->nextVariable($1, false, true); }
+		| ATOM					{ this->nextVariable($1, false, true); }
 		;
 
 body		: patom AND body			{ }
@@ -73,12 +79,26 @@ body		: patom AND body			{ }
 		| natom					{ }
 		;
 
-patom		: ATOM					{ this->addVariable(this->currentRule, $1, true, false); }
+patom		: ATOM					{ this->nextVariable($1, true, false); }
 		;
 
-natom		: NOT ATOM				{ this->addVariable(this->currentRule, $2, false, false); }
+natom		: NOT ATOM				{ this->nextVariable($2, false, false); }
 
 %%
 
 DatalogParser::~DatalogParser() { }
 
+inline void DatalogParser::nextRule()
+{
+	this->currentRule = this->problem->addNewRule();
+}
+
+inline void DatalogParser::nextVariable(const char *name, bool positive, bool head)
+{
+	this->problem->addEdge(this->currentRule, this->problem->addVariable(name), positive, head);
+}
+
+DatalogProblem *DatalogParser::getProblem()
+{
+	return this->problem;
+}

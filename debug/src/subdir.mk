@@ -1,14 +1,20 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../src/Global.cpp \
+../src/Problem.cpp \
+../src/DatalogProblem.cpp \
 ../src/main.cpp
 
 OBJS += \
 ./src/Global.o \
+./src/Problem.o \
+./src/DatalogProblem.o \
 ./src/main.o
 
 CPP_DEPS += \
 ./src/Global.d \
+./src/Problem.d \
+./src/DatalogProblem.d \
 ./src/main.d
 
 

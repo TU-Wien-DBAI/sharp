@@ -1,42 +1,24 @@
 /***********************************\
 |* CLASS: GenericInstantiator
 \***********************************/
-template<class TSolution>
-GenericInstantiator<TSolution>::GenericInstantiator(bool lazy) 
+template<class TSolutionContent>
+GenericInstantiator<TSolutionContent>::GenericInstantiator(bool lazy) 
+	: Instantiator(lazy)
 {
-	this->lazy = lazy;
 }
 
-template<class TSolution>
-GenericInstantiator<TSolution>::~GenericInstantiator() { }
+template<class TSolutionContent>
+GenericInstantiator<TSolutionContent>::~GenericInstantiator() { }
 
-template<class TSolution>
-TSolution *GenericInstantiator<TSolution>::createEmptySolution() const
+template<class TSolutionContent>
+Solution *GenericInstantiator<TSolutionContent>::createEmptySolution() const
 {
-	return new TSolution();
+	return new Solution(new TSolutionContent());
 }
 
-template<class TSolution>
-TSolution *GenericInstantiator<TSolution>::createLeafSolution(const set<Variable> &partition) const
+template<class TSolutionContent>
+Solution *GenericInstantiator<TSolutionContent>::createLeafSolution(const VertexSet &partition) const
 {
-	return new TSolution(partition);
-}
-
-template<class TSolution>
-TSolution *GenericInstantiator<TSolution>::combine(Operation operation, 
-	Solution *left, Solution *right) const
-{
-	TSolution *s = new TSolution(operation, left, right);
-	if(!lazy) s->forceCalculation();
-	return s;
-}
-
-template<class TSolution>
-TSolution *GenericInstantiator<TSolution>::addDifference(Solution *child, 
-	int difference) const
-{
-	TSolution *s = new TSolution(child, difference);
-	if(!lazy) s->forceCalculation();
-	return s;
+	return new Solution(new TSolutionContent(partition));
 }
 

@@ -38,7 +38,6 @@ HeadCycleFreeAnswerSetTuple::~HeadCycleFreeAnswerSetTuple() { }
 bool HeadCycleFreeAnswerSetTuple::operator<(const Tuple &other) const
 {
 	HeadCycleFreeAnswerSetTuple &o = (HeadCycleFreeAnswerSetTuple &)other;
-	//TODO
 
 	return     (this->variables < o.variables
 		|| (this->variables == o.variables
@@ -56,7 +55,6 @@ bool HeadCycleFreeAnswerSetTuple::operator<(const Tuple &other) const
 bool HeadCycleFreeAnswerSetTuple::operator==(const Tuple &other) const
 {
 	HeadCycleFreeAnswerSetTuple &o = (HeadCycleFreeAnswerSetTuple &)other;
-	//TODO
 
 	return 	   this->variables == o.variables
 		&& this->rules == o.rules
@@ -72,23 +70,19 @@ int HeadCycleFreeAnswerSetTuple::hash() const
 	return -1;
 }
 
-HeadCycleFreeAnswerSetAlgorithm::HeadCycleFreeAnswerSetAlgorithm
-	(const Instantiator *instantiator, const ExtendedHypertree *root, 
-		const SignMap &signMap, const HeadMap &headMap, const NameMap &nameMap)
-	: AbstractAlgorithm(instantiator, root, signMap, headMap, nameMap)
+HeadCycleFreeAnswerSetAlgorithm::HeadCycleFreeAnswerSetAlgorithm(Problem *problem)
+	: AnswerSetAlgorithm(problem)
 {
 }
 
 HeadCycleFreeAnswerSetAlgorithm::~HeadCycleFreeAnswerSetAlgorithm() { }
 
-Solution *HeadCycleFreeAnswerSetAlgorithm::selectSolution(TupleSet *tuples)
+Solution *HeadCycleFreeAnswerSetAlgorithm::selectSolution(TupleSet *tuples, const ExtendedHypertree *root)
 {
 	Solution *s = this->instantiator->createEmptySolution();
 
-	//TODO
-
 	equal_to<set<int> > eq;
-	set<Rule> rules = this->root->getRules();
+	RuleSet rules = getRules(root);
 
 	for(TupleSet::iterator it = tuples->begin(); it != tuples->end(); ++it)
 	{
@@ -114,7 +108,10 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateLeafNode(const ExtendedHypert
 {
 	TupleSet *ts = new TupleSet();
 
-	Partition apart = Helper::partition(node->getVariables());
+	VariableSet nodeVariables = getVariables(node);
+	RuleSet nodeRules = getRules(node);
+
+	Partition apart = Helper::partition(nodeVariables);
 
         for(unsigned int i = 0; i < apart.first.size(); ++i)
 	{
@@ -129,8 +126,8 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateLeafNode(const ExtendedHypert
 			ast.variables = apart.first[i];
 			ast.rules = Helper::trueRules(apart.first[i], 
 					      apart.second[i], 
-					      node->getRules(),
-					      this->signMap);
+					      nodeRules,
+					      this->problem->getSignMap());
 
 			ast.order = order;
 			ast.ordertypes = OrderTypes(order.size(), false);
@@ -142,13 +139,13 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateLeafNode(const ExtendedHypert
 				ast.guards.insert(pair<Variable, set<Rule> >(
 					*it,
 					trueRules(apart.first[i],
-						node->getVariables(),
-						node->getRules(),
+						nodeVariables,
+						nodeRules,
 						*it,
 						ast.order,
 						ast.ordertypes,
-						this->signMap,
-						this->headMap
+						this->problem->getSignMap(),
+						this->problem->getHeadMap()
 					)));
 			}
 
@@ -291,11 +288,14 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateVariableIntroductionNode(cons
 	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
+	VariableSet nodeVariables = getVariables(node);
+	RuleSet nodeRules = getRules(node);
+
 	set<Variable> var; var.insert(node->getDifference());
 	set<Rule> trueN = Helper::trueRules(set<Variable>(), var, 
-				node->getRules(), this->signMap);
+				nodeRules, this->problem->getSignMap());
 	set<Rule> trueP = Helper::trueRules(var, set<Variable>(), 
-				node->getRules(), this->signMap);
+				nodeRules, this->problem->getSignMap());
 
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
 	{
@@ -318,13 +318,13 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateVariableIntroductionNode(cons
 			++git)
 		{
 			astf.guards[git->first] = trueRules(	astf.variables,
-								node->getVariables(),
+								nodeVariables,
 								git->second,
 								git->first,
 								astf.order,
 								astf.ordertypes,
-								this->getSignMap(),
-								this->getHeadMap());
+								this->problem->getSignMap(),
+								this->problem->getHeadMap());
 		}
 
 		for(set<set<Rule> >::iterator git = x.guardsdown.begin();
@@ -332,12 +332,12 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateVariableIntroductionNode(cons
 			++git)
 		{
 			set<Rule> next = trueRules(	astf.variables,
-							node->getVariables(),
+							nodeVariables,
 							*git,
 							astf.order,
 							astf.ordertypes,	
-							this->getSignMap(),
-							this->getHeadMap());
+							this->problem->getSignMap(),
+							this->problem->getHeadMap());
 
 			if(next.size() == 0) { insert = false; break; }
 			
@@ -384,25 +384,25 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateVariableIntroductionNode(cons
 				++git)
 			{
 				astt.guards[git->first] = trueRules(	astt.variables,
-									node->getVariables(),
+									nodeVariables,
 									git->second,
 									git->first,
 									astt.order,
 									astt.ordertypes,
-									this->getSignMap(),
-									this->getHeadMap());
+									this->problem->getSignMap(),
+									this->problem->getHeadMap());
 			}
 
 			set<Rule> diffg, truediffg;
 
 			truediffg =  trueRules(	astt.variables,
-						node->getVariables(),
-						node->getRules(),
+						nodeVariables,
+						nodeRules,
 						node->getDifference(),
 						astt.order,
 						astt.ordertypes,
-						this->getSignMap(),
-						this->getHeadMap());
+						this->problem->getSignMap(),
+						this->problem->getHeadMap());
 
 			set_difference(truediffg.begin(), truediffg.end(), x.rules.begin(), x.rules.end(),
 						inserter(diffg, diffg.begin()));
@@ -414,12 +414,12 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateVariableIntroductionNode(cons
 				++git)
 			{
 				set<Rule> next = trueRules(	astt.variables,
-								node->getVariables(),
+								nodeVariables,
 								*git,
 								astt.order,
 								astt.ordertypes,	
-								this->getSignMap(),
-								this->getHeadMap());
+								this->problem->getSignMap(),
+								this->problem->getHeadMap());
 	
 				if(next.size() == 0) { insert = false; break; }
 				
@@ -460,6 +460,8 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateVariableRemovalNode(const Ext
 	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
+	RuleSet nodeRules = getRules(node);
+
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
 	{
 		HeadCycleFreeAnswerSetTuple &x = *(HeadCycleFreeAnswerSetTuple *)it->first;
@@ -473,11 +475,11 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateVariableRemovalNode(const Ext
 			else l2 = git->second;
 		}
 
-		for(set<Rule>::iterator rit = node->getRules().begin(); rit != node->getRules().end(); ++rit)
+		for(set<Rule>::iterator rit = nodeRules.begin(); rit != nodeRules.end(); ++rit)
 		{
 			map<Variable, bool>::iterator rulesigns;
-			if((rulesigns = this->signMap[*rit].find(node->getDifference())) 
-				!= this->signMap[*rit].end())
+			if((rulesigns = this->problem->getSignMap()[*rit].find(node->getDifference())) 
+				!= this->problem->getSignMap()[*rit].end())
 			{
 				if(rulesigns->second) l1.insert(*rit);
 			}
@@ -537,6 +539,8 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateRuleIntroductionNode(const Ex
 	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
+	VariableSet nodeVariables = getVariables(node);
+
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
 	{
 		HeadCycleFreeAnswerSetTuple &x = *(HeadCycleFreeAnswerSetTuple *)it->first;
@@ -548,9 +552,9 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateRuleIntroductionNode(const Ex
 		//FIXME: use swap instead of copying...
 		ast.rules = x.rules;
 		if(Helper::trueRule(ast.variables, 
-				    node->getVariables(), 
+				    nodeVariables, 
 				    node->getDifference(),
-				    this->signMap)) 
+				    this->problem->getSignMap())) 
 			ast.rules.insert(node->getDifference());
 
 		ast.order = x.order;
@@ -562,13 +566,13 @@ TupleSet *HeadCycleFreeAnswerSetAlgorithm::evaluateRuleIntroductionNode(const Ex
 		{
 			pair<Variable, set<Rule> > temp(git->first, git->second);
 			if(trueRule(ast.variables,
-				    node->getVariables(), 
+				    nodeVariables, 
 				    node->getDifference(),
 				    temp.first, 
 				    ast.order,
 				    ast.ordertypes,
-				    this->signMap,
-				    this->headMap))
+				    this->problem->getSignMap(),
+				    this->problem->getHeadMap()))
 				temp.second.insert(node->getDifference());
 			ast.guards.insert(temp);
 		}

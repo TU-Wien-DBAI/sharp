@@ -1,7 +1,7 @@
 #ifndef HEADCYCLEFREEANSWERSET_H_
 #define HEADCYCLEFREEANSWERSET_H_
 
-#include "AbstractAlgorithm.h"
+#include "AnswerSet.h"
 
 class HeadCycleFreeAnswerSetTuple : public Tuple
 {
@@ -25,18 +25,18 @@ public:
 	virtual int hash() const;
 };
 
-class HeadCycleFreeAnswerSetAlgorithm : public AbstractAlgorithm
+class HeadCycleFreeAnswerSetAlgorithm : public AnswerSetAlgorithm
 {
 public:
-	HeadCycleFreeAnswerSetAlgorithm(const Instantiator *instantiator, const ExtendedHypertree *root, 
-		const SignMap &signMap, const HeadMap &headMap, const NameMap &nameMap);
+	HeadCycleFreeAnswerSetAlgorithm(Problem *problem);
 	virtual ~HeadCycleFreeAnswerSetAlgorithm();
 
 protected:
-	virtual Solution *selectSolution(TupleSet *tuples);
+	virtual Solution *selectSolution(TupleSet *tuples, const ExtendedHypertree *node);
 	
 	virtual TupleSet *evaluateLeafNode(const ExtendedHypertree *node);
 	virtual TupleSet *evaluateBranchNode(const ExtendedHypertree *node);
+
 	virtual TupleSet *evaluateVariableIntroductionNode(const ExtendedHypertree *node);
 	virtual TupleSet *evaluateVariableRemovalNode(const ExtendedHypertree *node);
 	virtual TupleSet *evaluateRuleIntroductionNode(const ExtendedHypertree *node);

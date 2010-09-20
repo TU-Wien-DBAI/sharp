@@ -21,7 +21,7 @@ protected:
 	int iMyID;
 
 	// Name of the component
-	char *cMyName;
+	int name;
 
 	// Size of the component
 	int iMyMaxSize;
@@ -68,8 +68,8 @@ protected:
 
 public:
 	// Constructor
-	Component(int ID, char *cName, int iSize, int iNbrOfNeighbours);
-	Component(int ID, char *cName);
+	Component(int ID, int name, int iSize, int iNbrOfNeighbours);
+	Component(int ID, int name);
 
 	// Destructor
 	virtual ~Component();
@@ -78,7 +78,7 @@ public:
 	int getID();
 
 	// Returns the name of the component
-	char *getName();
+	int getName();
 
 	// Returns the number of neighbours
 	int getNbrOfNeighbours();
