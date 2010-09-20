@@ -1,0 +1,43 @@
+This is a framework for working with (hypter)tree decompositions.
+
+To implement a new algorithm, follow these steps:
+
+A) Derive a subclass from the Problem class, representing your problem (i.e. DatalogProblem, ArgumentationProblem, MultiCutProblem, etc.)
+	-) implement the parse() method: This should parse the information about your problem and store it in the Problem class.
+	-) implement the preprocess() method: This is called directly after parsing, allows for preliminary optimizations (i.e. redundancy elimination, etc.)
+	-) implement the buildHypergraphRepresentation() method: This should return a hypergraph representation of your problem. If only working on normal graphs, make use of the createHypergraphFromSets() method!
+
+B) Derive a subclass from the AbstractAlgorithm class, which implements the actual algorithm for the first bottom-up traversal of the tree.
+	-) derive from the Tuple class, in your Tuple (i.e. AnswerSetTuple), define the fields that you need to represent a partial solution
+	-) derive from the SolutionContent class, in it (i.e. EnumerationSolutionContent), define the fields to represent the solution to your problem.
+	-) implement the evaluate*Node() methods: Each should handle the various node-types (leaf, branch, intro, removal) and produce Tuples accordingly.
+		*) To get the tuple sets of your child nodes, call the evaluateNode(...) method like so: evaluateNode(node->firstChild()), etc. Do this before anything else.
+		*) Based on the TupleSets of your child nodes, process the Tuples for the current node and return the new TupleSet.
+		*) To instantiate solutions, use the instantiator: this->instantiator->createLeafSolutions(), or ..->createEmptySolutions() or ..->combine(...), etc.
+		*) Usually you use the combine(CrossJoin,...) instantiation method, when Tuples are merged in branch nodes
+		*) Usually you use the combine(Union,...) instantiation method, when two tuples become the same after processing
+		*) Usually you use the addDifference(...) instantiation method, when for a tuple an additional vertex is instroduced.
+	-) implement the selectSolutions() method: This should select from the final TupleSet all those, that represent valid solutions.
+	-) implement the calculate*() methods of the SolutionContent class: These handle how solutions belonging to the same Tuple are merged.
+		*) CrossJoin: This happens, when in a branch node a Tuple from the left branch and a Tuple from the right branch are merged.
+		*) Union: This happens, when during Tuple processing one or more Tuples become the same.
+		*) AddDifference: This happens when a vertex is introduced into a Tuple.
+
+C) Instantiate your Problem class and call the calculateSolution() method with an appropriate instantiator for your SolutionContent (i.e GenericInstantiator<EnumerationSolutionContent>()). Now the following happens:
+	-) your parse() method is called
+	-) your preprocess() method is called
+	-) your buildHypergraphRepresentation() method is called
+	-) based on the returned hypergraph, a hypertree decomposition is created
+	-) the hypertree is normalized, so that between two nodes there is a maximum difference of one vertex
+	-) the normalized hypertree is passed to your algorithm
+	-) on the root node, the evaluateNode-method is called, which calls the appropriate evaluate*Node() methods of your algorithm
+	-) the returned TupleSets of the root node are passed to the selectSolutions() method
+	-) the Solution that your selectSolution() method selects is returned as the Solution to the problem represented by your Problem class instance.
+	
+D) To now get the actual content of your solution, you can now call the getContent() method on your solution. What happens then is the following:
+	-) if the instantiator that you used, had the lazy flag set (i.e. lazy = true) in the constructor, a second traversal of the tree is done.
+	-) this second traversal only follows the path where it is now known that they lead to an actual solution. The framework has recorded these paths for you.
+	-) once the traversal of the tree is complete, the actual solution content is generated.
+	-) the solution content is returned. You can now access your data in the solution content (an instance of your class derived from SolutionContent is returned).
+
+
