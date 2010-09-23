@@ -27,6 +27,6 @@ release:
 clean:
 	@cd ./debug/ ; make clean
 	@cd ./release/ ; make clean
-	-$(RM) src/input/DIMACSParser.cpp src/input/DIMACSParser.h src/input/DIMACSLexer.cpp src/input/DatalogParser.cpp src/input/DatalogParser.h src/input/DatalogLexer.cpp sharp
+	-$(RM) src/input/DIMACSParser.cpp src/input/DIMACSParser.h src/input/DIMACSLexer.cpp src/input/DatalogParser.cpp src/input/DatalogParser.h src/input/DatalogLexer.cpp src/input/ArgumentationParser.cpp src/input/ArgumentationParser.h src/input/ArgumentationLexer.cpp sharp
 
 .PHONY: all release debug debug-verbose clean

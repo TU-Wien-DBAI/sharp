@@ -3,6 +3,8 @@ CPP_SRCS += \
 ../src/input/AbstractHypergraph.cpp \
 ../src/input/DatalogParser.cpp \
 ../src/input/DatalogLexer.cpp \
+../src/input/ArgumentationParser.cpp \
+../src/input/ArgumentationLexer.cpp \
 ../src/input/DIMACSParser.cpp \
 ../src/input/DIMACSLexer.cpp \
 ../src/input/DIMACSHypergraph.cpp 
@@ -11,6 +13,8 @@ OBJS += \
 ./src/input/AbstractHypergraph.o \
 ./src/input/DatalogParser.o \
 ./src/input/DatalogLexer.o \
+./src/input/ArgumentationParser.o \
+./src/input/ArgumentationLexer.o \
 ./src/input/DIMACSParser.o \
 ./src/input/DIMACSLexer.o \
 ./src/input/DIMACSHypergraph.o
@@ -19,6 +23,8 @@ CPP_DEPS += \
 ./src/input/AbstractHypergraph.d \
 ./src/input/DatalogParser.d \
 ./src/input/DatalogLexer.d \
+./src/input/ArgumentationParser.d \
+./src/input/ArgumentationLexer.d \
 ./src/input/DIMACSParser.d \
 ./src/input/DIMACSLexer.d \
 ./src/input/DIMACSHypergraph.d
@@ -36,6 +42,14 @@ CPP_DEPS += \
 	@echo ' '
 
 ../src/input/%Parser.cpp: ../src/input/%Parser.y
+	@echo 'Building file: $<'
+	@echo 'Invoking: Bison++ Parser Generator'
+	bison++ -d -h"$(@:%.cpp=%.h)" -o"$@" "$<"
+	@echo 'Finished building: $<'
+	@echo ' '
+
+# .yacc-Files should be processed with bison (not bison++) - NOT IMPLEMENTED YET	
+../src/input/%Parser.cpp: ../src/input/%Parser.yacc
 	@echo 'Building file: $<'
 	@echo 'Invoking: Bison++ Parser Generator'
 	bison++ -d -h"$(@:%.cpp=%.h)" -o"$@" "$<"
