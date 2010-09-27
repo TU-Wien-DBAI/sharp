@@ -69,8 +69,12 @@ void ArgumentationParser::addArgumentId(string arg)
 {
 	/* Arguments are represented with e.g. "arg(a).". This example would return "a" */
 	string argumentId = arg.substr(4, arg.length()-6);
+
+	#ifdef DEBUG
+	cout << "Parsed argument: " << argumentId << endl;
+	#endif
 	
-	/* parse argument info and call method in problem*/
+	this->problem->addArgument(argumentId);
 }
 
 void ArgumentationParser::addAttackId(string att)
@@ -79,8 +83,12 @@ void ArgumentationParser::addAttackId(string att)
 	int commaPos = att.find(",",0);
 	string attackerId = att.substr(4, commaPos-4);
 	string attackedId = att.substr(commaPos+1, att.length()-commaPos-3);
-	
-	/* parse attack info and call method in problem*/
+
+	#ifdef DEBUG
+	cout << "Parsed attack: " << attackerId << " attacks " << attackedId << endl;
+	#endif
+
+	this->problem->addAttack(attackerId, attackedId);	
 }
 
 ArgumentationProblem *ArgumentationParser::getProblem()

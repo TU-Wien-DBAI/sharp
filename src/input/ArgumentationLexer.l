@@ -20,14 +20,15 @@ whitespace 		{delimiter}+
 newline 		\n
 comment 		(%[^\n]*{newline})
 identifier		[a-z][a-z0-9]*
-arg 			arg({identifier})\.
-att 			att({identifier}\,[ ]*{identifier})\.
+arg 			arg\({identifier}\)\.
+att 			att\({identifier}\,[ ]*{identifier}\)\.
 
 %%
 
 {comment}		; /*ignore comments*/
 {whitespace}	; /*ignore whitespaces*/
-{newline}		; /*ignore newlines*/ 
+{newline}		; /*ignore newlines*/
+{identifier}	; /*ignore (standalone) identifiers*/ 
 {arg}			return ArgumentationParser::ARG;
 {att}			return ArgumentationParser::ATT;
 .				return ArgumentationParser::UNKNOWN;

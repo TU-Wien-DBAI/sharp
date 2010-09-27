@@ -18,8 +18,6 @@ ArgumentationProblem::ArgumentationProblem(istream *stream)
 	: Problem(0)
 {
 	this->parser = new ArgumentationParser(new ArgumentationFlexLexer(), stream, this);
-	this->args = 0;
-	this->attacks = 0;
 }
 
 ArgumentationProblem::~ArgumentationProblem()
@@ -28,12 +26,13 @@ ArgumentationProblem::~ArgumentationProblem()
 
 void ArgumentationProblem::addArgument(string argumentId)
 {
-	/* TODO: adds an argument to the argument set (= vertex set) */
+	Vertex arg = storeVertexName(argumentId);
+	args.insert(arg);
 }
 
 void ArgumentationProblem::addAttack(string attackerId, string attackedId)
 {
-	/* TODO: adds an attack relation to the attack set (= edge set) and stores the direction of the attack */
+	attacks.insert(make_pair(attackerId, attackedId));
 }
 
 void ArgumentationProblem::parse()
@@ -43,12 +42,28 @@ void ArgumentationProblem::parse()
 
 void ArgumentationProblem::preprocess()
 {
-	
+	// currently not used...
+	// todo: check if the elements of attack pairs appear in the vertex set; duplicate checks...
 }
 
 #ifdef DEBUG
 static void printAF(ArgumentSet &args, AttackSet &attacks)
 {
+	//go through ArgumentSet
+	cout << "Arguments:" << endl;
+	for(set<Vertex>::iterator it = args.begin(); it != args.end(); ++it)
+	{
+			cout << *it << endl;
+	}
+	
+	cout << endl;
+	
+	//go through AttackSet
+	cout << "Attacks:" << endl;	
+	for(set<pair<string, string> >::iterator it = attacks.begin(); it != attacks.end(); ++it)
+	{
+			cout << it->first << " attacks " << it->second << endl;
+	}
 }
 #endif
 
@@ -58,5 +73,16 @@ Hypergraph *ArgumentationProblem::buildHypergraphRepresentation()
 	printAF(args, attacks);
 #endif
 
-	return Problem::createHypergraphFromSets(args, attacks);
+	EdgeSet attackNbrSet;
+	int attackerNbr, attackedNbr;
+	
+	//goes through the attacks set, gets the numbers to each entry and stores them in the attackNbrSet
+	for(set<pair<string, string> >::iterator it = attacks.begin(); it != attacks.end(); ++it)
+	{
+		attackerNbr = getVertexId(it->first);
+		attackedNbr = getVertexId(it->first);
+		attackNbrSet.insert(make_pair(attackerNbr, attackedNbr));
+	}
+	
+	return Problem::createHypergraphFromSets(args, attackNbrSet);
 }

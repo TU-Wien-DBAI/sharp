@@ -3,18 +3,21 @@ CPP_SRCS += \
 ../src/Global.cpp \
 ../src/Problem.cpp \
 ../src/DatalogProblem.cpp \
+../src/ArgumentationProblem.cpp \
 ../src/main.cpp
 
 OBJS += \
 ./src/Global.o \
 ./src/Problem.o \
 ./src/DatalogProblem.o \
+./src/ArgumentationProblem.o \
 ./src/main.o
 
 CPP_DEPS += \
 ./src/Global.d \
 ./src/Problem.d \
 ./src/DatalogProblem.d \
+./src/ArgumentationProblem.d \
 ./src/main.d
 
 

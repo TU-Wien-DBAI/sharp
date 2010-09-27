@@ -9,7 +9,7 @@
 
 typedef Vertex Argument;
 typedef VertexSet ArgumentSet;
-typedef EdgeSet AttackSet;
+typedef std::set<std::pair<std::string, std::string> > AttackSet;
 
 class ArgumentationParser;
 
@@ -28,8 +28,8 @@ protected:
 	virtual Hypergraph *buildHypergraphRepresentation();
 
 private:
-	ArgumentSet args;
 	AttackSet attacks;
+	ArgumentSet args;
 	ArgumentationParser *parser;
 };
 

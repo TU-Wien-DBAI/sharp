@@ -13,6 +13,7 @@
 #define YY_DatalogParser_LTYPE yyltype /* otherwise double definition */ 
 
 #include "DatalogProblem.h"
+#include "ArgumentationProblem.h"
 
 #include "sharp/AnswerSet.h"
 #include "sharp/HeadCycleFreeAnswerSet.h"
@@ -29,7 +30,8 @@ enum Algorithm
 	SAT,
 	MinSAT,
 	ASP,
-	HCFASP
+	HCFASP,
+	AF
 };
 
 enum OutputType
@@ -75,6 +77,7 @@ int main(int argc, char **argv)
 			else if(!strcmp(optarg, "minsat")) algorithm = MinSAT;
 			else if(!strcmp(optarg, "asp")) algorithm = ASP;
 			else if(!strcmp(optarg, "hcfasp")) algorithm = HCFASP;
+			else if(!strcmp(optarg, "af")) algorithm = AF;
 			else usage();
 			++argCount;
 			aOpt = true;
@@ -167,6 +170,9 @@ int main(int argc, char **argv)
 		break;
 	case HCFASP:
 		problem = new DatalogProblem(stream, true);
+		break;
+	case AF:
+		problem = new ArgumentationProblem(stream);
 		break;
 	default:
 		C0(0 /*ERROR: Invalid algorithm selection*/);
