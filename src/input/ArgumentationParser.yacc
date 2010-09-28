@@ -1,3 +1,9 @@
+/*
+* Author: 		Clemens Nopp, Matr.Nr. 0826054
+* Date: 		September 2010
+* This File:	Parser for Argumentation Frameworks
+*/
+
 %name ArgumentationParser
 
 %define LSP_NEEDED
@@ -69,10 +75,6 @@ void ArgumentationParser::addArgumentId(string arg)
 {
 	/* Arguments are represented with e.g. "arg(a).". This example would return "a" */
 	string argumentId = arg.substr(4, arg.length()-6);
-
-	#ifdef DEBUG
-	cout << "Parsed argument: " << argumentId << endl;
-	#endif
 	
 	this->problem->addArgument(argumentId);
 }
@@ -83,10 +85,6 @@ void ArgumentationParser::addAttackId(string att)
 	int commaPos = att.find(",",0);
 	string attackerId = att.substr(4, commaPos-4);
 	string attackedId = att.substr(commaPos+1, att.length()-commaPos-3);
-
-	#ifdef DEBUG
-	cout << "Parsed attack: " << attackerId << " attacks " << attackedId << endl;
-	#endif
 
 	this->problem->addAttack(attackerId, attackedId);	
 }

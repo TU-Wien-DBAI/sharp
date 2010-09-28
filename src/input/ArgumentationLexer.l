@@ -1,9 +1,10 @@
 /*
-* Lexer for Argumentation Frameworks in DLV syntax
+* Author: 		Clemens Nopp, Matr.Nr. 0826054
+* Date: 		September 2010
+* This File:	Lexer for Argumentation Frameworks in DLV syntax
+*
 * Arguments are represented with e.g. "arg(a). arg(b)."
 * Attacks are represented with e.g. "att(a,b)." 
-*
-* Clemens Nopp, MatrNr 0826054
 */
 
 %option c++
