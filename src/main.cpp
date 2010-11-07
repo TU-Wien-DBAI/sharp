@@ -58,15 +58,16 @@ int main(int argc, char **argv)
 
 	int arg, argCount = 1;
 	char *sEnd = NULL;
-	bool sOpt = false, fOpt = false, tOpt = false, oOpt = false, aOpt = false;
+	bool sOpt = false, fOpt = false, tOpt = false, oOpt = false, aOpt = false, credOpt = false;
 	unsigned int seed = (unsigned int)time(NULL);
 	Algorithm algorithm = ASP;
 	OutputType output = Enumeration;
 	char *filename = NULL;
 	ifstream file;
 	istream *stream = &std::cin;
+	char *credulousAcc = NULL;
 
-	while((arg = getopt(argc, argv, "a:bs:o:f:t")) != EOF)
+	while((arg = getopt(argc, argv, "a:bs:o:f:t:cred")) != EOF)
 	{
 		++argCount;
 		switch(arg)
@@ -110,6 +111,12 @@ int main(int argc, char **argv)
 			if(fOpt || !optarg) usage();	
 			filename = optarg;
 			fOpt = true;
+			++argCount;
+			break;
+		case 'cred':
+			if(credOpt || !optarg) usage();
+			credulousAcc = optarg;
+			credOpt = true;
 			++argCount;
 			break;
 		case '?':
@@ -172,7 +179,7 @@ int main(int argc, char **argv)
 		problem = new DatalogProblem(stream, true);
 		break;
 	case AF:
-		problem = new ArgumentationProblem(stream);
+		problem = new ArgumentationProblem(stream, credulousAcc);
 		break;
 	default:
 		C0(0 /*ERROR: Invalid algorithm selection*/);
@@ -199,13 +206,14 @@ static void usage()
 {
 	cout 	<< "Usage: " 
 		<< sProgramName 
-		<< " [-b] [-t] [-s <seed>] [-f <file>] [-a <alg>] [-o <output>]" << endl 
+		<< " [-b] [-t] [-s <seed>] [-f <file>] [-a <alg>] [-o <output>] [-cred <argument>]" << endl 
 		<< "\t-b\t\tprint benchmark information" << endl
 		<< "\t-t\t\tperform only tree decomposition step" << endl
 		<< "\t-s seed\t\tinitialize random number generator with <seed>." << endl
 		<< "\t-f file\t\tthe file to read from" << endl
-		<< "\t-a alg\t\talgorithm, one of {sat, minsat, asp (default), hcfasp}" << endl
+		<< "\t-a alg\t\talgorithm, one of {sat, minsat, asp (default), hcfasp, af}" << endl
 		<< "\t-o output\toutput type, one of {enum (default), count, yesno}" << endl
+		<< "\t-cred\t\tchecks if credulous acceptance holds for the given argument (just with AFs)" << endl
 		;
 
 	exit(EXIT_FAILURE);

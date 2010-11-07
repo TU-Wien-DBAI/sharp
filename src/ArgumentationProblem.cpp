@@ -21,8 +21,8 @@ using namespace std;
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-ArgumentationProblem::ArgumentationProblem(istream *stream)
-	: Problem(new ArgumentationAlgorithm(this))
+ArgumentationProblem::ArgumentationProblem(istream *stream, char *credulousAcc)
+	: Problem(new ArgumentationAlgorithm(this, credulousAcc))
 {
 	this->parser = new ArgumentationParser(new ArgumentationFlexLexer(), stream, this);
 }
@@ -51,6 +51,7 @@ void ArgumentationProblem::addArgument(string argumentId)
 	//otherwise: store argument and add it to the args list
 	Vertex arg = storeVertexName(argumentId);
 	args.insert(arg);
+	argMap.insert(pair<Argument, string>(arg, argumentId));
 }
 
 /*
@@ -65,6 +66,59 @@ OUTPUT:	-
 void ArgumentationProblem::addAttack(string attackerId, string attackedId)
 {
 	attacks.insert(make_pair(attackerId, attackedId));
+}
+
+/*
+***Description***
+Converts the AttackSet (with <String, String>) to a set with the 
+corresponding numbers (<int, int>) and returns it
+
+INPUT:	attacks: The attack set
+OUTPUT:	attackNbrSet: The attack set converted to numbers
+*/
+EdgeSet ArgumentationProblem::getAttackNbrSet(AttackSet attacks)
+{
+	EdgeSet attackNbrSet;
+	int attackerNbr, attackedNbr;
+	
+	//goes through the attacks set, gets the numbers to each entry and stores them in the attackNbrSet
+	for(set<pair<string, string> >::iterator it = attacks.begin(); it != attacks.end(); it++)
+	{
+		attackerNbr = getVertexId(it->first);
+		attackedNbr = getVertexId(it->second);
+		attackNbrSet.insert(make_pair(attackerNbr, attackedNbr));
+	}
+	
+	return attackNbrSet;	
+}
+
+/*
+***Description***
+Returns the AttackSet 'attacks'
+
+INPUT:	
+OUTPUT:	attacks
+*/
+EdgeSet ArgumentationProblem::getAttacks()
+{
+	return ArgumentationProblem::getAttackNbrSet(attacks);
+}
+
+/*
+***Description***
+Returns an argument's string representation
+
+INPUT:	arg: The argument (as number)
+OUTPUT:	the argument as string or NULL if the argument does not exist
+*/
+string ArgumentationProblem::getArgumentString(Argument arg) {
+	map<Argument, string>::iterator iter = argMap.find(arg);
+
+	if( iter != argMap.end() ) {
+      return iter->second;
+    }
+	
+	return NULL;
 }
 
 /*
@@ -91,7 +145,6 @@ OUTPUT:	-
 void ArgumentationProblem::preprocess()
 {
 	// currently not used...
-	// todo: check if the elements of attack pairs appear in the vertex set; duplicate checks...
 }
 
 #ifdef DEBUG
@@ -133,21 +186,13 @@ OUTPUT:	a hypergraph representation of the argumentation framework
 */
 Hypergraph *ArgumentationProblem::buildHypergraphRepresentation()
 {
-
-	EdgeSet attackNbrSet;
-	int attackerNbr, attackedNbr;
+	EdgeSet attackNbrSet = getAttackNbrSet(attacks);
 	
-	//goes through the attacks set, gets the numbers to each entry and stores them in the attackNbrSet
-	for(set<pair<string, string> >::iterator it = attacks.begin(); it != attacks.end(); it++)
-	{
-		attackerNbr = getVertexId(it->first);
-		attackedNbr = getVertexId(it->second);
-		attackNbrSet.insert(make_pair(attackerNbr, attackedNbr));
-	}
-
 #ifdef DEBUG
 	printAF(args, attackNbrSet);
 #endif
 		
 	return Problem::createHypergraphFromSets(args, attackNbrSet);
 }
+
+

@@ -19,6 +19,7 @@ public:
 	virtual bool operator<(const Tuple &other) const;
 	virtual bool operator==(const Tuple &other) const;
 	virtual int hash() const;
+	
 };
 
 class AnswerSetAlgorithm : public AbstractAlgorithm

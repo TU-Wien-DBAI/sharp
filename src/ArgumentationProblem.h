@@ -15,6 +15,7 @@
 
 typedef Vertex Argument;
 typedef VertexSet ArgumentSet;
+typedef std::map<Argument, std::string> ArgumentMap;
 typedef std::set<std::pair<std::string, std::string> > AttackSet;
 
 class ArgumentationParser;
@@ -23,7 +24,7 @@ class ArgumentationProblem : public Problem
 {
 public:
 	//Constructor/Destructor
-	ArgumentationProblem(std::istream *stream);
+	ArgumentationProblem(std::istream *stream, char* credulousAcc);
 	virtual ~ArgumentationProblem();
 	
 	//This method is called from the parser when a new argument appears.
@@ -33,6 +34,10 @@ public:
 	//This method is called from the parser when a new attack relation appears.
 	//The new attack relation is stored in the attacks list.
 	void addAttack(std::string attackerId, std::string attackedId);
+	
+	//Getters
+	EdgeSet getAttacks();
+	std::string getArgumentString(Argument arg);
 
 protected:
 	//Parses the information about the argumentation framework from the input file.
@@ -47,11 +52,14 @@ protected:
 	virtual Hypergraph *buildHypergraphRepresentation();
 
 private:
+	EdgeSet getAttackNbrSet(AttackSet attacks);
+
 	//the attack relations
 	AttackSet attacks;
 	
 	//the arguments
 	ArgumentSet args;
+	ArgumentMap argMap;
 	
 	ArgumentationParser *parser;
 };
