@@ -329,7 +329,7 @@ TupleSet *AnswerSetAlgorithm::evaluateVariableIntroductionNode(const ExtendedHyp
 			Solution *orig = result.first->second;
 			ts->erase(result.first);
 			ts->insert(TupleSet::value_type(&astt, 
-				this->instantiator->combine(Union, orig, it->second)));
+				this->instantiator->combine(Union, orig, s)));
 		}
 	}
 
