@@ -76,20 +76,50 @@ corresponding numbers (<int, int>) and returns it
 INPUT:	attacks: The attack set
 OUTPUT:	attackNbrSet: The attack set converted to numbers
 */
-EdgeSet ArgumentationProblem::getAttackNbrSet(AttackSet attacks)
+EdgeSet ArgumentationProblem::getAttackNbrSet(AttackSet *attacks)
 {
 	EdgeSet attackNbrSet;
 	int attackerNbr, attackedNbr;
 	
 	//goes through the attacks set, gets the numbers to each entry and stores them in the attackNbrSet
-	for(set<pair<string, string> >::iterator it = attacks.begin(); it != attacks.end(); it++)
+	for(set<pair<string, string> >::iterator it = attacks->begin(); it != attacks->end(); it++)
 	{
-		attackerNbr = getVertexId(it->first);
-		attackedNbr = getVertexId(it->second);
+		if((attackerNbr = getVertexId(it->first)) == VERTEXNOTFOUND) 
+		{
+			cout << "Argument '" << it->first << "' was not found." << endl;
+			continue;
+		}
+
+		if((attackedNbr = getVertexId(it->second)) == VERTEXNOTFOUND) 
+		{
+			cout << "Argument '" << it->second << "' was not found." << endl;
+			continue;
+		}	
+		
 		attackNbrSet.insert(make_pair(attackerNbr, attackedNbr));
 	}
 	
 	return attackNbrSet;	
+}
+
+AttackMap ArgumentationProblem::calcAttacksAdjacency(EdgeSet *attackNbrSet)
+{
+	AttackMap adj;
+	
+	//goes through the attacks set, gets the numbers to each entry and stores them in the attackNbrSet
+	for(std::set<std::pair<Vertex, Vertex> >::iterator it = attackNbrSet->begin(); it != attackNbrSet->end(); it++)
+	{
+		if (adj.count(it->first) == 0)
+		{
+			adj[it->first].insert(set<Argument>::value_type(it->second));
+		}
+		else
+		{
+			adj[it->first].insert(it->second);
+		}
+	}
+	
+	return adj;
 }
 
 /*
@@ -99,9 +129,9 @@ Returns the AttackSet 'attacks'
 INPUT:	
 OUTPUT:	attacks
 */
-EdgeSet ArgumentationProblem::getAttacks()
+EdgeSet ArgumentationProblem::getAttacksAsNbr()
 {
-	return ArgumentationProblem::getAttackNbrSet(attacks);
+	return ArgumentationProblem::getAttackNbrSet(&attacks);
 }
 
 /*
@@ -111,11 +141,30 @@ Returns an argument's string representation
 INPUT:	arg: The argument (as number)
 OUTPUT:	the argument as string or NULL if the argument does not exist
 */
-string ArgumentationProblem::getArgumentString(Argument arg) {
+string ArgumentationProblem::getArgumentString(Argument arg) 
+{
 	map<Argument, string>::iterator iter = argMap.find(arg);
 
 	if( iter != argMap.end() ) {
       return iter->second;
+    }
+	
+	return NULL;
+}
+
+/*
+***Description***
+Returns a set of arguments attacked by the given arg.
+
+INPUT:	arg: The argument (as number)
+OUTPUT:	set with argument attacked by arg.
+*/
+set<Argument> *ArgumentationProblem::getAttacksFromArg(Argument arg) 
+{
+	map<Argument, set<Argument> >::iterator iter = attacksAdjacency.find(arg);
+
+	if( iter != attacksAdjacency.end() ) {
+      return &(iter->second);
     }
 	
 	return NULL;
@@ -156,10 +205,10 @@ INPUT:	args: The arguments
 		attacks: The attack relations
 OUTPUT:	-
 */
-static void printAF(ArgumentSet &args, EdgeSet &attacks)
+static void printAF(ArgumentSet &args, EdgeSet &attacks, AttackMap &attacksAdjacency)
 {
 	//go through ArgumentSet
-	cout << "Arguments:" << endl;
+	cout << endl << "Arguments:" << endl;
 	for(set<Vertex>::iterator it = args.begin(); it != args.end(); ++it)
 	{
 			cout << *it << endl;
@@ -173,6 +222,25 @@ static void printAF(ArgumentSet &args, EdgeSet &attacks)
 	{
 			cout << it->first << " attacks " << it->second << endl;
 	}
+	
+	cout << endl;
+
+	//go through AttackMap
+	cout << "Attacks as adjacency list:" << endl;	
+	for(std::map<Argument, std::set<Argument> >::iterator it1 = attacksAdjacency.begin(); it1 != attacksAdjacency.end(); ++it1)
+	{
+			cout << "Argument " << it1->first << " attacks ";
+			
+			for(std::set<Argument>::iterator it2 = (it1->second).begin(); it2 != (it1->second).end(); ++it2)
+			{
+				cout << *it2 << " ";
+		    }
+			
+			cout << endl;
+	}
+	
+	cout << endl;
+
 }
 #endif
 
@@ -186,10 +254,13 @@ OUTPUT:	a hypergraph representation of the argumentation framework
 */
 Hypergraph *ArgumentationProblem::buildHypergraphRepresentation()
 {
-	EdgeSet attackNbrSet = getAttackNbrSet(attacks);
-	
+	//calculate attack set with stored numbers
+	EdgeSet attackNbrSet = getAttackNbrSet(&attacks);
+		
+	attacksAdjacency = calcAttacksAdjacency(&attackNbrSet);
+		
 #ifdef DEBUG
-	printAF(args, attackNbrSet);
+	printAF(args, attackNbrSet, attacksAdjacency);
 #endif
 		
 	return Problem::createHypergraphFromSets(args, attackNbrSet);

@@ -13,7 +13,7 @@ using namespace std;
 #if defined(VERBOSE) && defined(DEBUG)
 static void printTuples(TupleSet *tuples, const ExtendedHypertree *node, ArgumentationProblem *problem)
 {
-        cout << "Colorings for node " << node << ":" << endl;
+        cout << endl << "Colorings for node " << node << ":" << endl;
 		for(VertexSet::iterator it = node->getVertices().begin();
 			it != node->getVertices().end();
 			++it) 
@@ -70,6 +70,13 @@ ArgumentationAlgorithm::ArgumentationAlgorithm(Problem *problem, char *credulous
 {
 	this->problem = (ArgumentationProblem *)problem;
 	this->credulousAcc = credulousAcc;
+	
+#if defined(VERBOSE) && defined(DEBUG)
+	if (credulousAcc != NULL)
+	{
+		cout << endl << "Algorithm will check credulous acceptance for '" << credulousAcc << "'." << endl;
+	}
+#endif	
 }
 
 ArgumentationAlgorithm::~ArgumentationAlgorithm() { }
@@ -77,55 +84,86 @@ ArgumentationAlgorithm::~ArgumentationAlgorithm() { }
 
 Solution *ArgumentationAlgorithm::selectSolution(TupleSet *tuples, const ExtendedHypertree *root)
 {
-	//just a dummy
-	return this->instantiator->createEmptySolution();
+	Solution *s = this->instantiator->createEmptySolution();
+
+	for(TupleSet::iterator it = tuples->begin(); it != tuples->end(); ++it)
+	{
+		s = this->instantiator->combine(Union, s, it->second);
+	}
+
+	return s;
 }
 
 TupleSet *ArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypertree *node)
 {
-	//just a dummy
+#if defined(VERBOSE) && defined(DEBUG)
+	cout << endl << "Entered evaluateLeafNode." << endl;
+#endif
+
 	TupleSet *ts = new TupleSet();
-	return ts;
+
+	
+
+
 
 #if defined(VERBOSE) && defined(DEBUG)
 	printTuples(ts, node, problem);
 #endif
 
+	return ts;
 }
 
 TupleSet *ArgumentationAlgorithm::evaluateBranchNode(const ExtendedHypertree *node)
 {
-	//just a dummy
+#if defined(VERBOSE) && defined(DEBUG)
+	cout << endl << "Entered evaluateBranchNode." << endl;
+#endif
+
+	TupleSet *left = this->evaluateNode(node->firstChild()), 
+		*right = this->evaluateNode(node->secondChild());
+
 	TupleSet *ts = new TupleSet();
-	return ts;
 
 #if defined(VERBOSE) && defined(DEBUG)
 	printTuples(ts, node, problem);
 #endif
+
+	return ts;
 
 }
 
 TupleSet *ArgumentationAlgorithm::evaluateIntroductionNode(const ExtendedHypertree *node)
 {
-	//just a dummy
+#if defined(VERBOSE) && defined(DEBUG)
+	cout << endl << "Entered evaluateIntroductionNode." << endl;
+#endif
+	
+	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
-	return ts;
 
 #if defined(VERBOSE) && defined(DEBUG)
 	printTuples(ts, node, problem);
 #endif
 
+	return ts;
 }
 
 TupleSet *ArgumentationAlgorithm::evaluateRemovalNode(const ExtendedHypertree *node)
 {
-	//just a dummy
+#if defined(VERBOSE) && defined(DEBUG)
+	cout << endl << "Entered evaluateRemovalNode." << endl;
+#endif
+
+	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
-	return ts;
 
 #if defined(VERBOSE) && defined(DEBUG)
 	printTuples(ts, node, problem);
 #endif
 
+	return ts;
 }
 
+set< set<Argument> > ArgumentationAlgorithm::conflictFreeSets(set<Argument> *args)
+{
+}

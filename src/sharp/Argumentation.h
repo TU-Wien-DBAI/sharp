@@ -52,6 +52,9 @@ protected:
 protected:
 	ArgumentationProblem *problem;
 	char *credulousAcc;
+	
+private:
+	std::set< std::set<Argument> > conflictFreeSets(std::set<Argument> *args);
 };
 
 #endif

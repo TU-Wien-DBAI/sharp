@@ -67,7 +67,7 @@ int main(int argc, char **argv)
 	istream *stream = &std::cin;
 	char *credulousAcc = NULL;
 
-	while((arg = getopt(argc, argv, "a:bs:o:f:t:cred")) != EOF)
+	while((arg = getopt(argc, argv, "a:bs:o:f:t:c:")) != EOF)
 	{
 		++argCount;
 		switch(arg)
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
 			fOpt = true;
 			++argCount;
 			break;
-		case 'cred':
+		case 'c':
 			if(credOpt || !optarg) usage();
 			credulousAcc = optarg;
 			credOpt = true;
@@ -213,7 +213,7 @@ static void usage()
 		<< "\t-f file\t\tthe file to read from" << endl
 		<< "\t-a alg\t\talgorithm, one of {sat, minsat, asp (default), hcfasp, af}" << endl
 		<< "\t-o output\toutput type, one of {enum (default), count, yesno}" << endl
-		<< "\t-cred\t\tchecks if credulous acceptance holds for the given argument (just with AFs)" << endl
+		<< "\t-c\t\tchecks if credulous acceptance holds for the given argument (just with AFs)" << endl
 		;
 
 	exit(EXIT_FAILURE);
