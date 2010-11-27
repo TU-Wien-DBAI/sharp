@@ -5,6 +5,7 @@
 */ 
 
 #include <iostream>
+#include <algorithm>
 
 #include "Argumentation.h"
 
@@ -25,11 +26,18 @@ static void printTuples(TupleSet *tuples, const ExtendedHypertree *node, Argumen
  
         for(TupleSet::iterator it = tuples->begin(); it != tuples->end(); ++it)
         {
-			ColoringSet c = ((ArgumentationTuple *)it->first)->colorings;
+			ColoringVector c = ((ArgumentationTuple *)it->first)->colorings;
                     
-            for(ColoringSet::iterator colIt = c.begin(); colIt != c.end(); ++colIt)
+            for(ColoringVector::iterator colIt = c.begin(); colIt != c.end(); ++colIt)
             {
-				cout << *colIt << "\t";
+				string col;
+				
+				if (*colIt == 0) col = "Att";
+				else if (*colIt == 1) col = "Def";
+				else if (*colIt == 2) col = "In";
+				else if (*colIt == 3) col = "Out";
+				
+				cout << col << "\t";
 			}      
 			      
             cout << endl;
@@ -51,9 +59,15 @@ ArgumentationTuple::ArgumentationTuple()
 
 ArgumentationTuple::~ArgumentationTuple() { }
 
+bool ArgumentationTuple::operator<(const Tuple &other) const
+{
+	ArgumentationTuple &o = (ArgumentationTuple &)other;
+	return this->colorings < o.colorings;
+}
+
 bool ArgumentationTuple::operator==(const Tuple &other) const
 {
-	equal_to<ColoringSet> colEqual;
+	equal_to<ColoringVector> colEqual;
 	ArgumentationTuple &o = (ArgumentationTuple &)other;
 
 	return colEqual(this->colorings, o.colorings);
@@ -101,14 +115,75 @@ TupleSet *ArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypertree *node
 #endif
 
 	TupleSet *ts = new TupleSet();
+	const ArgumentSet arguments = (ArgumentSet) node->getVertices();
 
+	//calculate conflict free sets
+	vector< set<Argument> > cfSets = ArgumentationAlgorithm::conflictFreeSets(&arguments);
 	
+	//go through conflict free sets and calculate colorings
+	for(unsigned int i=0; i < (cfSets.size()); ++i)
+	{
+		ArgumentationTuple &argTuple = *new ArgumentationTuple();
+	
+		//calculate set with args attacked by cfSet
+		set<Argument> attByCF = ArgumentationAlgorithm::attackedBySet(&cfSets[i], problem);
 
+		//calculate coloring for every argument
+		for(VertexSet::iterator it = arguments.begin();
+			it != arguments.end();
+			++it) 
+		{
+			
+			//empty set => arg is out
+			if (cfSets[i].size() == 0)
+			{
+				(argTuple.colorings).push_back(OUT);
+				cout << "Calculated OUT for tupel " << i << ", Argument " << *it << endl;
+			}
+			
+			//cfSets contains arg => In
+			else if ((cfSets[i]).count(*it) > 0)
+			{
+				(argTuple.colorings).push_back(IN);
+				cout << "Calculated IN for tupel " << i << ", Argument " << *it << endl;
+			} 
+		
+			//call attCheck to decide if IN-args are attacked by another arg
+			else if (ArgumentationAlgorithm::attCheck(&cfSets[i], (Argument) *it, problem)) 
+			{
+				(argTuple.colorings).push_back(ATT);
+				cout << "Calculated ATT for tupel " << i << ", Argument " << *it << endl;
+			}
+		
+			//if list of args attacked by conflict free sets contains arg => Def
+			else if (attByCF.count(*it) > 0)
+			{
+				(argTuple.colorings).push_back(DEF);
+				cout << "Calculated DEF for tupel " << i << ", Argument " << *it << endl;
+			}
+		
+			
+		}		
+		
+		ts->insert(TupleSet::value_type(&argTuple, this->instantiator->createLeafSolution(arguments)));
+	}
 
 
 #if defined(VERBOSE) && defined(DEBUG)
 	printTuples(ts, node, problem);
+
+	cout << "Conflict free sets:" << endl;
+	for(vector<set<Argument> >::iterator it1 = cfSets.begin(); it1 != cfSets.end(); ++it1)
+	{			
+			for(set<Argument>::iterator it2 = it1->begin(); it2 != it1->end(); ++it2)
+			{
+				cout << *it2 << " ";
+		    }
+			cout << endl;
+	}
 #endif
+
+
 
 	return ts;
 }
@@ -164,6 +239,124 @@ TupleSet *ArgumentationAlgorithm::evaluateRemovalNode(const ExtendedHypertree *n
 	return ts;
 }
 
-set< set<Argument> > ArgumentationAlgorithm::conflictFreeSets(set<Argument> *args)
+/*
+***Description***
+Calculates all conflict free sets
+
+INPUT:	a set of arguments
+OUTPUT:	a vector with sets of conflict free argument combinations
+*/
+vector< ArgumentSet > ArgumentationAlgorithm::conflictFreeSets(const ArgumentSet *args)
 {
+	vector< ArgumentSet > result;
+
+	// 1 << args.size is the amount of power sets
+	for(int i=0; i < (1 << (*args).size()); ++i)
+	{
+		//cout << "Entered i = " << i << endl;
+		
+		ArgumentSet tmpTuple;
+		int j = 0;
+		
+		//add args to temporary tuple
+		for(set<Argument>::iterator it = args->begin();	it != args->end(); ++it)
+		{
+			//true if j is '1' at this position
+			if((1<<j)&i)
+			{ 
+				tmpTuple.insert(*it);
+				//cout << "Element " << *it << " inserted in tmpTuple" << endl;
+			}
+			
+			j++;
+		}
+		
+		//cout << "Now check if tmpTuple is conflict free" << endl;
+		
+		//check if new element of powerset is conflict free
+		bool conflictFree = true;
+		
+		for(set<Argument>::iterator it = tmpTuple.begin(); it != tmpTuple.end(); ++it)
+		{
+			ArgumentSet *attackedElements = problem->getAttacksFromArg((Argument)*it); 		
+
+			//cout << "Got attacked elements" << endl;
+
+			//calculate intersection if current argument attacks elements
+			if (attackedElements != NULL)
+			{
+				vector<int> v(attackedElements->size());
+				vector<int>::iterator vit;
+				
+				vit = set_intersection (tmpTuple.begin(), tmpTuple.end(), attackedElements->begin(), attackedElements->end(), v.begin());
+
+				//check if intersection contains elements
+				//if so, this set is not conflict free
+				if (int(vit - v.begin()) > 0) conflictFree = false;
+			}
+		}	
+		
+		if(conflictFree) 
+		{
+			result.push_back(tmpTuple);
+			//cout << "Set is conflict free, added tmpTuple to result." << endl;
+		}
+	}
+	
+	return result;
 }
+
+/*
+***Description***
+Calculates a set of arguments attacked by the given args
+
+INPUT:	a set of arguments
+OUTPUT:	a set with all args attacked by the given args
+*/
+ArgumentSet ArgumentationAlgorithm::attackedBySet(const ArgumentSet *args, ArgumentationProblem *problem)
+{
+	ArgumentSet result = *new ArgumentSet();
+
+	for(set<Argument>::iterator it = args->begin(); it != args->end(); ++it)
+	{
+		ArgumentSet *attackedElements = problem->getAttacksFromArg(*it); 		
+
+		if (attackedElements != NULL)
+		{
+			for(set<Argument>::iterator it2 = attackedElements->begin(); it2 != attackedElements->end(); ++it2)
+			{
+				result.insert(*it2);
+			}
+		}
+	}
+	
+	return result;
+}
+
+/*
+***Description***
+Decides if the given arg has the coloring ATT
+
+INPUT:	a set of arguments (usually the IN-args) and an single argument
+OUTPUT:	true, if the given arg attacks the given set
+*/
+bool ArgumentationAlgorithm::attCheck(const ArgumentSet *args, Argument arg, ArgumentationProblem *problem)
+{
+	ArgumentSet *attackedElements = problem->getAttacksFromArg(arg); 		
+
+	//calculate intersection if current argument attacks elements
+	if (attackedElements != NULL)
+	{
+		vector<int> v(attackedElements->size());
+		vector<int>::iterator vit;
+		
+		vit = set_intersection (args->begin(), args->end(), attackedElements->begin(), attackedElements->end(), v.begin());
+
+		//check if intersection contains elements
+		//if so => given set is attacked by the given arg
+		if (int(vit - v.begin()) > 0) return true;
+	}
+	
+	return false;
+}
+

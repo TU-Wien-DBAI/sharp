@@ -14,7 +14,7 @@
 enum Coloring {ATT, DEF, IN, OUT};
 
 //typedef std::set<std::pair<Argument, Coloring> > ColoringSet;
-typedef std::set<Coloring> ColoringSet;
+typedef std::vector<Coloring> ColoringVector;
 
 class ArgumentationTuple : public Tuple
 {
@@ -23,7 +23,7 @@ public:
 	virtual ~ArgumentationTuple();
 
 	//used for the mapping Argument<>Coloring
-	ColoringSet colorings;
+	ColoringVector colorings;
 	
 	//cardinality of the set (# of restricted admissible sets characterized by the colorings)
 	int cardinality;
@@ -31,6 +31,7 @@ public:
 	//true, if credulous acceptance for the given variable holds
 	bool bCredulousAcc;
 
+	virtual bool operator<(const Tuple &other) const;
 	virtual bool operator==(const Tuple &other) const;
 	virtual int hash() const;
 };
@@ -54,7 +55,15 @@ protected:
 	char *credulousAcc;
 	
 private:
-	std::set< std::set<Argument> > conflictFreeSets(std::set<Argument> *args);
+	//Calculates all conflict free sets
+	std::vector< ArgumentSet > conflictFreeSets(const ArgumentSet *args);
+	
+	//Calculates a set of arguments attacked by the given args
+	ArgumentSet attackedBySet(const ArgumentSet *args, ArgumentationProblem *problem);
+	
+	//Decides if the given arg has the coloring ATT
+	bool attCheck(const ArgumentSet *args, Argument arg, ArgumentationProblem *problem);
+
 };
 
 #endif

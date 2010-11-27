@@ -43,7 +43,7 @@ public:
 	std::string getArgumentString(Argument arg);
 	
 	//Get set of arguments attacked by the given arg.
-	set<Argument> *getAttacksFromArg(Argument arg); 
+	ArgumentSet *getAttacksFromArg(Argument arg); 
 
 protected:
 	//Parses the information about the argumentation framework from the input file.

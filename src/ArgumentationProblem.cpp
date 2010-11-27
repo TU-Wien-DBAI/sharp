@@ -109,14 +109,7 @@ AttackMap ArgumentationProblem::calcAttacksAdjacency(EdgeSet *attackNbrSet)
 	//goes through the attacks set, gets the numbers to each entry and stores them in the attackNbrSet
 	for(std::set<std::pair<Vertex, Vertex> >::iterator it = attackNbrSet->begin(); it != attackNbrSet->end(); it++)
 	{
-		if (adj.count(it->first) == 0)
-		{
-			adj[it->first].insert(set<Argument>::value_type(it->second));
-		}
-		else
-		{
-			adj[it->first].insert(it->second);
-		}
+		adj[it->first].insert(set<Argument>::value_type(it->second));
 	}
 	
 	return adj;
@@ -154,14 +147,14 @@ string ArgumentationProblem::getArgumentString(Argument arg)
 
 /*
 ***Description***
-Returns a set of arguments attacked by the given arg.
+Returns a vector of arguments attacked by the given arg.
 
 INPUT:	arg: The argument (as number)
-OUTPUT:	set with argument attacked by arg.
+OUTPUT:	vector with argument attacked by arg.
 */
-set<Argument> *ArgumentationProblem::getAttacksFromArg(Argument arg) 
+ArgumentSet *ArgumentationProblem::getAttacksFromArg(Argument arg) 
 {
-	map<Argument, set<Argument> >::iterator iter = attacksAdjacency.find(arg);
+	map<Argument, ArgumentSet >::iterator iter = attacksAdjacency.find(arg);
 
 	if( iter != attacksAdjacency.end() ) {
       return &(iter->second);
@@ -227,11 +220,11 @@ static void printAF(ArgumentSet &args, EdgeSet &attacks, AttackMap &attacksAdjac
 
 	//go through AttackMap
 	cout << "Attacks as adjacency list:" << endl;	
-	for(std::map<Argument, std::set<Argument> >::iterator it1 = attacksAdjacency.begin(); it1 != attacksAdjacency.end(); ++it1)
+	for(map<Argument, set<Argument> >::iterator it1 = attacksAdjacency.begin(); it1 != attacksAdjacency.end(); ++it1)
 	{
 			cout << "Argument " << it1->first << " attacks ";
 			
-			for(std::set<Argument>::iterator it2 = (it1->second).begin(); it2 != (it1->second).end(); ++it2)
+			for(set<Argument>::iterator it2 = (it1->second).begin(); it2 != (it1->second).end(); ++it2)
 			{
 				cout << *it2 << " ";
 		    }
