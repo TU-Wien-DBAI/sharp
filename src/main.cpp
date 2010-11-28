@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 	char *filename = NULL;
 	ifstream file;
 	istream *stream = &std::cin;
-	char *credulousAcc = NULL;
+	char *credulousAcc;
 
 	while((arg = getopt(argc, argv, "a:bs:o:f:t:c:")) != EOF)
 	{

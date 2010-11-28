@@ -52,6 +52,7 @@ protected:
 
 protected:
 	ArgumentationProblem *problem;
+	Argument intCredulousAcc;
 	char *credulousAcc;
 	
 private:

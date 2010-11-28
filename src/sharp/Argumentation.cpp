@@ -21,6 +21,8 @@ static void printTuples(TupleSet *tuples, const ExtendedHypertree *node, Argumen
 		{
 			cout << problem->getArgumentString((Argument)*it) << "\t";
 		}
+		
+		cout << "#\tcred";
  
 		cout << endl;
  
@@ -39,8 +41,9 @@ static void printTuples(TupleSet *tuples, const ExtendedHypertree *node, Argumen
 				
 				cout << col << "\t";
 			}      
-			      
-            cout << endl;
+			
+			cout << ((ArgumentationTuple *)it->first)->cardinality << "\t";
+			cout << ((ArgumentationTuple *)it->first)->bCredulousAcc << endl;			
         }
         
 		cout << endl;
@@ -84,13 +87,13 @@ ArgumentationAlgorithm::ArgumentationAlgorithm(Problem *problem, char *credulous
 {
 	this->problem = (ArgumentationProblem *)problem;
 	this->credulousAcc = credulousAcc;
-	
-#if defined(VERBOSE) && defined(DEBUG)
+
 	if (credulousAcc != NULL)
-	{
-		cout << endl << "Algorithm will check credulous acceptance for '" << credulousAcc << "'." << endl;
-	}
+	{	
+#if defined(VERBOSE) && defined(DEBUG)
+		cout << endl << "Algorithm will check credulous acceptance for '" << credulousAcc << "' (code: " << intCredulousAcc << ")." << endl;
 #endif	
+	}
 }
 
 ArgumentationAlgorithm::~ArgumentationAlgorithm() { }
@@ -116,6 +119,9 @@ TupleSet *ArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypertree *node
 
 	TupleSet *ts = new TupleSet();
 	const ArgumentSet arguments = (ArgumentSet) node->getVertices();
+
+	//get integer value for credulous acceptance argument 
+	intCredulousAcc = problem->getVertexId(credulousAcc);
 
 	//calculate conflict free sets
 	vector< set<Argument> > cfSets = ArgumentationAlgorithm::conflictFreeSets(&arguments);
@@ -144,6 +150,9 @@ TupleSet *ArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypertree *node
 			//cfSets contains arg => In
 			else if ((cfSets[i]).count(*it) > 0)
 			{
+				//set credulous acceptance flag if current arg equals intCredulousAcc
+				if(*it == intCredulousAcc) argTuple.bCredulousAcc = true;
+				
 				(argTuple.colorings).push_back(IN);
 				cout << "Calculated IN for tupel " << i << ", Argument " << *it << endl;
 			} 
@@ -165,7 +174,7 @@ TupleSet *ArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypertree *node
 			
 		}		
 		
-		ts->insert(TupleSet::value_type(&argTuple, this->instantiator->createLeafSolution(arguments)));
+		ts->insert(TupleSet::value_type(&argTuple, this->instantiator->createLeafSolution(cfSets[i])));
 	}
 
 
@@ -199,6 +208,9 @@ TupleSet *ArgumentationAlgorithm::evaluateBranchNode(const ExtendedHypertree *no
 
 	TupleSet *ts = new TupleSet();
 
+	delete left;
+	delete right;
+
 #if defined(VERBOSE) && defined(DEBUG)
 	printTuples(ts, node, problem);
 #endif
@@ -216,6 +228,9 @@ TupleSet *ArgumentationAlgorithm::evaluateIntroductionNode(const ExtendedHypertr
 	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
+
+	delete base;
+	
 #if defined(VERBOSE) && defined(DEBUG)
 	printTuples(ts, node, problem);
 #endif
@@ -231,6 +246,54 @@ TupleSet *ArgumentationAlgorithm::evaluateRemovalNode(const ExtendedHypertree *n
 
 	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
+	
+	const ArgumentSet arguments = (ArgumentSet) node->getVertices();
+	const ArgumentSet childArguments = (ArgumentSet) (node->firstChild())->getVertices();
+	
+	//iterate through tuples and generate new tupleset
+	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
+	{	
+		ArgumentationTuple &argTuple = *new ArgumentationTuple();	
+		bool insertFlag = true;
+		int index = 0;
+		ColoringVector childColoring = ((ArgumentationTuple *)it->first)->colorings;
+		
+		//take over bCredulousAcc
+		argTuple.bCredulousAcc = ((ArgumentationTuple *)it->first)->bCredulousAcc;
+		
+		for(set<Argument>::iterator it2 = childArguments.begin(); it2 != childArguments.end(); ++it2)
+		{
+			//insert coloring if current argument is not the removed one
+			if (*it2 != node->getDifference())
+			{	
+				(argTuple.colorings).push_back(childColoring[index]);	
+			}
+			
+			//if current argument is the removed one and the previous coloring
+			//was ATT => do not insert into new tupleset
+			else if ((*it2 == node->getDifference()) && childColoring[index] == ATT)
+			{
+				insertFlag = false;
+				break;
+			}
+			
+			index++; 
+		}
+		
+		if(insertFlag)
+		{
+			//TODO solution
+			ts->insert(TupleSet::value_type(&argTuple, this->instantiator->createEmptySolution()));
+		}	
+	}
+	
+	//go through tuple sets, delete "double" colorings (and increase counter)
+	for(std::map<Tuple *, Solution *, less<Tuple *> >::iterator it = ts->begin(); it != ts->end(); ++it)
+	{
+		//TODO
+	}
+	
+	delete base;
 
 #if defined(VERBOSE) && defined(DEBUG)
 	printTuples(ts, node, problem);
