@@ -15,6 +15,7 @@
 	private: \
 		FlexLexer *lexer; \
 		ArgumentationProblem *problem; \
+		std::string trim(const std::string &str); \
 		void addArgumentId(std::string arg); \
 		void addAttackId(std::string att); \
 
@@ -71,10 +72,21 @@ argumentation: 		ARG argumentation 				{ this->addArgumentId($1); }
 
 ArgumentationParser::~ArgumentationParser() { }
 
+std::string ArgumentationParser::trim(const std::string &str)
+{
+    size_t s = str.find_first_not_of(" \n\r\t");
+    size_t e = str.find_last_not_of (" \n\r\t");
+
+    if(( string::npos == s) || ( string::npos == e))
+        return "";
+    else
+        return str.substr(s, e-s+1);
+}
+
 void ArgumentationParser::addArgumentId(string arg)
 {
 	/* Arguments are represented with e.g. "arg(a).". This example would return "a" */
-	string argumentId = arg.substr(4, arg.length()-6);
+	string argumentId = this->trim(arg.substr(4, arg.length()-6));
 	
 	this->problem->addArgument(argumentId);
 }
@@ -84,7 +96,7 @@ void ArgumentationParser::addAttackId(string att)
 	/* Attacks are represented with e.g. "att(a,b)." This example would return "a" and "b"*/ 
 	int commaPos = att.find(",",0);
 	string attackerId = att.substr(4, commaPos-4);
-	string attackedId = att.substr(commaPos+1, att.length()-commaPos-3);
+	string attackedId = this->trim(att.substr(commaPos+1, att.length()-commaPos-3));
 
 	this->problem->addAttack(attackerId, attackedId);	
 }

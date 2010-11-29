@@ -64,6 +64,9 @@ private:
 	
 	//Decides if the given arg has the coloring ATT
 	bool attCheck(const ArgumentSet *args, Argument arg, ArgumentationProblem *problem);
+	
+	//Returns the set of arguments which are colored 'IN' in the ColoringVector
+	ArgumentSet getInArgs(const ArgumentSet *args, ColoringVector *colorings);
 
 };
 
