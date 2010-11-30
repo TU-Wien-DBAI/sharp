@@ -102,7 +102,10 @@ ArgumentationAlgorithm::ArgumentationAlgorithm(Problem *problem, char *credulous
 	if (credulousAcc != NULL)
 	{	
 #if defined(VERBOSE) && defined(DEBUG)
+	if (strlen(credulousAcc) > 0)
+	{
 		cout << endl << "Algorithm will check credulous acceptance for '" << credulousAcc << "' (code: " << intCredulousAcc << ")." << endl;
+	}
 #endif	
 	}
 }
@@ -155,7 +158,7 @@ TupleSet *ArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypertree *node
 			if (cfSets[i].size() == 0)
 			{
 				(argTuple.colorings).push_back(OUT);
-				cout << "Calculated OUT for tupel " << i << ", Argument " << *it << endl;
+				//cout << "Calculated OUT for tupel " << i << ", Argument " << *it << endl;
 			}
 			
 			//cfSets contains arg => In
@@ -165,21 +168,21 @@ TupleSet *ArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypertree *node
 				if(*it == intCredulousAcc) argTuple.bCredulousAcc = true;
 				
 				(argTuple.colorings).push_back(IN);
-				cout << "Calculated IN for tupel " << i << ", Argument " << *it << endl;
+				//cout << "Calculated IN for tupel " << i << ", Argument " << *it << endl;
 			} 
 		
 			//call attCheck to decide if IN-args are attacked by another arg
 			else if (ArgumentationAlgorithm::attCheck(&cfSets[i], (Argument) *it, problem)) 
 			{
 				(argTuple.colorings).push_back(ATT);
-				cout << "Calculated ATT for tupel " << i << ", Argument " << *it << endl;
+				//cout << "Calculated ATT for tupel " << i << ", Argument " << *it << endl;
 			}
 		
 			//if list of args attacked by conflict free sets contains arg => Def
 			else if (attByCF.count(*it) > 0)
 			{
 				(argTuple.colorings).push_back(DEF);
-				cout << "Calculated DEF for tupel " << i << ", Argument " << *it << endl;
+				//cout << "Calculated DEF for tupel " << i << ", Argument " << *it << endl;
 			}
 		
 			
@@ -202,7 +205,7 @@ TupleSet *ArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypertree *node
 	}
 #endif
 
-
+	if(node->isRoot()) ArgumentationAlgorithm::calculateFinalInfos(ts);
 
 	return ts;
 }
@@ -312,6 +315,8 @@ TupleSet *ArgumentationAlgorithm::evaluateBranchNode(const ExtendedHypertree *no
 #if defined(VERBOSE) && defined(DEBUG)
 	printTuples(ts, node, problem);
 #endif
+
+	if(node->isRoot()) ArgumentationAlgorithm::calculateFinalInfos(ts);
 
 	return ts;
 
@@ -490,6 +495,8 @@ TupleSet *ArgumentationAlgorithm::evaluateIntroductionNode(const ExtendedHypertr
 	printTuples(ts, node, problem);
 #endif
 
+	if(node->isRoot()) ArgumentationAlgorithm::calculateFinalInfos(ts);
+
 	return ts;
 }
 
@@ -564,6 +571,8 @@ TupleSet *ArgumentationAlgorithm::evaluateRemovalNode(const ExtendedHypertree *n
 #if defined(VERBOSE) && defined(DEBUG)
 	printTuples(ts, node, problem);
 #endif
+
+	if(node->isRoot()) ArgumentationAlgorithm::calculateFinalInfos(ts);
 
 	return ts;
 }
@@ -711,6 +720,51 @@ ArgumentSet ArgumentationAlgorithm::getInArgs(const ArgumentSet *args, ColoringV
 	}
 	
 	return in;
+}
+
+/*
+***Description***
+Calculates the final Informations about the number of X>t restricted admissible
+sets and credulous acceptance
+
+INPUT: ts: tuple set of the tree composition's root node
+*/
+void ArgumentationAlgorithm::calculateFinalInfos(TupleSet *ts)
+{
+	
+	bool credAcc = false;
+	int admissibleSets = 0;
+	
+	//go through tuple sets of the root node
+	for(TupleSet::iterator it = ts->begin(); it != ts->end(); ++it)
+	{
+		ColoringVector colorings = ((ArgumentationTuple *)it->first)->colorings;
+		bool containsAtt = false;		
+		
+		for(int i=0; i < colorings.size(); i++)
+		{
+			if (colorings[i] == ATT) containsAtt = true;
+		}
+		
+		if (!containsAtt)
+		{
+			if(((ArgumentationTuple *)it->first)->bCredulousAcc) credAcc = true;
+			
+			admissibleSets += ((ArgumentationTuple *)it->first)->cardinality;
+		}
+	}	
+	
+	if (credAcc && (strlen(credulousAcc) > 0))
+	{
+		cout << "Credulous acceptance holds for the requested variable '" << credulousAcc << "'." << endl;
+	} 	
+	else if (strlen(credulousAcc) > 0)
+	{
+		cout << "Credulous acceptance does not hold for the requested variable '" << credulousAcc << "'." << endl;
+	} 	
+	
+	cout << "Number of admissible sets: " << admissibleSets << endl;
+	cout << endl;
 }
 
 

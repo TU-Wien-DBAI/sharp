@@ -67,7 +67,10 @@ private:
 	
 	//Returns the set of arguments which are colored 'IN' in the ColoringVector
 	ArgumentSet getInArgs(const ArgumentSet *args, ColoringVector *colorings);
-
+	
+	//Calculates the final Informations about the number of X>t restricted admissible
+	//sets and credulous acceptanc
+	void calculateFinalInfos(TupleSet *ts);
 };
 
 #endif
