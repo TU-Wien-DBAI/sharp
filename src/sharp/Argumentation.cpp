@@ -22,7 +22,7 @@ static void printTuples(TupleSet *tuples, const ExtendedHypertree *node, Argumen
 			cout << problem->getArgumentString((Argument)*it) << "\t";
 		}
 		
-		cout << "#\tcred";
+		cout << "cred";
  
 		cout << endl;
  
@@ -42,11 +42,8 @@ static void printTuples(TupleSet *tuples, const ExtendedHypertree *node, Argumen
 				cout << col << "\t";
 			}      
 			
-			cout << ((ArgumentationTuple *)it->first)->cardinality << "\t";
 			cout << ((ArgumentationTuple *)it->first)->bCredulousAcc << endl;			
         }
-        
-		cout << endl;
 }
 #endif
 
@@ -57,7 +54,6 @@ static void printTuples(TupleSet *tuples, const ExtendedHypertree *node, Argumen
 ArgumentationTuple::ArgumentationTuple() 
 {
 	bCredulousAcc = false;
-	cardinality = 1; 
 }
 
 ArgumentationTuple::~ArgumentationTuple() { }
@@ -70,10 +66,8 @@ bool ArgumentationTuple::operator<(const Tuple &other) const
 
 bool ArgumentationTuple::operator==(const Tuple &other) const
 {
-	equal_to<ColoringVector> colEq;
 	ArgumentationTuple &o = (ArgumentationTuple &)other;
-
-	return colEq(this->colorings, o.colorings);
+	return this->colorings == o.colorings;
 }
 
 int ArgumentationTuple::hash() const
@@ -88,15 +82,13 @@ ArgumentationAlgorithm::ArgumentationAlgorithm(Problem *problem, char *credulous
 	this->problem = (ArgumentationProblem *)problem;
 	this->credulousAcc = credulousAcc;
 
-	if (credulousAcc != NULL)
-	{	
 #if defined(VERBOSE) && defined(DEBUG)
-	if (strlen(credulousAcc) > 0)
-	{
-		cout << endl << "Algorithm will check credulous acceptance for '" << credulousAcc << "' (code: " << intCredulousAcc << ")." << endl;
+	if (this->credulousAcc != NULL)
+	{	
+		cout << endl << "Algorithm will check credulous acceptance for '" << credulousAcc << "' (code: " << intCredulousAcc << ")." << endl;	
 	}
-#endif	
-	}
+#endif
+	
 }
 
 ArgumentationAlgorithm::~ArgumentationAlgorithm() { }
@@ -104,20 +96,25 @@ ArgumentationAlgorithm::~ArgumentationAlgorithm() { }
 
 Solution *ArgumentationAlgorithm::selectSolution(TupleSet *tuples, const ExtendedHypertree *root)
 {
+	
 	Solution *s = this->instantiator->createEmptySolution();
 	bool credAcc = false;
 	ColoringVector colorings;
 	bool containsAtt = false;	
 
 	for(TupleSet::iterator it = tuples->begin(); it != tuples->end(); ++it)
-	{
+	{	
 		colorings = ((ArgumentationTuple *)it->first)->colorings;
 		containsAtt = false;		
 		
-		for(int i=0; i < colorings.size(); i++)
+		for(unsigned int i=0; i < colorings.size(); i++)
 		{
-			if (colorings[i] == ATT) containsAtt = true;
-			break;
+			if (colorings[i] == ATT) 
+			{
+				containsAtt = true;
+				break;
+			}
+			
 		}
 		
 		if (!containsAtt)
@@ -129,11 +126,11 @@ Solution *ArgumentationAlgorithm::selectSolution(TupleSet *tuples, const Extende
 
 	if (credAcc)
 	{
-		cout << "Credulous acceptance holds for the requested variable '" << credulousAcc << "'." << endl;
+		cout << endl << "Credulous acceptance holds for the requested variable '" << credulousAcc << "'." << endl;
 	} 	
-	else if (strlen(credulousAcc) > 0)
+	else if (credulousAcc != NULL && strlen(credulousAcc) > 0)
 	{
-		cout << "Credulous acceptance does not hold for the requested variable '" << credulousAcc << "'." << endl;
+		cout << endl << "Credulous acceptance does not hold for the requested variable '" << credulousAcc << "'." << endl;
 	} 	
 
 	cout << endl;
@@ -151,7 +148,14 @@ TupleSet *ArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypertree *node
 	const ArgumentSet arguments = (ArgumentSet) node->getVertices();
 
 	//get integer value for credulous acceptance argument 
-	intCredulousAcc = problem->getVertexId(credulousAcc);
+	if (this->credulousAcc != NULL)
+	{
+		intCredulousAcc = problem->getVertexId(this->credulousAcc);
+	}
+	else 
+	{
+		intCredulousAcc = -1;
+	}
 
 	//calculate conflict free sets
 	vector< set<Argument> > cfSets = this->conflictFreeSets(&arguments);
@@ -210,7 +214,7 @@ TupleSet *ArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypertree *node
 #if defined(VERBOSE) && defined(DEBUG)
 	printTuples(ts, node, problem);
 
-	cout << "Conflict free sets:" << endl;
+	/*cout << "Conflict free sets:" << endl;
 	for(vector<set<Argument> >::iterator it1 = cfSets.begin(); it1 != cfSets.end(); ++it1)
 	{			
 			for(set<Argument>::iterator it2 = it1->begin(); it2 != it1->end(); ++it2)
@@ -218,7 +222,7 @@ TupleSet *ArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypertree *node
 				cout << *it2 << " ";
 		    }
 			cout << endl;
-	}
+	}*/
 #endif
 
 	return ts;
@@ -238,18 +242,17 @@ TupleSet *ArgumentationAlgorithm::evaluateBranchNode(const ExtendedHypertree *no
 	const ArgumentSet arguments = (ArgumentSet) node->getVertices();
 	const ArgumentSet leftArguments = (ArgumentSet) (node->firstChild())->getVertices();
 	const ArgumentSet rightArguments = (ArgumentSet) (node->secondChild())->getVertices();
-	set<ColoringVector> allColorings;
 
 	//iterate through left tuples
-	for(TupleSet::iterator it = left->begin(); it != left->end(); ++it)
+	for(TupleSet::iterator lit = left->begin(); lit != left->end(); ++lit)
 	{	
-		ColoringVector leftColoring = ((ArgumentationTuple *)it->first)->colorings;
+		ColoringVector leftColoring = ((ArgumentationTuple *)lit->first)->colorings;
 		ArgumentSet leftIn = this->getInArgs(&leftArguments, &leftColoring);
 		
 		//iterate through right tuples and generate new tuplesets
-		for(TupleSet::iterator it2 = right->begin(); it2 != right->end(); ++it2)
+		for(TupleSet::iterator rit = right->begin(); rit != right->end(); ++rit)
 		{	
-			ColoringVector rightColoring = ((ArgumentationTuple *)it2->first)->colorings;
+			ColoringVector rightColoring = ((ArgumentationTuple *)rit->first)->colorings;
 			ArgumentSet rightIn = this->getInArgs(&rightArguments, &rightColoring);
 			
 			//check if IN-sets are equal => generate new tuple
@@ -257,69 +260,52 @@ TupleSet *ArgumentationAlgorithm::evaluateBranchNode(const ExtendedHypertree *no
 			{
 				ArgumentationTuple &argTuple = *new ArgumentationTuple();
 				
-				//calculate bCredulousAcc and cardinality
-				argTuple.bCredulousAcc = ((ArgumentationTuple *)it->first)->bCredulousAcc || 
-										 ((ArgumentationTuple *)it2->first)->bCredulousAcc;
-				argTuple.cardinality =     ((ArgumentationTuple *)it->first)->cardinality *
-										   ((ArgumentationTuple *)it2->first)->cardinality;
-
+				//calculate bCredulousAcc
+				argTuple.bCredulousAcc = ((ArgumentationTuple *)lit->first)->bCredulousAcc ||
+										 ((ArgumentationTuple *)rit->first)->bCredulousAcc;
 				
 				//calculate colorings
 				int index = 0;
-				for(set<Argument>::iterator it3 = arguments.begin(); it3 != arguments.end(); ++it3)
+				for(set<Argument>::iterator it = arguments.begin(); it != arguments.end(); ++it)
 				{		
 					//IN if both colorings are IN				
 					if ((leftColoring[index] == IN) && (rightColoring[index] == IN))
 					{
 						(argTuple.colorings).push_back(IN);
-						//cout << "Calculated IN for tupel " << i << ", Argument " << *it3 << endl;
+						//cout << "Calculated IN for tupel " << i << ", Argument " << *it << endl;
 					}
 					
 					//OUT if both colorings are OUT
 					else if ((leftColoring[index] == OUT) && (rightColoring[index] == OUT))
 					{
 						(argTuple.colorings).push_back(OUT);
-						//cout << "Calculated OUT for tupel " << i << ", Argument " << *it3 << endl;
+						//cout << "Calculated OUT for tupel " << i << ", Argument " << *it << endl;
 					}
 
 					//DEF if left or right coloring is DEF
 					else if ((leftColoring[index] == DEF) || (rightColoring[index] == DEF))
 					{
 						(argTuple.colorings).push_back(DEF);
-						//cout << "Calculated DEF for tupel " << i << ", Argument " << *it3 << endl;
+						//cout << "Calculated DEF for tupel " << i << ", Argument " << *it << endl;
 					}
 
 					//ATT otherwise
 					else
 					{
 						(argTuple.colorings).push_back(ATT);
-						//cout << "Calculated ATT for tupel " << i << ", Argument " << *it3 << endl;
+						//cout << "Calculated ATT for tupel " << i << ", Argument " << *it << endl;
 					}
 					
 					index++;
 				}
 				
-				if (allColorings.count(argTuple.colorings) == 0)
-				{
-					//TODO solution
-					ts->insert(TupleSet::value_type(&argTuple, this->instantiator->createEmptySolution()));
-					allColorings.insert(argTuple.colorings);		
-				}
-				else
-				{
-					//search for ColoringVector in ts
-					for(std::map<Tuple *, Solution *, less<Tuple *> >::iterator it3 = ts->begin(); it3 != ts->end(); ++it3)
-					{
-						if (argTuple.colorings == ((ArgumentationTuple *)it3->first)->colorings)
-						{
-							((ArgumentationTuple *)it3->first)->cardinality = ((ArgumentationTuple *)it3->first)->cardinality + argTuple.cardinality;
-						}
-					}
-				}
-
-
+				
+				//generate cross join solution
+				Solution *s = this->instantiator->combine(CrossJoin, lit->second, rit->second);
+				
+				//add to tuple set with alternative operation 'union'
+				addToTupleSet(&argTuple, s, ts, Union);
 			}
-			
 		}
 	}
 
@@ -342,7 +328,6 @@ TupleSet *ArgumentationAlgorithm::evaluateIntroductionNode(const ExtendedHypertr
 	
 	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
-	set<ColoringVector> allColorings;
 	
 	const ArgumentSet arguments = (ArgumentSet) node->getVertices();
 	const ArgumentSet childArguments = (ArgumentSet) (node->firstChild())->getVertices();
@@ -354,10 +339,9 @@ TupleSet *ArgumentationAlgorithm::evaluateIntroductionNode(const ExtendedHypertr
 		ColoringVector childColoring = ((ArgumentationTuple *)it->first)->colorings;
 		bool addTuple = false;
 		
-		//take over bCredulousAcc and cardinality
+		//take over bCredulousAcc
 		argTuple.bCredulousAcc = ((ArgumentationTuple *)it->first)->bCredulousAcc;
-		argTuple.cardinality = ((ArgumentationTuple *)it->first)->cardinality;
-		
+
 		ArgumentSet in = this->getInArgs(&childArguments, &childColoring);
 				
 		//calculate colorings
@@ -393,10 +377,13 @@ TupleSet *ArgumentationAlgorithm::evaluateIntroductionNode(const ExtendedHypertr
 				else
 				{
 					(argTuple.colorings).push_back(OUT);
-					//cout << "Calculated OUT for tupel " << i << ", Argument " << *it2 << endl;
+					//cout << "Calculated OUT for Argument " << *it2 << endl;
 					
-					//add tuple if arg does not attack itself
-					if (this->attCheck(problem->getAttacksFromArg(*it2), (Argument) *it2, problem))
+					ArgumentSet curArgAsSet;
+					curArgAsSet.insert(*it2);
+					
+					//add additional tuple if arg does not attack itself
+					if (!(this->attCheck(&curArgAsSet, (Argument) *it2, problem)));
 					{
 						addTuple = true;
 					}	
@@ -405,13 +392,11 @@ TupleSet *ArgumentationAlgorithm::evaluateIntroductionNode(const ExtendedHypertr
 		}
 		
 		if (addTuple)
-		{
+		{	
 			ArgumentationTuple &additionalArgTuple = *new ArgumentationTuple();	
 			
-			//take over bCredulousAcc and cardinality
+			//take over bCredulousAcc
 			additionalArgTuple.bCredulousAcc = ((ArgumentationTuple *)it->first)->bCredulousAcc;
-			additionalArgTuple.cardinality = ((ArgumentationTuple *)it->first)->cardinality;
-
 			
 			index = 0;
 			for(set<Argument>::iterator it2 = arguments.begin(); it2 != arguments.end(); ++it2)
@@ -437,7 +422,8 @@ TupleSet *ArgumentationAlgorithm::evaluateIntroductionNode(const ExtendedHypertr
 					}
 					
 					//DEF if the new arg attacks the current arg or if the corresponding child arg is DEF 
-					else if ((problem->getAttacksFromArg(node->getDifference()))->count(*it2) > 0 ||
+					else if ((problem->getAttacksFromArg(node->getDifference()) != NULL &&
+					          (problem->getAttacksFromArg(node->getDifference()))->count(*it2) > 0) ||
 							  childColoring[index] == DEF)
 					{
 						(additionalArgTuple.colorings).push_back(DEF);	
@@ -445,7 +431,9 @@ TupleSet *ArgumentationAlgorithm::evaluateIntroductionNode(const ExtendedHypertr
 					
 					//OUT if the corresponding child arg is OUT and there is no attack from 
 					//the current arg to the new one or otherwise
-					else if ((problem->getAttacksFromArg(node->getDifference()))->count(*it2) == 0 &&
+					else if  (problem->getAttacksFromArg(node->getDifference()) != NULL &&
+							 (problem->getAttacksFromArg(node->getDifference()))->count(*it2) == 0 &&
+							  problem->getAttacksFromArg(*it2) != NULL &&
 							 (problem->getAttacksFromArg(*it2))->count(node->getDifference()) == 0 &&	
 							  childColoring[index] == OUT)
 					{
@@ -463,42 +451,15 @@ TupleSet *ArgumentationAlgorithm::evaluateIntroductionNode(const ExtendedHypertr
 			}	
 			addTuple = false;
 			
-			if (allColorings.count(additionalArgTuple.colorings) == 0)
-			{
-				//TODO solution
-				ts->insert(TupleSet::value_type(&additionalArgTuple, this->instantiator->createEmptySolution()));
-				allColorings.insert(additionalArgTuple.colorings);		
-			}
-			else
-			{
-				//search for ColoringVector in ts
-				for(std::map<Tuple *, Solution *, less<Tuple *> >::iterator it2 = ts->begin(); it2 != ts->end(); ++it2)
-				{
-					if (additionalArgTuple.colorings == ((ArgumentationTuple *)it2->first)->colorings)
-					{
-						((ArgumentationTuple *)it2->first)->cardinality = ((ArgumentationTuple *)it2->first)->cardinality + additionalArgTuple.cardinality;
-					}
-				}
-			}
+			//generate 'add difference' solution
+			Solution *s = this->instantiator->addDifference(it->second,	node->getDifference());
+			
+			//add new tuple to tuple set with alternative operation 'union'
+			addToTupleSet(&additionalArgTuple, s, ts, Union);
 		}	
-
-		if (allColorings.count(argTuple.colorings) == 0)
-		{
-			//TODO solution
-			ts->insert(TupleSet::value_type(&argTuple, this->instantiator->createEmptySolution()));
-			allColorings.insert(argTuple.colorings);		
-		}
-		else
-		{
-			//search for ColoringVector in ts
-			for(std::map<Tuple *, Solution *, less<Tuple *> >::iterator it2 = ts->begin(); it2 != ts->end(); ++it2)
-			{
-				if (argTuple.colorings == ((ArgumentationTuple *)it2->first)->colorings)
-				{
-					((ArgumentationTuple *)it2->first)->cardinality = ((ArgumentationTuple *)it2->first)->cardinality + argTuple.cardinality;
-				}
-			}
-		}
+		
+		//add 'old' tuple to tuple set with alternative operation 'union'
+		addToTupleSet(&argTuple, it->second, ts, Union);
 	}	
 
 	delete base;
@@ -518,7 +479,6 @@ TupleSet *ArgumentationAlgorithm::evaluateRemovalNode(const ExtendedHypertree *n
 
 	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
-	set<ColoringVector> allColorings;
 	
 	const ArgumentSet arguments = (ArgumentSet) node->getVertices();
 	const ArgumentSet childArguments = (ArgumentSet) (node->firstChild())->getVertices();
@@ -531,9 +491,8 @@ TupleSet *ArgumentationAlgorithm::evaluateRemovalNode(const ExtendedHypertree *n
 		int index = 0;
 		ColoringVector childColoring = ((ArgumentationTuple *)it->first)->colorings;
 		
-		//take over bCredulousAcc and cardinality
+		//take over bCredulousAcc
 		argTuple.bCredulousAcc = ((ArgumentationTuple *)it->first)->bCredulousAcc;
-		argTuple.cardinality = ((ArgumentationTuple *)it->first)->cardinality;
 		
 		for(set<Argument>::iterator it2 = childArguments.begin(); it2 != childArguments.end(); ++it2)
 		{
@@ -556,23 +515,8 @@ TupleSet *ArgumentationAlgorithm::evaluateRemovalNode(const ExtendedHypertree *n
 		
 		if(insertFlag)
 		{
-			if (allColorings.count(argTuple.colorings) == 0)
-			{
-				//TODO solution
-				ts->insert(TupleSet::value_type(&argTuple, this->instantiator->createEmptySolution()));
-				allColorings.insert(argTuple.colorings);
-			}
-			else
-			{
-				//search for ColoringVector in ts
-				for(std::map<Tuple *, Solution *, less<Tuple *> >::iterator it2 = ts->begin(); it2 != ts->end(); ++it2)
-				{
-					if (argTuple.colorings == ((ArgumentationTuple *)it2->first)->colorings)
-					{
-						((ArgumentationTuple *)it2->first)->cardinality = ((ArgumentationTuple *)it2->first)->cardinality + argTuple.cardinality;
-					}
-				}
-			}
+			//add tuple to tuple set with alternative operation 'union'
+			addToTupleSet(&argTuple, it->second, ts, Union);
 		}	
 	}
 		
@@ -700,9 +644,12 @@ bool ArgumentationAlgorithm::attCheck(const ArgumentSet *args, Argument arg, Arg
 
 		//check if intersection contains elements
 		//if so => given set is attacked by the given arg
-		if (int(vit - v.begin()) > 0) return true;
+		if (int(vit - v.begin()) > 0) 
+		{
+			return true;
+		}
 	}
-	
+
 	return false;
 }
 
@@ -730,4 +677,27 @@ ArgumentSet ArgumentationAlgorithm::getInArgs(const ArgumentSet *args, ColoringV
 	return in;
 }
 
+/*
+***Description***
+Tries to insert a new element in the tupleset
+
+INPUT: t: the tuple
+	   s: the solution
+	   ts: the tupleset where t and s should be inserted
+	   op: the operation (CrossJoin, Union)
+*/
+void ArgumentationAlgorithm::addToTupleSet(Tuple *t, Solution *s, TupleSet *ts, Operation op)
+{
+	// try to insert the tuple into the tuple set
+	pair<TupleSet::iterator, bool> result = ts->insert(TupleSet::value_type(t, s));
+
+	// if the tuple was already in the set
+	if(!result.second)
+	{
+		// delete it and insert it again with combined solution
+		Solution *orig = result.first->second;
+		ts->erase(result.first); 
+		ts->insert(TupleSet::value_type(t, this->instantiator->combine(op, orig, s)));
+	}
+}
 

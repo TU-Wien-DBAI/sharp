@@ -12,7 +12,7 @@ OBJS += \
 ./src/sharp/Helper.o \
 ./src/sharp/AbstractAlgorithm.o \
 ./src/sharp/AnswerSet.o \
-./src/sharp/Argumentationnnnnnnnnnnn.o \
+./src/sharp/Argumentation.o \
 ./src/sharp/HeadCycleFreeAnswerSet.o \
 ./src/sharp/Circumscription.o \
 ./src/sharp/Satisfiability.o

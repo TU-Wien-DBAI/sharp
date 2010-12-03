@@ -24,10 +24,7 @@ public:
 
 	//used for the mapping Argument<>Coloring
 	ColoringVector colorings;
-	
-	//cardinality of the set (# of restricted admissible sets characterized by the colorings)
-	int cardinality;
-	
+		
 	//true, if credulous acceptance for the given variable holds
 	bool bCredulousAcc;
 
@@ -67,6 +64,9 @@ private:
 	
 	//Returns the set of arguments which are colored 'IN' in the ColoringVector
 	ArgumentSet getInArgs(const ArgumentSet *args, ColoringVector *colorings);
+	
+	//Tries to insert a new element in the tupleset
+	void addToTupleSet(Tuple *t, Solution *s, TupleSet *ts, Operation op);
 };
 
 #endif
