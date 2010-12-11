@@ -16,7 +16,6 @@
 typedef Vertex Argument;
 typedef VertexSet ArgumentSet;
 typedef std::map<Argument, std::string> ArgumentMap;
-typedef std::set<std::pair<std::string, std::string> > AttackSet;
 typedef std::map<Argument, std::set<Argument> > AttackMap;
 
 class ArgumentationParser;
@@ -58,17 +57,17 @@ protected:
 	virtual Hypergraph *buildHypergraphRepresentation();
 
 private:
-	EdgeSet getAttackNbrSet(AttackSet *attacks);
-	AttackMap calcAttacksAdjacency(EdgeSet *attackNbrSet);
+	AttackMap calcAttacksAdjacency(EdgeSet *attacks);
 
 	//the attack relations
-	AttackSet attacks;
+	EdgeSet attacks;
 	
 	//Attack relations stored in an ajdacency list
 	AttackMap attacksAdjacency;
 	
 	//the arguments
 	ArgumentSet args;
+	std::set<std::string> definedArgs;
 	ArgumentMap argMap;
 	
 	ArgumentationParser *parser;

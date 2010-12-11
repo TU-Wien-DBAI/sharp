@@ -45,13 +45,7 @@ OUTPUT:	-
 */
 void ArgumentationProblem::addArgument(string argumentId)
 {
-	//return if argument already exists
-	if(getVertexId(argumentId) != VERTEXNOTFOUND) return;
-	
-	//otherwise: store argument and add it to the args list
-	Vertex arg = storeVertexName(argumentId);
-	args.insert(arg);
-	argMap.insert(pair<Argument, string>(arg, argumentId));
+	definedArgs.insert(argumentId);
 }
 
 /*
@@ -65,41 +59,24 @@ OUTPUT:	-
 */
 void ArgumentationProblem::addAttack(string attackerId, string attackedId)
 {
-	attacks.insert(make_pair(attackerId, attackedId));
-}
-
-/*
-***Description***
-Converts the AttackSet (with <String, String>) to a set with the 
-corresponding numbers (<int, int>) and returns it
-
-INPUT:	attacks: The attack set
-OUTPUT:	attackNbrSet: The attack set converted to numbers
-*/
-EdgeSet ArgumentationProblem::getAttackNbrSet(AttackSet *attacks)
-{
-	EdgeSet attackNbrSet;
-	int attackerNbr, attackedNbr;
-	
-	//goes through the attacks set, gets the numbers to each entry and stores them in the attackNbrSet
-	for(set<pair<string, string> >::iterator it = attacks->begin(); it != attacks->end(); it++)
-	{
-		if((attackerNbr = getVertexId(it->first)) == VERTEXNOTFOUND) 
-		{
-			cout << "Argument '" << it->first << "' was not found." << endl;
-			continue;
-		}
-
-		if((attackedNbr = getVertexId(it->second)) == VERTEXNOTFOUND) 
-		{
-			cout << "Argument '" << it->second << "' was not found." << endl;
-			continue;
-		}	
+	Vertex attacker;
+	Vertex attacked;
 		
-		attackNbrSet.insert(make_pair(attackerNbr, attackedNbr));
+	if((attacker = getVertexId(attackerId)) == VERTEXNOTFOUND)
+	{
+		attacker = storeVertexName(attackerId);
+		args.insert(attacker);
+		argMap.insert(pair<Argument, string>(attacker, attackerId));
+	}
+			
+	if((attacked = getVertexId(attackedId)) == VERTEXNOTFOUND)
+	{
+		attacked = storeVertexName(attackedId);
+		args.insert(attacked);
+		argMap.insert(pair<Argument, string>(attacked, attackedId));
 	}
 	
-	return attackNbrSet;	
+	attacks.insert(pair<Vertex, Vertex>(attacker, attacked));
 }
 
 AttackMap ArgumentationProblem::calcAttacksAdjacency(EdgeSet *attackNbrSet)
@@ -124,7 +101,7 @@ OUTPUT:	attacks
 */
 EdgeSet ArgumentationProblem::getAttacksAsNbr()
 {
-	return ArgumentationProblem::getAttackNbrSet(&attacks);
+	return attacks;
 }
 
 /*
@@ -179,14 +156,43 @@ void ArgumentationProblem::parse()
 /*
 ***Description***
 This is called directly after parsing, allows for preliminary optimizations (i.e. redundancy elimination, etc.)
-(currently not used)
 
 INPUT:	-
 OUTPUT:	-
 */
 void ArgumentationProblem::preprocess()
 {
-	// currently not used...
+	if (definedArgs.size() > args.size())
+	{
+		cout << endl << "The following arguments do not appear in any attack relation (they will be ignored):" << endl;
+		
+		for(set<string>::iterator it = definedArgs.begin(); it != definedArgs.end(); ++it)
+		{
+			if(getVertexId(*it) == VERTEXNOTFOUND)
+			{
+				cout << *it << "; ";
+			}
+		}
+		
+		cout << endl;
+	}
+	else if (definedArgs.size() < args.size())
+	{
+		cout << endl << "The following arguments have not been explicitly defined as argument:" << endl;
+		
+		for(ArgumentSet::iterator it = args.begin(); it != args.end(); ++it)
+		{
+			if(definedArgs.count(getArgumentString(*it)) == 0)
+			{
+				cout << getArgumentString(*it) << "; ";
+			}
+		}
+		
+		cout << endl;
+	}
+	
+	//calculate attack set with stored numbers
+	attacksAdjacency = calcAttacksAdjacency(&attacks);
 }
 
 #ifdef DEBUG
@@ -247,16 +253,12 @@ OUTPUT:	a hypergraph representation of the argumentation framework
 */
 Hypergraph *ArgumentationProblem::buildHypergraphRepresentation()
 {
-	//calculate attack set with stored numbers
-	EdgeSet attackNbrSet = getAttackNbrSet(&attacks);
-		
-	attacksAdjacency = calcAttacksAdjacency(&attackNbrSet);
 		
 #ifdef DEBUG
-	printAF(args, attackNbrSet, attacksAdjacency);
+	printAF(args, attacks, attacksAdjacency);
 #endif
 		
-	return Problem::createHypergraphFromSets(args, attackNbrSet);
+	return Problem::createHypergraphFromSets(args, attacks);
 }
 
 
