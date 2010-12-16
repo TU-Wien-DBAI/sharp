@@ -17,6 +17,7 @@
 
 #include "sharp/AnswerSet.h"
 #include "sharp/HeadCycleFreeAnswerSet.h"
+#include "sharp/HCFAnswerSet.h"
 #include "htree/ExtendedHypertree.h"
 #include "htree/H_BucketElim.h"
 
@@ -31,6 +32,7 @@ enum Algorithm
 	MinSAT,
 	ASP,
 	HCFASP,
+	HCF,
 	AF
 };
 
@@ -42,13 +44,8 @@ enum OutputType
 };
 
 static void usage();
-static Hypertree *decompose(Hypergraph *);
 static void printTime(pair<double, double>);
 static void printSolution(SolutionContent *, OutputType, Problem *);
-
-#ifdef DEBUG
-static void printNameMap(NameMap &);
-#endif
 
 int main(int argc, char **argv)
 {
@@ -78,6 +75,7 @@ int main(int argc, char **argv)
 			else if(!strcmp(optarg, "minsat")) algorithm = MinSAT;
 			else if(!strcmp(optarg, "asp")) algorithm = ASP;
 			else if(!strcmp(optarg, "hcfasp")) algorithm = HCFASP;
+			else if(!strcmp(optarg, "hcf")) algorithm = HCF;
 			else if(!strcmp(optarg, "af")) algorithm = AF;
 			else usage();
 			++argCount;
@@ -173,10 +171,13 @@ int main(int argc, char **argv)
 		PrintError("The MinSAT algorithm has not yet been ported and is not available ATM!");
 		break;
 	case ASP:
-		problem = new DatalogProblem(stream, false);
+		problem = new DatalogProblem(stream, DatalogProblem::ASP);
 		break;
 	case HCFASP:
-		problem = new DatalogProblem(stream, true);
+		problem = new DatalogProblem(stream, DatalogProblem::OLDHCF);
+		break;
+	case HCF:
+		problem = new DatalogProblem(stream, DatalogProblem::NEWHCF);
 		break;
 	case AF:
 		problem = new ArgumentationProblem(stream, credulousAcc);
@@ -211,27 +212,12 @@ static void usage()
 		<< "\t-t\t\tperform only tree decomposition step" << endl
 		<< "\t-s seed\t\tinitialize random number generator with <seed>." << endl
 		<< "\t-f file\t\tthe file to read from" << endl
-		<< "\t-a alg\t\talgorithm, one of {sat, minsat, asp (default), hcfasp, af}" << endl
+		<< "\t-a alg\t\talgorithm, one of {sat, minsat, asp (default), hcfasp, hcf, af}" << endl
 		<< "\t-o output\toutput type, one of {enum (default), count, yesno}" << endl
 		<< "\t-c\t\tchecks if credulous acceptance holds for the given argument (just with AFs)" << endl
 		;
 
 	exit(EXIT_FAILURE);
-}
-
-static Hypertree *decompose(Hypergraph *hg)
-{
-        Timer local;
-        Hypertree *ht;
-        H_BucketElim be;
-
-        ht = be.buildHypertree(hg, BE_MIW_ORDER);
-
-        ht->swapChiLambda();
-        ht->shrink(true);
-        ht->swapChiLambda();
-
-        return ht;
 }
 
 static void printSolution(SolutionContent *sc, OutputType output, Problem *p)
@@ -275,13 +261,4 @@ static void printTime(pair<double, double> time)
 {
 	cout << time.first;
 }
-
-#ifdef DEBUG
-static void printNameMap(NameMap &eht)
-{
-	for(unsigned int i = 0; i < eht.size(); ++i)
-		cout << "(" << i << "=" << eht[i] << ")";
-	cout << endl;
-}
-#endif
 

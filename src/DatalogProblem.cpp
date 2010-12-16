@@ -11,13 +11,14 @@
 
 #include "sharp/AnswerSet.h"
 #include "sharp/HeadCycleFreeAnswerSet.h"
+#include "sharp/HCFAnswerSet.h"
 
 using namespace std;
 
-DatalogProblem::DatalogProblem(istream *stream, bool enableHCFExtension)
-	: Problem(!enableHCFExtension ? 
-			new AnswerSetAlgorithm(this) : 
-			new HeadCycleFreeAnswerSetAlgorithm(this))
+DatalogProblem::DatalogProblem(istream *stream, int type)
+	: Problem(type == DatalogProblem::ASP ? (AbstractAlgorithm *)new AnswerSetAlgorithm(this)
+		: (type == DatalogProblem::OLDHCF ? (AbstractAlgorithm *)new HeadCycleFreeAnswerSetAlgorithm(this)
+		: /* otherwise */ (AbstractAlgorithm *)new HCFAnswerSetAlgorithm(this)))
 {
 	this->parser = new DatalogParser(new DatalogFlexLexer(), stream, this);
 }
@@ -55,7 +56,7 @@ Rule DatalogProblem::addNewRule()
 {
 	Vertex r = createAuxiliaryVertex();
 
-	if((unsigned int)r >= this->heads.capacity()) this->heads.resize(r + 100);
+	if((unsigned int)r >= this->heads.size()) this->heads.resize(r + 100);
 	this->heads[r] = VariableSet();
 
 	this->types.push_back(RuleVertex);
@@ -83,7 +84,12 @@ void DatalogProblem::addEdge(Rule rule, Variable variable, bool positive, bool h
 	{
 		// case: variable appears in head and negated in body - remove from head and body
 		if(heads[rule].find(variable) != heads[rule].end() && !positive)
-		{ heads[rule].erase(variable); signs[rule].erase(variable); signs[rule].insert(make_pair(createAuxiliaryVertex(), false)); }
+		{ 
+			heads[rule].erase(variable);
+			signs[rule].erase(variable);
+			signs[rule].insert(make_pair(createAuxiliaryVertex(), false)); 
+			types.push_back(VariableVertex);
+		}
 		// case: variable appears in body twice (negated or unnegated) - do nothing
 		else if(signs[rule][variable] == positive) { }
 		// case: any other - ignore the rule completely
@@ -91,7 +97,7 @@ void DatalogProblem::addEdge(Rule rule, Variable variable, bool positive, bool h
 	}
 	else
 	{
-		signs[rule].insert(map<Variable, bool>::value_type(variable, positive));
+		signs[rule].insert(make_pair(variable, positive));
 	}
 }
 
@@ -114,13 +120,17 @@ void DatalogProblem::preprocess()
 }
 
 #ifdef DEBUG
-static void printSignMap(SignMap &eht)
+static void printSignMap(SignMap &sm, HeadMap &hm)
 {
-        for(map<int, map<int, bool> >::iterator it = eht.begin(); it != eht.end(); ++it)
+        for(map<int, map<int, bool> >::iterator it = sm.begin(); it != sm.end(); ++it)
         {
-                cout << "clause " << it->first << ": ";
+                cout << "rule " << it->first << ": ";
                 for(map<int, bool>::iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
-                        cout << (sit->second ? "-" : "\0") << sit->first << ", "; cout << "END" << endl;
+                        cout << (sit->second ? "+" : "-") 
+				<< sit->first 
+				<< (hm[it->first].find(sit->first) == hm[it->first].end() ? "b" : "h") 
+				<< ", ";
+		cout << "END" << endl;
         }
 }
 #endif
@@ -128,22 +138,26 @@ static void printSignMap(SignMap &eht)
 Hypergraph *DatalogProblem::buildHypergraphRepresentation()
 {
 #ifdef DEBUG
-	printSignMap(signs);
+	printVertexNames(cout);
+	printSignMap(signs, heads);
 #endif
 
-	VertexSet vertices;
+	VertexSet vertices1;
+	VertexSet vertices2;
 	EdgeSet edges;
 
 	for(SignMap::iterator it = this->signs.begin(); it != this->signs.end(); ++it)
 	{
-		vertices.insert(it->first);
+		vertices1.insert(it->first);
 
 		for(map<Variable, bool>::iterator v = it->second.begin(); v != it->second.end(); ++v)
 		{
-			vertices.insert(v->first);
+			vertices2.insert(v->first);
 			edges.insert(make_pair(it->first, v->first));
 		}
 	}
 
-	return Problem::createHypergraphFromSets(vertices, edges);
+	// ENABLE BIPARTITE GRAPH OPTIMIZATIONS
+	// this->setDecompositionOptions(BipartiteGraph, (void *)vertices1.size());
+	return Problem::createGraphFromDisjointSets(vertices1, vertices2, edges);
 }

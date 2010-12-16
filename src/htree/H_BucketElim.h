@@ -52,7 +52,7 @@ public:
 	Hypertree *buildHypertree(Hypergraph *HGraph, Node **VarOrder, bool bDual);
 
 	// Builds a hypertree according to the bucket elimination heuristic
-	Hypertree *buildHypertree(Hypergraph *HGraph, int iHeuristic, bool bDual = false);
+	Hypertree *buildHypertree(Hypergraph *HGraph, int iHeuristic, int preElim = 0, bool bDual = false);
 };
 
 

@@ -27,7 +27,7 @@ class DatalogParser;
 class DatalogProblem : public Problem
 {
 public:
-	DatalogProblem(std::istream *stream, bool enableHCFExtension);
+	DatalogProblem(std::istream *stream, int type = DatalogProblem::ASP);
 	virtual ~DatalogProblem();
 
 	SignMap &getSignMap();
@@ -52,6 +52,11 @@ private:
 	TypeMap types;
 
 	DatalogParser *parser;
+
+public:
+	static const int ASP = 0;
+	static const int OLDHCF = 1;
+	static const int NEWHCF = 2;
 };
 
 #endif //DATALOGPROBLEM_H_

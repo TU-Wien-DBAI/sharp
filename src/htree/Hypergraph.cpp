@@ -524,7 +524,7 @@ Comments:
 ------------------------------------------------------------------------------------------------
 */
 
-Node **Hypergraph::getInputOrder()
+Node **Hypergraph::getInputOrder(int preElim)
 {
 	int i;
 	Node **VarOrder;
@@ -558,7 +558,7 @@ Comments:
 ------------------------------------------------------------------------------------------------
 */
 
-Node **Hypergraph::getMIWOrder()
+Node **Hypergraph::getMIWOrder(int preElim)
 {
 	int *iOrder, iMinDegree, iMinDegreePos, i, j;
 	Node **VarOrder;
@@ -593,25 +593,34 @@ Node **Hypergraph::getMIWOrder()
 	// Remove nodes with smallest degree iteratively
 	for(i=0; i < iMyMaxNbrOfNodes; i++) {
 
-		// Search for the first node that has not been removed yet
-		for(j=0; NodeNeighbours[j] == NULL; j++);
-		iMinDegree = NodeNeighbours[j]->size();
-		Candidates.push_back(j);
+		if(i < preElim)
+		{
+			iMinDegreePos = i;
+		}
+		else
+		{
+			// Search for the first node that has not been removed yet
+			for(j=0; NodeNeighbours[j] == NULL; j++);
+			iMinDegree = NodeNeighbours[j]->size();
+			Candidates.push_back(j);
 
-		// Search for the node with smallest degree
-		for(++j; j < iMyMaxNbrOfNodes; j++)
-			if(NodeNeighbours[j] != NULL)
-				if((int)NodeNeighbours[j]->size() <= iMinDegree) {
-					if((int)NodeNeighbours[j]->size() < iMinDegree) {
-						iMinDegree = NodeNeighbours[j]->size();
-						Candidates.clear();
+			// Search for the node with smallest degree
+			for(++j; j < iMyMaxNbrOfNodes; j++)
+				if(NodeNeighbours[j] != NULL)
+					if((int)NodeNeighbours[j]->size() <= iMinDegree) 
+					{
+						if((int)NodeNeighbours[j]->size() < iMinDegree) 
+						{
+							iMinDegree = NodeNeighbours[j]->size();
+							Candidates.clear();
+						}
+						Candidates.push_back(j);
 					}
-					Candidates.push_back(j);
-				}
-
-		// Randomly select the next node with smallest degree
-		iMinDegreePos = Candidates[random_range(0, Candidates.size()-1)];
-		Candidates.clear();
+		
+			// Randomly select the next node with smallest degree
+			iMinDegreePos = Candidates[random_range(0, Candidates.size()-1)];
+			Candidates.clear();
+		}
 
 		// Disconnect the selected node and connect all its neighbours
 		for(SetIter = NodeNeighbours[iMinDegreePos]->begin(); SetIter != NodeNeighbours[iMinDegreePos]->end(); SetIter++) {
@@ -664,7 +673,7 @@ Comments:
 ------------------------------------------------------------------------------------------------
 */
 
-Node **Hypergraph::getMFOrder()
+Node **Hypergraph::getMFOrder(int preElim)
 {
 	int *iOrder, iMinFill, iMinFillPos, iTmp, i, j;
 	Node **VarOrder;
@@ -785,7 +794,7 @@ Comments:
 ------------------------------------------------------------------------------------------------
 */
 
-Node **Hypergraph::getMCSOrder()
+Node **Hypergraph::getMCSOrder(int preElim)
 {
 	int *iOrder, iMaxCard, iTmpCard, iMaxCardPos, iInitialVertex, i, j, k;
 	Node **VarOrder, *Var;

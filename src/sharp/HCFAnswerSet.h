@@ -1,28 +1,40 @@
 #ifndef HCFANSWERSET_H_
 #define HCFANSWERSET_H_
 
+#include <map>
+#include <set>
+
 #include "AnswerSet.h"
+
+#ifndef DERIVED
+#define DERIVED (-1)
+#endif
+
+typedef std::map<Vertex, VertexSet> Graph;
 
 class HCFAnswerSetTuple : public Tuple
 {
 public:
 	HCFAnswerSetTuple();
+	HCFAnswerSetTuple(HCFAnswerSetTuple &o);
 	virtual ~HCFAnswerSetTuple();
 
 public:
-	set<Variable> variables;
-	set<Rule> rules;
-
-	Order order;
-	OrderTypes ordertypes;
-
-	map<Variable, set<Rule> > guards;
-	set<set<Rule> > guardsdown;
+	Graph graph; // one (partial) possible world
+	Graph reversegraph; // the reverse graph
+	RuleSet satisfied; // rules not in graph but satisfied
 
 public:
 	virtual bool operator<(const Tuple &other) const;
 	virtual bool operator==(const Tuple &other) const;
 	virtual int hash() const;
+
+public:
+	void removeVertex(Vertex v);
+	void addVertex(Vertex v);
+	void addEdge(Vertex v1, Vertex v2);
+	void transitiveClosureThrough(Vertex v);
+	bool hasCycleThrough(Vertex v);
 };
 
 class HCFAnswerSetAlgorithm : public AnswerSetAlgorithm
@@ -43,48 +55,15 @@ protected:
 	virtual TupleSet *evaluateRuleRemovalNode(const ExtendedHypertree *node);
 
 public:
-	static std::set<Rule> trueRules(const std::set<Variable> &positives,
-					const std::set<Variable> &all,
-					const std::set<Rule> &rules,
-					Variable variable,
-					const Order &order,
-					const OrderTypes &ordertypes,
-					const SignMap &signs,
-					const HeadMap &heads);
+	HCFAnswerSetTuple *combineTuples(HCFAnswerSetTuple &l, HCFAnswerSetTuple &r, RuleSet rules);
 
-	static std::set<Rule> trueRules(const std::set<Variable> &positives,
-					const std::set<Variable> &all,
-					const std::set<Rule> &rules,
-					const Order &order,
-					const OrderTypes &ordertypes,
-					const SignMap &signs,
-					const HeadMap &heads);
+	HCFAnswerSetTuple *copyTupleAddPositiveVariable(HCFAnswerSetTuple &x, RuleSet rules, Variable v);
+	HCFAnswerSetTuple *copyTupleAddNegativeVariable(HCFAnswerSetTuple &x, RuleSet rules, Variable v);
 
-	static bool trueRule(	const std::set<Variable> &positives,
-				const std::set<Variable> &all,
-				Rule rule,
-				Variable variable,
-				const Order &order,
-				const OrderTypes &ordertypes,
-				const SignMap &signs,
-				const HeadMap &heads);
+	HCFAnswerSetTuple *copyTupleAddProofRule(HCFAnswerSetTuple &x, VariableSet variables, Rule r);
+	HCFAnswerSetTuple *copyTupleAddNonProofRule(HCFAnswerSetTuple &x, VariableSet variables, Rule r);
 
-	static OrderCombinations combineOrder(	const Order &original,
-						const OrderTypes &types,
-						const std::set<Rule> &left,
-						const std::set<Rule> &right,
-						int separator,
-						bool separatorType);
-
-	static OrderCombinations combineOrder(	const Order &original,
-						const OrderTypes &types,
-						int toInsert,
-						bool insertType);
-
-	static OrderCombinations combineOrder(	const Order &left,
-						const OrderTypes &lefttypes,
-						const Order &right,
-						const OrderTypes &righttypes);
+	void addToTupleSet(Tuple &t, Solution *s, TupleSet *ts, Operation operation = Union);
 };
 
 #endif

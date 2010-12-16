@@ -12,26 +12,29 @@ static void printTuples(TupleSet *svals, const ExtendedHypertree *node)
         for(TupleSet::iterator it = svals->begin(); it != svals->end(); ++it)
         {
 		HCFAnswerSetTuple &c = *(HCFAnswerSetTuple *)it->first;
-                cout << "var: "; printIntSet(c.variables);
-                cout << ", cla: "; printIntSet(c.rules);
-		cout << ", ord: "; printIntList(c.order);
-		cout << ", typ: "; printBoolList(c.ordertypes); 
-		cout << ", gua: ";
-		for(map<Variable, set<Rule> >::iterator i = c.guards.begin(); i != c.guards.end(); ++i)
-		{ 
-			cout << "[" << i->first << "|>"; printIntSet(i->second); cout << "<]";
-		}
-		cout << ", glo: ";
-		for(set<set<Rule> >::iterator i = c.guardsdown.begin(); i != c.guardsdown.end(); ++i)
+		cout << "\tgraph: ";
+		for(Graph::const_iterator i = c.graph.begin(); i != c.graph.end(); ++i)
 		{
-			cout << "["; printIntSet(*i); cout << "]";
+			cout << "[" << i->first << " > "; printIntSet(i->second); cout << "]";
 		}
+		cout << ", sat: "; printIntSet(c.satisfied);
 		cout << endl;
         }
 }
 #endif
 
-HCFAnswerSetTuple::HCFAnswerSetTuple() { }
+HCFAnswerSetTuple::HCFAnswerSetTuple() 
+{
+	// add the default DERIVED vertex to the graph
+	this->addVertex(DERIVED);
+}
+
+HCFAnswerSetTuple::HCFAnswerSetTuple(HCFAnswerSetTuple &o) 
+{
+	this->graph = o.graph;
+	this->reversegraph = o.reversegraph;
+	this->satisfied = o.satisfied;
+}
 
 HCFAnswerSetTuple::~HCFAnswerSetTuple() { }
 
@@ -39,35 +42,93 @@ bool HCFAnswerSetTuple::operator<(const Tuple &other) const
 {
 	HCFAnswerSetTuple &o = (HCFAnswerSetTuple &)other;
 
-	return     (this->variables < o.variables
-		|| (this->variables == o.variables
-		&& (this->rules < o.rules
-		|| (this->rules == o.rules
-		&& (this->order < o.order
-		|| (this->order == o.order
-		&& (this->ordertypes < o.ordertypes
-		|| (this->ordertypes == o.ordertypes
-		&& (this->guards < o.guards
-		|| (this->guards == o.guards
-		&& (this->guardsdown < o.guardsdown)))))))))));
+	return     (this->graph < o.graph
+		|| (this->graph == o.graph
+		&&  this->satisfied < o.satisfied));
 }
 
 bool HCFAnswerSetTuple::operator==(const Tuple &other) const
 {
 	HCFAnswerSetTuple &o = (HCFAnswerSetTuple &)other;
 
-	return 	   this->variables == o.variables
-		&& this->rules == o.rules
-		&& this->order == o.order
-		&& this->ordertypes == o.ordertypes
-		&& this->guards == o.guards
-		&& this->guardsdown == o.guardsdown;
+	return 	   this->graph == o.graph
+		&& this->satisfied == o.satisfied;
 }
 
 int HCFAnswerSetTuple::hash() const
 {
 	//TODO
 	return -1;
+}
+
+void HCFAnswerSetTuple::addVertex(Vertex v)
+{
+	this->graph[v];
+	this->reversegraph[v];
+}
+
+void HCFAnswerSetTuple::removeVertex(Vertex v)
+{
+	for(VertexSet::iterator it = this->graph[v].begin(); it != this->graph[v].end(); ++it)
+		this->reversegraph[*it].erase(v);
+	for(VertexSet::iterator it = this->reversegraph[v].begin(); it != this->reversegraph[v].end(); ++it)
+		this->graph[*it].erase(v);
+
+	this->graph.erase(v);
+	this->reversegraph.erase(v);
+}
+
+void HCFAnswerSetTuple::addEdge(Vertex v1, Vertex v2)
+{
+	if(v1 == v2) return;
+
+	Graph::iterator it1 = this->graph.find(v1);
+	Graph::iterator it2 = this->graph.find(v2);
+
+	CNOT0(it1 == this->graph.end());
+	CNOT0(it2 == this->graph.end());
+
+	it1->second.insert(v2);
+	this->reversegraph[v2].insert(v1);
+}
+
+void HCFAnswerSetTuple::transitiveClosureThrough(Vertex v)
+{
+	VertexSet ancestors, successors;
+
+	// accumulate all ancestors of v
+	ancestors.insert(v);
+	for(VertexSet::const_iterator a = this->reversegraph[v].begin();
+			a != this->reversegraph[v].end(); ++a)
+	{
+		ancestors.insert(this->reversegraph[*a].begin(), this->reversegraph[*a].end());
+		ancestors.insert(*a);
+	}
+
+	// accumulate all successors of v
+	successors.insert(v);
+	for(VertexSet::const_iterator s = this->graph[v].begin();
+			s != this->graph[v].end(); ++s)
+	{
+		successors.insert(this->graph[*s].begin(), this->graph[*s].end());
+		successors.insert(*s);
+	}
+	
+	// connect every ancestor to all successors
+	for(VertexSet::const_iterator a = ancestors.begin();
+			a != ancestors.end(); ++a)
+		for(VertexSet::const_iterator s = successors.begin();
+				s != successors.end(); ++s)
+			this->addEdge(*a, *s);
+}
+
+bool HCFAnswerSetTuple::hasCycleThrough(Vertex v)
+{
+	for(VertexSet::const_iterator s = this->graph[v].begin();
+			s != this->graph[v].end(); ++s)
+		if(this->graph[*s].find(v) != this->graph[*s].end())
+			return true;
+	return false;
 }
 
 HCFAnswerSetAlgorithm::HCFAnswerSetAlgorithm(Problem *problem)
@@ -81,23 +142,33 @@ Solution *HCFAnswerSetAlgorithm::selectSolution(TupleSet *tuples, const Extended
 {
 	Solution *s = this->instantiator->createEmptySolution();
 
-	equal_to<set<int> > eq;
 	RuleSet rules = getRules(root);
+	VariableSet variables = getVariables(root);
 
 	for(TupleSet::iterator it = tuples->begin(); it != tuples->end(); ++it)
 	{
 		HCFAnswerSetTuple &x = *(HCFAnswerSetTuple *)it->first;
 
-		if(!eq(rules, x.rules)) continue;
-
 		bool filter = false;
-		for(map<Variable, set<Rule> >::iterator git = x.guards.begin(); 
-			!filter && git != x.guards.end(); ++git)
-		{
-			if(git->second.size() == 0) filter = true;
-		}
+		for(RuleSet::const_iterator rit = rules.begin(); rit != rules.end(); ++rit)
+			if(x.reversegraph[DERIVED].find(*rit) == x.reversegraph[DERIVED].end()
+				&& x.satisfied.find(*rit) == x.satisfied.end())
+			{
+				filter = true;
+				break;
+			}
+		if(filter) continue;
 
-		if(!filter) s = this->instantiator->combine(Union, s, it->second);
+		for(VariableSet::const_iterator vit = variables.begin(); vit != variables.end(); ++vit)
+			if(x.graph.find(*vit) != x.graph.end()
+				&& x.graph[DERIVED].find(*vit) == x.graph[DERIVED].end())
+			{
+				filter = true;
+				break;
+			}
+		if(filter) continue;
+
+		s = this->instantiator->combine(Union, s, it->second);
 	}
 
 	return s;
@@ -110,51 +181,43 @@ TupleSet *HCFAnswerSetAlgorithm::evaluateLeafNode(const ExtendedHypertree *node)
 
 	VariableSet nodeVariables = getVariables(node);
 	RuleSet nodeRules = getRules(node);
+	VertexSet vertices = node->getVertices();
 
-	Partition apart = Helper::partition(nodeVariables);
+	Partition apart = Helper::partition(vertices);
 
         for(unsigned int i = 0; i < apart.first.size(); ++i)
 	{
-		list<Variable> order(apart.first[i].begin(), apart.first[i].end());
+		VariableSet positiveVariables;
+		set_intersection(apart.first[i].begin(), apart.first[i].end(),
+				nodeVariables.begin(), nodeVariables.end(),
+				inserter(positiveVariables, positiveVariables.begin()));
 
-		do
+		HCFAnswerSetTuple *x = new HCFAnswerSetTuple(), *t = NULL;
+
+		for(VertexSet::const_iterator it = apart.first[i].begin();
+				it != apart.first[i].end(); ++it)
 		{
-			HCFAnswerSetTuple &ast = *new HCFAnswerSetTuple();
+			if(nodeRules.find(*it) != nodeRules.end()) t = copyTupleAddProofRule(*x, nodeVariables, *it);
+			else t = copyTupleAddPositiveVariable(*x, nodeRules, *it);
 
-			Partition gpart = Helper::partition(apart.first[i]);
-
-			ast.variables = apart.first[i];
-			ast.rules = Helper::trueRules(apart.first[i], 
-					      apart.second[i], 
-					      nodeRules,
-					      this->problem->getSignMap());
-
-			ast.order = order;
-			ast.ordertypes = OrderTypes(order.size(), false);
-
-			for(set<Variable>::iterator it = ast.variables.begin();
-				it != ast.variables.end();
-				++it)
-			{
-				ast.guards.insert(pair<Variable, set<Rule> >(
-					*it,
-					trueRules(apart.first[i],
-						nodeVariables,
-						nodeRules,
-						*it,
-						ast.order,
-						ast.ordertypes,
-						this->problem->getSignMap(),
-						this->problem->getHeadMap()
-					)));
-			}
-
-			ts->insert(TupleSet::value_type(&ast, 
-				this->instantiator->createLeafSolution(apart.first[i])));
-			
+			delete x; x = t;
+			if(!x) break;
 		}
-		while(next_permutation(order.begin(), order.end()));
+		if(!x) continue;
 
+		for(VertexSet::const_iterator it = apart.second[i].begin();
+				it != apart.second[i].end(); ++it)
+		{
+			if(nodeRules.find(*it) != nodeRules.end()) t = copyTupleAddNonProofRule(*x, nodeVariables, *it);
+			else t = copyTupleAddNegativeVariable(*x, nodeRules, *it);
+
+			delete x; x = t;
+			if(!x) break;
+		}
+		if(!x) continue;
+
+		ts->insert(TupleSet::value_type(x,
+			this->instantiator->createLeafSolution(positiveVariables)));
 	}
 
 #if defined(VERBOSE) && defined(DEBUG)
@@ -169,106 +232,25 @@ TupleSet *HCFAnswerSetAlgorithm::evaluateBranchNode(const ExtendedHypertree *nod
 	TupleSet *left = this->evaluateNode(node->firstChild()), 
 		*right = this->evaluateNode(node->secondChild());
 	TupleSet *ts = new TupleSet();
-	equal_to<set<Variable> > eq;
+
+	RuleSet nodeRules = getRules(node);
 
 	for(TupleSet::iterator lit = left->begin(); lit != left->end(); ++lit)
 	{
+		// the tuple from the left
 		HCFAnswerSetTuple &l = *(HCFAnswerSetTuple *)lit->first;
 		for(TupleSet::iterator rit = right->begin(); rit != right->end(); ++rit)
 		{
+			// the tuple from the right
 			HCFAnswerSetTuple &r = *(HCFAnswerSetTuple *)rit->first;
-			if(!eq(l.variables, r.variables)) continue;
-
-			OrderCombinations combinations = combineOrder(l.order, l.ordertypes,
-										r.order, r.ordertypes);
-
-			for(OrderCombinations::iterator oit = combinations.begin();
-				oit != combinations.end();
-				++oit)
+			
+			// try to combine the tuples (left/right)
+			HCFAnswerSetTuple *t = this->combineTuples(l, r, nodeRules);
+			if(t)
 			{
-
-				HCFAnswerSetTuple &ast = *new HCFAnswerSetTuple();
-				bool insert = true;
-	
-				ast.variables = l.variables;
-				
-				ast.rules = l.rules;
-				ast.rules.insert(r.rules.begin(), r.rules.end());
-
-				ast.order = oit->first;
-				ast.ordertypes = oit->second;
-
-				insert_iterator<map<Variable, set<Rule> > > ins(ast.guards, 
-										ast.guards.begin());
-
-				map<Variable, set<Rule> >::const_iterator clgit = l.guards.begin(),
-									crgit = r.guards.begin();
-				
-				while(clgit != l.guards.end() && crgit != r.guards.end())
-				{
-					if(clgit->first < crgit->first) ++clgit;
-					else if(crgit->first < clgit->first) ++crgit;
-					else
-					{
-						set<Rule> intersect;
-						set_intersection(clgit->second.begin(),
-								clgit->second.end(),
-								crgit->second.begin(),
-								crgit->second.end(),
-								inserter(intersect, intersect.begin()));
-
-						*ins++ = map<Variable, set<Rule> >::value_type(
-								clgit++->first,
-								intersect);
-					}
-				}
-
-				//FIXME the next two for-loops do essentially the same thing -> method
-				for(set<set<Rule> >::const_iterator lgit = l.guardsdown.begin(); 
-					lgit != l.guardsdown.end(); 
-					++lgit)
-				{
-					set<Rule> diff;
-					insert_iterator<set<Rule> > ii = inserter(diff, diff.begin());
-					set_difference(lgit->begin(), lgit->end(), 
-						r.rules.begin(), r.rules.end(), ii);
-
-					if(diff.size() == 0) { insert = false; break; }
-					ast.guardsdown.insert(diff);					
-				}
-
-				for(set<set<Rule> >::const_iterator rgit = r.guardsdown.begin(); 
-					insert && rgit != r.guardsdown.end(); 
-					++rgit)
-				{
-					set<Rule> diff;
-					insert_iterator<set<Rule> > ii = inserter(diff, diff.begin());
-					set_difference(rgit->begin(), rgit->end(),
-						l.rules.begin(), l.rules.end(), ii);
-
-					if(diff.size() == 0) { insert = false; break; }
-					ast.guardsdown.insert(diff);
-				}
-				
-	
-				if(insert)
-				{
-					Solution *s = this->instantiator->combine(CrossJoin, 
-										  lit->second, 
-										  rit->second);
-		
-					//FIXME implement a postproc function to avoid duplicate code
-					pair<TupleSet::iterator, bool> result = 
-						ts->insert(TupleSet::value_type(&ast, s));
-					if(!result.second)
-					{
-						Solution *orig = result.first->second;
-						ts->erase(result.first);
-						ts->insert(TupleSet::value_type(&ast, 
-							this->instantiator->combine(Union, 
-								orig, s)));
-					}
-				}
+				Solution *s = this->instantiator->combine(CrossJoin, 
+						lit->second, rit->second);
+				this->addToTupleSet(*t, s, ts);
 			}
 		}
 	}
@@ -288,162 +270,24 @@ TupleSet *HCFAnswerSetAlgorithm::evaluateVariableIntroductionNode(const Extended
 	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 
-	VariableSet nodeVariables = getVariables(node);
 	RuleSet nodeRules = getRules(node);
-
-	set<Variable> var; var.insert(node->getDifference());
-	set<Rule> trueN = Helper::trueRules(set<Variable>(), var, 
-				nodeRules, this->problem->getSignMap());
-	set<Rule> trueP = Helper::trueRules(var, set<Variable>(), 
-				nodeRules, this->problem->getSignMap());
 
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
 	{
+		// the old tuple
 		HCFAnswerSetTuple &x = *(HCFAnswerSetTuple *)it->first;
-		HCFAnswerSetTuple &astf = *new HCFAnswerSetTuple();
-		
-		astf.variables = x.variables;
 
-		astf.rules = x.rules;
-		astf.rules.insert(trueN.begin(), trueN.end());
-
-		astf.order = x.order;
-		astf.ordertypes = x.ordertypes;
-
-		bool insert = true;
-
-		//FIXME pull these two for-loops in a separate method, duplicate code
-		for(map<Variable, set<Rule> >::iterator git = x.guards.begin();
-			git != x.guards.end();
-			++git)
+		// try to insert the variable into the tuple (set to true)
+		HCFAnswerSetTuple *t = this->copyTupleAddPositiveVariable(x, nodeRules, node->getDifference());
+		if(t)
 		{
-			astf.guards[git->first] = trueRules(	astf.variables,
-								nodeVariables,
-								git->second,
-								git->first,
-								astf.order,
-								astf.ordertypes,
-								this->problem->getSignMap(),
-								this->problem->getHeadMap());
+			Solution *s = this->instantiator->addDifference(it->second, node->getDifference());
+			this->addToTupleSet(*t, s, ts);
 		}
 
-		for(set<set<Rule> >::iterator git = x.guardsdown.begin();
-			git != x.guardsdown.end();
-			++git)
-		{
-			set<Rule> next = trueRules(	astf.variables,
-							nodeVariables,
-							*git,
-							astf.order,
-							astf.ordertypes,	
-							this->problem->getSignMap(),
-							this->problem->getHeadMap());
-
-			if(next.size() == 0) { insert = false; break; }
-			
-			astf.guardsdown.insert(next);
-		}
-
-		if(insert)
-		{
-			//FIXME implement a postproc function to avoid duplicate code
-			pair<TupleSet::iterator, bool> result = 
-				ts->insert(TupleSet::value_type(&astf, it->second));
-			if(!result.second)
-			{
-				Solution *orig = result.first->second;
-				ts->erase(result.first);
-				ts->insert(TupleSet::value_type(&astf, 
-					this->instantiator->combine(Union, orig, it->second)));
-			}
-		}
-
-		OrderCombinations combinations = 
-			combineOrder(x.order, x.ordertypes, node->getDifference(), false);
-
-		for(OrderCombinations::iterator oit = combinations.begin(); 
-			oit != combinations.end();
-			++oit)
-		{
-			HCFAnswerSetTuple &astt = *new HCFAnswerSetTuple();
-
-			insert = true;
-
-			astt.variables = x.variables;
-			astt.variables.insert(node->getDifference());
-
-			astt.rules = x.rules;
-			astt.rules.insert(trueP.begin(), trueP.end());
-
-			astt.order = oit->first;
-			astt.ordertypes = oit->second;
-
-			//FIXME pull these two for-loops in a separate method, duplicate code
-			for(map<Variable, set<Rule> >::iterator git = x.guards.begin();
-				git != x.guards.end();
-				++git)
-			{
-				astt.guards[git->first] = trueRules(	astt.variables,
-									nodeVariables,
-									git->second,
-									git->first,
-									astt.order,
-									astt.ordertypes,
-									this->problem->getSignMap(),
-									this->problem->getHeadMap());
-			}
-
-			set<Rule> diffg, truediffg;
-
-			truediffg =  trueRules(	astt.variables,
-						nodeVariables,
-						nodeRules,
-						node->getDifference(),
-						astt.order,
-						astt.ordertypes,
-						this->problem->getSignMap(),
-						this->problem->getHeadMap());
-
-			set_difference(truediffg.begin(), truediffg.end(), x.rules.begin(), x.rules.end(),
-						inserter(diffg, diffg.begin()));
-
-			astt.guards[node->getDifference()] = diffg;
-	
-			for(set<set<Rule> >::iterator git = x.guardsdown.begin();
-				git != x.guardsdown.end();
-				++git)
-			{
-				set<Rule> next = trueRules(	astt.variables,
-								nodeVariables,
-								*git,
-								astt.order,
-								astt.ordertypes,	
-								this->problem->getSignMap(),
-								this->problem->getHeadMap());
-	
-				if(next.size() == 0) { insert = false; break; }
-				
-				astt.guardsdown.insert(next);
-			}
-
-			if(insert)
-			{
-				Solution *s = this->instantiator->addDifference(it->second,
-									node->getDifference());
-
-				//FIXME implement a postproc function to avoid duplicate code
-				pair<TupleSet::iterator, bool> result = 
-					ts->insert(TupleSet::value_type(&astt, s));
-				if(!result.second)
-				{
-					Solution *orig = result.first->second;
-					ts->erase(result.first);
-					ts->insert(TupleSet::value_type(&astt, 
-						this->instantiator->combine(Union, 
-							orig, it->second)));
-				}
-			}			
-		}
+		// try to insert the variable into the tuple (set to false)
+		t = this->copyTupleAddNegativeVariable(x, nodeRules, node->getDifference());
+		if(t) this->addToTupleSet(*t, it->second, ts);
 	}
 
 	delete base;
@@ -464,65 +308,22 @@ TupleSet *HCFAnswerSetAlgorithm::evaluateVariableRemovalNode(const ExtendedHyper
 
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
 	{
+		// the old tuple
 		HCFAnswerSetTuple &x = *(HCFAnswerSetTuple *)it->first;
 
-		map<Variable, set<Rule> >::iterator git = x.guards.find(node->getDifference());
-		set<Rule> l1, l2;
+		// if the variable is in the graph but has not been derived, cancel operation
+		if(x.graph.find(node->getDifference()) != x.graph.end()
+			&& x.graph[DERIVED].find(node->getDifference()) == x.graph[DERIVED].end())
+			continue;
 
-		if(git != x.guards.end())
-		{
-			if(git->second.size() == 0) continue;
-			else l2 = git->second;
-		}
+		// create a copy of the tuple
+		HCFAnswerSetTuple &t = *new HCFAnswerSetTuple(x);
+		
+		// remove the rule from the tuple
+		t.removeVertex(node->getDifference());
 
-		for(set<Rule>::iterator rit = nodeRules.begin(); rit != nodeRules.end(); ++rit)
-		{
-			map<Variable, bool>::iterator rulesigns;
-			if((rulesigns = this->problem->getSignMap()[*rit].find(node->getDifference())) 
-				!= this->problem->getSignMap()[*rit].end())
-			{
-				if(rulesigns->second) l1.insert(*rit);
-			}
-		}
-
-		OrderCombinations combinations =
-			combineOrder(x.order, x.ordertypes, l1, l2, node->getDifference(), false);
-
-		for(OrderCombinations::iterator cit = combinations.begin();
-			cit != combinations.end();
-			++cit)
-		{
-			HCFAnswerSetTuple &ast = *new HCFAnswerSetTuple();
-			ast.guardsdown = x.guardsdown;
-	
-			if(l2.size() != 0) ast.guardsdown.insert(l2);
-	
-			for(set<Variable>::iterator vit = x.variables.begin(); 
-				vit != x.variables.end(); ++vit)
-				if(*vit != node->getDifference()) ast.variables.insert(*vit);
-			
-			ast.rules = x.rules;
-
-			ast.order = cit->first;
-			ast.ordertypes = cit->second;
-	
-			for(git = x.guards.begin(); git != x.guards.end(); ++git)
-			{
-				if(git->first == node->getDifference()) continue;
-				ast.guards.insert(*git);
-			}
-	
-			//FIXME implement a postproc function to avoid duplicate code
-			pair<TupleSet::iterator, bool> result = 
-				ts->insert(TupleSet::value_type(&ast, it->second));
-			if(!result.second)
-			{
-				Solution *orig = result.first->second;
-				ts->erase(result.first);
-				ts->insert(TupleSet::value_type(&ast, 
-					this->instantiator->combine(Union, orig, it->second)));
-			}
-		}
+		// add the tuple to the set with Union on duplicate
+		this->addToTupleSet(t, it->second, ts);
 	}
 
 	delete base;
@@ -543,52 +344,16 @@ TupleSet *HCFAnswerSetAlgorithm::evaluateRuleIntroductionNode(const ExtendedHype
 
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
 	{
+		// the old tuple
 		HCFAnswerSetTuple &x = *(HCFAnswerSetTuple *)it->first;
-		HCFAnswerSetTuple &ast = *new HCFAnswerSetTuple();
-		
-		//FIXME: use swap instead of copying...
-		ast.variables = x.variables;
 
-		//FIXME: use swap instead of copying...
-		ast.rules = x.rules;
-		if(Helper::trueRule(ast.variables, 
-				    nodeVariables, 
-				    node->getDifference(),
-				    this->problem->getSignMap())) 
-			ast.rules.insert(node->getDifference());
+		// try to insert the rule into the tuple as proof rule
+		HCFAnswerSetTuple *t = this->copyTupleAddProofRule(x, nodeVariables, node->getDifference());
+		if(t) this->addToTupleSet(*t, it->second, ts);
 
-		ast.order = x.order;
-		ast.ordertypes = x.ordertypes;
-
-		for(map<Variable, set<Rule> >::iterator git = x.guards.begin(); 
-			git != x.guards.end(); 
-			++git)
-		{
-			pair<Variable, set<Rule> > temp(git->first, git->second);
-			if(trueRule(ast.variables,
-				    nodeVariables, 
-				    node->getDifference(),
-				    temp.first, 
-				    ast.order,
-				    ast.ordertypes,
-				    this->problem->getSignMap(),
-				    this->problem->getHeadMap()))
-				temp.second.insert(node->getDifference());
-			ast.guards.insert(temp);
-		}
-
-		ast.guardsdown = x.guardsdown;
-
-		//FIXME implement a postproc function to avoid duplicate code
-		pair<TupleSet::iterator, bool> result = 
-			ts->insert(TupleSet::value_type(&ast, it->second));
-		if(!result.second)
-		{
-			Solution *orig = result.first->second;
-			ts->erase(result.first);
-			ts->insert(TupleSet::value_type(&ast, 
-				this->instantiator->combine(Union, orig, it->second)));
-		}
+		// try to insert the rule into the tuple as non-proof rule
+		t = this->copyTupleAddNonProofRule(x, nodeVariables, node->getDifference());
+		if(t) this->addToTupleSet(*t, it->second, ts);
 	}
 
 	delete base;
@@ -607,64 +372,32 @@ TupleSet *HCFAnswerSetAlgorithm::evaluateRuleRemovalNode(const ExtendedHypertree
 
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
 	{
+		// the old tuple
 		HCFAnswerSetTuple &x = *(HCFAnswerSetTuple *)it->first;
-		HCFAnswerSetTuple &ast = *new HCFAnswerSetTuple();
 
-		if(x.rules.find(node->getDifference()) == x.rules.end()) continue;
-		
-		//FIXME: use swap instead of copying...
-		ast.variables = x.variables;
-		
-		ast.rules.swap(x.rules);
-		ast.rules.erase(node->getDifference());
-
-		//FIXME: is the above faster than this?
-		//for(set<Rule>::iterator rit = x.rules.begin(); rit != x.rules.end(); ++rit)
-		//	if(*rit != node->getDifference()) ast.rules.insert(*rit);
-
-		OrderTypes::const_iterator otit = x.ordertypes.begin();
-		for(Order::const_iterator oit = x.order.begin(); oit != x.order.end(); ++oit)
+		Graph::const_iterator git;
+		if((git = x.graph.find(node->getDifference())) == x.graph.end())
 		{
-			if(*oit == node->getDifference() && *otit)
-			{
-				++otit;
+			// if the rule is not in the graph and not satisfied, cancel operation
+			if(x.satisfied.find(node->getDifference()) == x.satisfied.end())
 				continue;
-			}
-
-			ast.order.push_back(*oit);
-			ast.ordertypes.push_back(*otit++);
 		}
-
-		for(map<Variable, set<Rule> >::iterator git = x.guards.begin();
-			git != x.guards.end();
-			++git)
+		else
 		{
-			if(git->second.find(node->getDifference()) != git->second.end())
+			// if the rule is in the graph but not derived yet, cancel operation
+			if(git->second.find(DERIVED) == git->second.end())
 				continue;
-
-			ast.guards.insert(*git);
 		}
 
-		for(set<set<Rule> >::iterator git = x.guardsdown.begin();
-			git != x.guardsdown.end();
-			++git)
-		{
-			if(git->find(node->getDifference()) != git->end())
-				continue;
+		// create a copy of the tuple
+		HCFAnswerSetTuple &t = *new HCFAnswerSetTuple(x);
 
-			ast.guardsdown.insert(*git);
-		}
-		
-		//FIXME implement a postproc function to avoid duplicate code
-		pair<TupleSet::iterator, bool> result = 
-			ts->insert(TupleSet::value_type(&ast, it->second));
-		if(!result.second)
-		{
-			Solution *orig = result.first->second;
-			ts->erase(result.first);
-			ts->insert(TupleSet::value_type(&ast, 
-				this->instantiator->combine(Union, orig, it->second)));
-		}
+		// remove the rule from the tuple
+		t.removeVertex(node->getDifference());
+		t.satisfied.erase(node->getDifference());
+
+		// add the tuple to the set with Union on duplicate
+		this->addToTupleSet(t, it->second, ts);
 	}
 
 	delete base;
@@ -676,441 +409,202 @@ TupleSet *HCFAnswerSetAlgorithm::evaluateRuleRemovalNode(const ExtendedHypertree
 	return ts;
 }
 
-/********************************\
-| INTERNAL HELPER methods
-\********************************/
-
-//FIXME: this is veeeeery inefficient because list is copied in every recursion. use pointers?
-static OrderCombinations internal_combine(	Order::const_iterator l,
-						Order::const_iterator lend,
-						OrderTypes::const_iterator lt,
-						OrderTypes::const_iterator ltend,
-						Order::const_iterator r,
-						Order::const_iterator rend,
-						OrderTypes::const_iterator rt,
-						OrderTypes::const_iterator rtend)
+void HCFAnswerSetAlgorithm::addToTupleSet(Tuple &t, Solution *s, TupleSet *ts, Operation op)
 {
-	OrderCombinations combinations;
-	
-	if(l == lend) combinations.push_back(make_pair(Order(r, rend), OrderTypes(rt, rtend)));
-	else if(r == rend) combinations.push_back(make_pair(Order(l, lend), OrderTypes(lt, ltend)));
-	else
+	// try to insert the tuple into the tuple set
+	pair<TupleSet::iterator, bool> result = ts->insert(TupleSet::value_type(&t, s));
+
+	// if the tuple was already in the set
+	if(!result.second)
 	{
-		Order::const_iterator add = l;
-		OrderTypes::const_iterator addtype = lt;
-
-		OrderCombinations temp = internal_combine(++l, lend, ++lt, ltend, r, rend, rt, rtend);
-		for(OrderCombinations::iterator it = temp.begin(); it != temp.end(); ++it)
-		{ it->first.push_front(*add); it->second.push_front(*addtype); }
-		combinations.splice(combinations.end(), temp);
-
-		l = add; add = r; lt = addtype; addtype = rt;
-
-		temp = internal_combine(l, lend, lt, ltend, ++r, rend, ++rt, rtend);
-		for(OrderCombinations::iterator it = temp.begin(); it != temp.end(); ++it)
-		{ it->first.push_front(*add); it->second.push_front(*addtype); }
-		combinations.splice(combinations.end(), temp);
+		// delete it and insert it again with combined solution
+		Solution *orig = result.first->second;
+		ts->erase(result.first); 
+		ts->insert(TupleSet::value_type(&t, this->instantiator->combine(op, orig, s)));
 	}
-
-	return combinations;
 }
 
-/**************************************\
-| HELPER Methods
-\**************************************/
+HCFAnswerSetTuple *HCFAnswerSetAlgorithm::combineTuples(HCFAnswerSetTuple &l, HCFAnswerSetTuple &r, RuleSet rules)
+{
+	Graph::const_iterator lit = l.graph.begin(),
+			      rit = r.graph.begin();
 
-set<Rule> HCFAnswerSetAlgorithm::trueRules(	const set<Variable> &positives,
-							const set<Variable> &all,
-							const set<Rule> &rules,
-							Variable variable,
-							const Order &order,
-							const OrderTypes &ordertypes,	
-							const SignMap &signs,
-							const HeadMap &heads)
-{	
-	//TODO
-	set<Rule> truerules;
-        set<Variable> negatives;
-        set<Variable> intersect;
+	// check if the graph vertices coincide, otherwise abort
+	while(lit != l.graph.end() && rit != r.graph.end())
+		if(lit->first != rit->first) return NULL;
+		else { ++lit; ++rit; }
+	if(lit != l.graph.end() || rit != r.graph.end()) return NULL;
 
-        set_difference(all.begin(), all.end(), positives.begin(), positives.end(),
-                                        inserter(negatives, negatives.begin()));
+	VertexSet::const_iterator ldit = l.reversegraph[DERIVED].begin(),
+				  rdit = r.reversegraph[DERIVED].begin();
 
-        for(set<Rule>::const_iterator r = rules.begin(); r != rules.end(); ++r)
-        {
-		intersect.clear();
-
-                //FIXME danger: linear in the size of the head of the rule... how to??
-                set_intersection(heads[*r].begin(), heads[*r].end(),
-                                positives.begin(), positives.end(),
-                                inserter(intersect, intersect.begin()));
-                bool add = (intersect.size() == 1 && *intersect.begin() == variable);
-
-                SignMap::const_iterator posneg = signs.find(*r);
-
-                //FIXME slow, utilize the fact that sets are sorted (multiple finds -> log(n))
-                //FIXME simplification possible?
-                for(set<Variable>::const_iterator var = positives.begin();
-                        add && var != positives.end(); ++var)
-                {
-                        map<Variable, bool>::const_iterator it = posneg->second.find(*var);
-			set<Variable>::const_iterator hit = heads[*r].find(*var);
-                        add = hit != heads[*r].end() || it == posneg->second.end() || it->second;
-                }
-                for(set<Variable>::const_iterator var = negatives.begin();
-                        add && var != negatives.end(); ++var)
-                {
-                        map<Variable, bool>::const_iterator it = posneg->second.find(*var);
-                        add = it == posneg->second.end() || !it->second;
-                }
-
-                bool seen = false;
-                OrderTypes::const_iterator otit = ordertypes.begin();
-		for(Order::const_iterator oit = order.begin(); add && oit != order.end(); ++oit)
+	while(ldit != l.reversegraph[DERIVED].end() && rdit != r.reversegraph[DERIVED].end())
+		if(*ldit < *rdit) ++ldit;
+		else if(*ldit > *rdit) ++rdit;
+		else // if the same rule is derived left and right
 		{
-			OrderTypes::const_iterator currtype = otit++;
-			if(!seen && !*currtype && *oit == variable) { seen = true; continue; }
-			else if(!seen) continue;
-			else if(!*currtype)
+			// check that a head variable exists in both graphs
+			bool inbothgraphs = false;
+			for(VariableSet::const_iterator it = this->problem->getHeadMap()[*ldit].begin();
+				it != this->problem->getHeadMap()[*ldit].end(); ++it)
 			{
-				map<Variable, bool>::const_iterator it = posneg->second.find(*oit);
-				add = it == posneg->second.end() || !it->second;
+				if(l.graph[*ldit].find(*it) != l.graph[*ldit].end()
+					&& r.graph[*rdit].find(*it) != r.graph[*rdit].end())
+				{
+					inbothgraphs = true;
+					break;
+				}
 			}
-			else if(*oit == *r) { add = false; }
+
+			// if not, then abort
+			if(!inbothgraphs) return NULL;
+
+			// otherwise continue
+			++ldit; ++rdit;
 		}
-		
-		if(add) truerules.insert(*r);
+
+	// now that all the preconditions are met, start combining the tuples
+	HCFAnswerSetTuple *t = new HCFAnswerSetTuple(l); // copy the left tuple
+
+	// add all edges from the right tuple to the left and check consistency
+	for(rit = r.graph.begin(); rit != r.graph.end(); ++rit)
+	{
+		for(rdit = r.graph[rit->first].begin(); rdit != r.graph[rit->first].end(); ++rdit)
+		{
+			t->addEdge(rit->first, *rdit);
+		}
+
+		t->transitiveClosureThrough(rit->first); // calculate the transitive closure over the graph
+		if(t->hasCycleThrough(rit->first)) { delete t; return NULL; } // check for inconsistency
 	}
 
-	return truerules;
+	// combine the satisfied rules
+	t->satisfied.insert(r.satisfied.begin(), r.satisfied.end());
+
+	return t;
 }
 
-set<Rule> HCFAnswerSetAlgorithm::trueRules(	const set<Variable> &positives,
-							const set<Variable> &all,
-							const set<Rule> &rules,
-							const Order &order,
-							const OrderTypes &ordertypes,
-							const SignMap &signs,
-							const HeadMap &heads)
+HCFAnswerSetTuple *HCFAnswerSetAlgorithm::copyTupleAddPositiveVariable(HCFAnswerSetTuple &x, RuleSet rules, Variable v)
 {
-	//TODO
-	set<Rule> truerules;
-        set<Variable> negatives;
-        set<Variable> intersect;
+	HCFAnswerSetTuple *t = new HCFAnswerSetTuple(x); // copy the original tuple
+	t->addVertex(v);
 
-        set_difference(all.begin(), all.end(), positives.begin(), positives.end(),
-                                        inserter(negatives, negatives.begin()));
-
-        for(set<Rule>::const_iterator r = rules.begin(); r != rules.end(); ++r)
-        {
-                //FIXME danger: linear in the size of the head of the rule... how to??
-                set_intersection(heads[*r].begin(), heads[*r].end(),
-                                positives.begin(), positives.end(),
-                                inserter(intersect, intersect.begin()));
-                bool add = (intersect.size() == 0);
-
-                SignMap::const_iterator posneg = signs.find(*r);
-
-                //FIXME slow, utilize the fact that sets are sorted (multiple finds -> log(n))
-                //FIXME simplification possible?
-                for(set<Variable>::const_iterator var = positives.begin();
-                        add && var != positives.end(); ++var)
-                {
-			map<Variable, bool>::const_iterator it = posneg->second.find(*var);
-			set<Variable>::const_iterator hit = heads[*r].find(*var);
-                        add = hit != heads[*r].end() || it == posneg->second.end() || it->second;
-                }
-                for(set<Variable>::const_iterator var = negatives.begin();
-                        add && var != negatives.end(); ++var)
-                {
-                        map<Variable, bool>::const_iterator it = posneg->second.find(*var);
-                        add = it == posneg->second.end() || !it->second;
-                }
-
-                bool seen = false;
-                OrderTypes::const_iterator otit = ordertypes.begin();
-                for(Order::const_iterator oit = order.begin(); add && oit != order.end(); ++oit)
-                {
-                        OrderTypes::const_iterator currtype = otit++;
-                        if(!seen && *currtype && *oit == *r) { seen = true; continue; }
-                        else if(!seen) continue;
-                        else if(!*currtype)
-                        {
-                                map<Variable, bool>::const_iterator it = posneg->second.find(*oit);
-				add = it == posneg->second.end() || !it->second;
-                        }
-		}
-		
-		if(add) truerules.insert(*r);
-	}
-
-	return truerules;
-}
-
-bool HCFAnswerSetAlgorithm::trueRule(	const set<Variable> &positives,
-						const set<Variable> &all,
-						Rule rule,
-						Variable variable,
-						const Order &order,
-						const OrderTypes &ordertypes,
-						const SignMap &signs,
-						const HeadMap &heads)
-{
-	set<Rule> rules; rules.insert(rule);
-	return trueRules(positives, all, rules, variable, order, ordertypes, signs, heads).size() != 0;
-}
-
-OrderCombinations HCFAnswerSetAlgorithm::combineOrder(const Order &original,
-								const OrderTypes &types,
-								const set<Rule> &left,
-								const set<Rule> &right,
-								int separator,
-								bool separatorType)
-{
-	//TODO
-	OrderCombinations leftcomb, rightcomb, leftsingle, rightsingle, combinations;
-	Order leftinit, rightinit;
-	OrderTypes lefttypes, righttypes;
-
-	Order::const_iterator oit = original.begin();
-	OrderTypes::const_iterator tit = types.begin();
-
-	set<Rule> lset(left), rset(right);
-
-	bool sepfound = false;
-	if(original.size() > 0)
+	for(RuleSet::const_iterator it = rules.begin(); it != rules.end(); ++it)
 	{
-		while(oit != original.end() && !(*oit == separator && *tit == separatorType))
-		{ 
-			leftinit.push_back(*oit++); lefttypes.push_back(*tit++); 
-			if(*tit) { lset.erase(leftinit.back()); rset.erase(leftinit.back()); }
-		}
+		map<Variable, bool>::const_iterator sit;
 
-		if(oit != original.end())
+		bool ingraph = x.graph.find(*it) != x.graph.end();
+		bool inhead = this->problem->getHeadMap()[*it].find(v) != this->problem->getHeadMap()[*it].end();
+		bool inrule = (sit = this->problem->getSignMap()[*it].find(v)) != this->problem->getSignMap()[*it].end();
+		bool inposbody = inrule && sit->second;
+		bool innegbody = inrule && !sit->second && !inhead;
+		bool isderived = ingraph && x.graph[*it].find(DERIVED) != x.graph[*it].end();
+
+		if(ingraph)
 		{
-			sepfound = true;
-			while(++oit != original.end() && ++tit != types.end()) 
-			{ 
-				rightinit.push_back(*oit); righttypes.push_back(*tit); 
-				if(*tit) { lset.erase(rightinit.back()); rset.erase(rightinit.back()); }
-			}
-		}
-	}
-	
-	leftcomb.push_back(make_pair(leftinit, lefttypes));
-	rightcomb.push_back(make_pair(rightinit, righttypes));
+			if(innegbody) { delete t; return NULL; } // if the rule is in the graph but v is in the neg. body, abort
+			if(inposbody) t->addEdge(v, *it); // if instead in positive body, add edge
 
-	if(!sepfound)
-	{
-		leftsingle.push_back(make_pair(Order(), OrderTypes()));
-		rightsingle.push_back(make_pair(Order(), OrderTypes()));
-	}
-
-	//left loop
-	for(set<Rule>::const_iterator lit = lset.begin(); lit != lset.end(); ++lit)
-	{
-		OrderCombinations temp;
-		for(OrderCombinations::iterator it = leftcomb.begin(); it != leftcomb.end(); ++it)
-		{
-			OrderCombinations noref = combineOrder(it->first, it->second, *lit, true);
-			temp.splice(temp.end(), noref);
-		}
-		leftcomb.swap(temp);
-	}
-
-	//right loop
-	for(set<Rule>::const_iterator rit = rset.begin(); rit != rset.end(); ++rit)
-	{
-		OrderCombinations temp;
-		for(OrderCombinations::iterator it = rightcomb.begin(); it != rightcomb.end(); ++it)
-		{
-			OrderCombinations noref = combineOrder(it->first, it->second, *rit, true);
-			temp.splice(temp.end(), noref);
-		}
-		rightcomb.swap(temp);
-	}
-
-	//loop again without external variables
-	if(!sepfound)
-	{
-		//left loop
-        	for(set<Rule>::const_iterator lit = lset.begin(); lit != lset.end(); ++lit)
-        	{
-                	OrderCombinations temp;
-                	for(OrderCombinations::iterator it = leftsingle.begin(); it != leftsingle.end(); ++it)
-                	{
-       	        	        OrderCombinations noref = combineOrder(it->first, it->second, *lit, true);
-       	        	        temp.splice(temp.end(), noref);
-       	        	}
-       	        	leftsingle.swap(temp);
-	        }
-	
-	        //right loop
-	        for(set<Rule>::const_iterator rit = rset.begin(); rit != rset.end(); ++rit)
-        	{
-                	OrderCombinations temp;
-                	for(OrderCombinations::iterator it = rightsingle.begin(); it != rightsingle.end(); ++it)
-                	{
-                        	OrderCombinations noref = combineOrder(it->first, it->second, *rit, true);
-                        	temp.splice(temp.end(), noref);
-               		}
-               		rightsingle.swap(temp);
-        	}
-	}
-	
-	//merge loops
-	if(sepfound)
-		for(OrderCombinations::iterator lit = leftcomb.begin(); lit != leftcomb.end(); ++lit)
-			for(OrderCombinations::iterator rit = rightcomb.begin(); rit != rightcomb.end(); ++rit)
+			if(inhead)
 			{
-				Order neworder(lit->first); 
-				neworder.insert(neworder.end(), rit->first.begin(), rit->first.end());
-				OrderTypes newtypes(lit->second);
-				newtypes.insert(newtypes.end(), rit->second.begin(), rit->second.end());
-	
-				combinations.push_back(make_pair(neworder, newtypes));
+				if(isderived) { delete t; return NULL; } // if v is in the head but rule already derived, abort
+				else 
+				{
+					// if not yet derived, add appropriate edges
+					t->addEdge(*it, v);
+					t->addEdge(*it, DERIVED);
+					t->addEdge(DERIVED, v);
+				}
 			}
-	else
+		}
+		else if(innegbody || inhead) t->satisfied.insert(*it); // if rule is not in graph but satisfied, mark it
+	}
+
+	t->transitiveClosureThrough(v); // calculate the transitive closure over the graph
+	if(t->hasCycleThrough(v)) { delete t; return NULL; } // if the resulting graph has a cycle, abort
+	return t;
+}
+
+HCFAnswerSetTuple *HCFAnswerSetAlgorithm::copyTupleAddNegativeVariable(HCFAnswerSetTuple &x, RuleSet rules, Variable v)
+{
+	HCFAnswerSetTuple *t = new HCFAnswerSetTuple(x); // copy the original tuple
+
+	for(RuleSet::const_iterator it = rules.begin(); it != rules.end(); ++it)
 	{
-		for(OrderCombinations::iterator lit = leftcomb.begin(); lit != leftcomb.end(); ++lit)
-			for(OrderCombinations::iterator rit = rightsingle.begin(); rit != rightsingle.end(); ++rit)
+		// check if the variable is contained in some rule
+		map<Variable, bool>::const_iterator sit;
+		if((sit = this->problem->getSignMap()[*it].find(v)) != this->problem->getSignMap()[*it].end())
+		{
+			if(x.graph.find(*it) != x.graph.end()) // if rule is in the graph (i.e. a proof rule)
 			{
-				Order neworder(lit->first); 
-				neworder.insert(neworder.end(), rit->first.begin(), rit->first.end());
-				OrderTypes newtypes(lit->second);
-				newtypes.insert(newtypes.end(), rit->second.begin(), rit->second.end());
-	
-				combinations.push_back(make_pair(neworder, newtypes));
+				if(sit->second) { delete t; return NULL; } // abort if v is in positive body
 			}
+			else if(sit->second) // if rule is not in the graph and v occurs in pos. body
+			{
+				t->satisfied.insert(*it); // set rule to satisfied
+			}
+		}
+	}
+
+	return t;
+}
+
+HCFAnswerSetTuple *HCFAnswerSetAlgorithm::copyTupleAddProofRule(HCFAnswerSetTuple &x, VariableSet variables, Rule r)
+{
+	HCFAnswerSetTuple *t = new HCFAnswerSetTuple(x); // copy the original tuple
+	t->addVertex(r); 
+
+	int headcount = 0;
+	for(VariableSet::const_iterator it = variables.begin(); it != variables.end(); ++it)
+	{
+		map<Variable, bool>::const_iterator sit;
+
+		bool ingraph = x.graph.find(*it) != x.graph.end();
+		bool inhead = this->problem->getHeadMap()[r].find(*it) != this->problem->getHeadMap()[r].end();
+		bool inrule = (sit = this->problem->getSignMap()[r].find(*it)) != this->problem->getSignMap()[r].end();
+		bool inposbody = inrule && sit->second;
+		bool innegbody = inrule && !sit->second && !inhead;
+	
+		if(ingraph && inhead) // if we found a head variable
+		{
+			if(++headcount > 1) { delete t; return NULL; } // if it is the second one, abort
+			else
+			{
+				// otherwise insert edges accordingly
+				t->addEdge(r, *it);
+				t->addEdge(r, DERIVED);
+				t->addEdge(DERIVED, *it);
+			}
+		}
 
 		
-		for(OrderCombinations::iterator lit = leftsingle.begin(); lit != leftsingle.end(); ++lit)
-			for(OrderCombinations::iterator rit = rightcomb.begin(); rit != rightcomb.end(); ++rit)
-			{
-				Order neworder(lit->first); 
-				neworder.insert(neworder.end(), rit->first.begin(), rit->first.end());
-				OrderTypes newtypes(lit->second);
-				newtypes.insert(newtypes.end(), rit->second.begin(), rit->second.end());
-	
-				combinations.push_back(make_pair(neworder, newtypes));
-			}
-
-		combinations.unique();
-	}
-
-	return combinations;
-}
-
-OrderCombinations HCFAnswerSetAlgorithm::combineOrder(const Order &original,
-								const OrderTypes &types,
-								int toInsert,
-								bool insertType)
-{
-	//TODO
-	OrderCombinations combinations;
-	Order::const_iterator oit = original.begin();
-	OrderTypes::const_iterator tit = types.begin();
-
-	do
-	{
-		if(*oit == toInsert && *tit == insertType) 
-			return OrderCombinations(1, make_pair(original, types));
-
-		Order neworder(original.begin(), oit);
-		OrderTypes newtypes(types.begin(), tit);
-
-		neworder.push_back(toInsert);
-		newtypes.push_back(insertType);
-
-		neworder.insert(neworder.end(), oit, original.end());
-		newtypes.insert(newtypes.end(), tit, types.end());
-
-		combinations.push_back(make_pair(neworder, newtypes));
-
-		if(oit == original.end()) break;
-		++oit; ++tit;
-	}
-	while(true);
-
-	return combinations;
-}						
-
-OrderCombinations HCFAnswerSetAlgorithm::combineOrder(const Order &left,
-								const OrderTypes &lefttypes,
-								const Order &right,
-								const OrderTypes &righttypes)
-{
-	//TODO
-	OrderCombinations combinations;
-	list<OrderCombinations> partials;
-
-	int currpos, maxpos = 0;
-	Order::const_iterator locurr = left.begin(), rocurr = right.begin();
-	OrderTypes::const_iterator ltcurr = lefttypes.begin(), rtcurr = righttypes.begin();
-
-	OrderTypes::const_iterator ltit = ltcurr;
-	for(Order::const_iterator loit = locurr; loit != left.end(); ++loit)
-	{
-		currpos = 0;
-		OrderTypes::const_iterator rtit = righttypes.begin();
-		for(Order::const_iterator roit = right.begin(); roit != right.end(); ++roit)
+		if(inrule) // if some variable is containted in the rule
 		{
-			if(*ltit == *rtit && *roit == *loit) //matchpoint found
-			{
-				//left and right orders are inconsistent
-				if(currpos < maxpos) return combinations;
-
-				maxpos = currpos;
-
-				partials.push_back(internal_combine(	locurr, loit,
-									ltcurr, ltit,
-									rocurr, roit,
-									rtcurr, rtit));
-
-				partials.push_back(OrderCombinations(1, 
-					make_pair(Order(1, *loit), OrderTypes(1, *ltit))));
-
-				locurr = loit; ++locurr;
-				ltcurr = ltit; ++ltcurr;
-				rocurr = roit; ++rocurr;
-				rtcurr = rtit; ++rtcurr;
-			}
-
-			++currpos;
-			++rtit;
+			if((ingraph && innegbody) || (!ingraph && inposbody)) { delete t; return NULL; } // and doesn't satisfy it, abort
+			if(ingraph && inposbody) t->addEdge(*it, r); // if it does satisfy the rule, add an edge
 		}
-		
-		++ltit;
 	}
-
-	partials.push_back(internal_combine(	locurr, left.end(),
-						ltcurr, lefttypes.end(),
-						rocurr, right.end(),
-						rtcurr, righttypes.end()));
-
-	combinations.swap(partials.front());
-	partials.pop_front();
-
-	while(!partials.empty())
-	{
-		OrderCombinations temp;
-		for(OrderCombinations::iterator oit = combinations.begin(); 
-			oit != combinations.end();
-			++oit)
-			for(OrderCombinations::iterator iit = partials.front().begin();
-				iit != partials.front().end();
-				++iit)
-			{
-				Order neworder(oit->first);
-				neworder.insert(neworder.end(), iit->first.begin(), iit->first.end());
-				OrderTypes newtypes(oit->second);
-				newtypes.insert(newtypes.end(), iit->second.begin(), iit->second.end());
-				temp.push_back(make_pair(neworder, newtypes));
-			}
-
-		combinations.swap(temp);
-		partials.pop_front();
-	}
-
-	return combinations;
+	
+	t->transitiveClosureThrough(r); // calculate the transitive closure over the graph
+	if(t->hasCycleThrough(r)) { delete t; return NULL; } // if the resulting graph has a cycle, abort
+	return t;
 }
+
+HCFAnswerSetTuple *HCFAnswerSetAlgorithm::copyTupleAddNonProofRule(HCFAnswerSetTuple &x, VariableSet variables, Rule r)
+{
+	HCFAnswerSetTuple *t = new HCFAnswerSetTuple(x); // copy the original tuple
+
+	for(VariableSet::const_iterator it = variables.begin(); it != variables.end(); ++it)
+	{
+		map<Variable, bool>::const_iterator sit;
+		if((sit = this->problem->getSignMap()[r].find(*it)) != this->problem->getSignMap()[r].end() // if some variable is containted in the rule
+				&& !((x.graph.find(*it) != x.graph.end()) ^ !sit->second)) // and it satisfies the rule
+		{
+			t->satisfied.insert(r); // set it to satisfied
+			break;
+		}
+	}
+
+	return t;
+}
+

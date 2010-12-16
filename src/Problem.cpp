@@ -12,21 +12,42 @@ using namespace std;
 Problem::Problem(AbstractAlgorithm *algorithm)
 {
 	this->algorithm = algorithm;
+	this->parsed = false;
+
+	this->setDecompositionOptions();
 }
 
 Problem::~Problem()
 {
 }
 
+void Problem::setDecompositionOptions(DecompositionOptions options, void *parameter)
+{
+	this->decompositionOptions = options;
+	this->decompositionParameter = parameter;
+}
+
 Solution *Problem::calculateSolution(Instantiator *instantiator)
 {
-	this->parse();
-	this->preprocess();
+	if(!this->parsed)
+	{
+		this->parse();
+		this->preprocess();
+		this->parsed = true;
+	}
 
 	Hypergraph *hg = this->buildHypergraphRepresentation();
 
 	H_BucketElim be;
-	Hypertree *ht = be.buildHypertree(hg, BE_MIW_ORDER);
+	Hypertree *ht = NULL;
+
+	// when decomposing a bipartite graph
+	if(this->decompositionOptions & BipartiteGraph)
+		ht = be.buildHypertree(hg, BE_MIW_ORDER, (int)this->decompositionParameter);
+	// when decomposing a default graph
+	else 
+		ht = be.buildHypertree(hg, BE_MIW_ORDER);
+
 	ht->swapChiLambda();
         ht->shrink(true);
         ht->swapChiLambda();
@@ -53,13 +74,26 @@ string Problem::getVertexName(Vertex vertexId)
 	return this->vertexNames[vertexId];
 }
 
-Hypergraph *Problem::createHypergraphFromSets(VertexSet vertices, EdgeSet edges)
+Hypergraph *Problem::createGraphFromSets(VertexSet vertices, EdgeSet edges)
 {
-	vector<Node *> lookup; lookup.resize(vertices.size(), NULL);
+	return createGraphFromDisjointSets(vertices, VertexSet(), edges);
+}
+
+Hypergraph *Problem::createGraphFromDisjointSets(VertexSet v1, VertexSet v2, EdgeSet edges)
+{
+	vector<Node *> lookup; lookup.resize(v1.size() + v2.size(), NULL);
 	int edgeId = 0;
 	Hypergraph *hg = new Hypergraph();
 
-	for(VertexSet::iterator it = vertices.begin(); it != vertices.end(); ++it)
+	for(VertexSet::iterator it = v1.begin(); it != v1.end(); ++it)
+	{
+		if((unsigned int)*it >= lookup.capacity()) lookup.resize(*it + 1);
+		Node *n; CNULL(n = new Node(*it, *it));
+		lookup[*it] = n;
+		hg->MyNodes.push_back(n);
+	}
+
+	for(VertexSet::iterator it = v2.begin(); it != v2.end(); ++it)
 	{
 		if((unsigned int)*it >= lookup.capacity()) lookup.resize(*it + 1);
 		Node *n; CNULL(n = new Node(*it, *it));
@@ -103,6 +137,13 @@ Vertex Problem::storeVertexName(string name)
 
 Vertex Problem::createAuxiliaryVertex()
 {
-	vertexNames.push_back(string(""));
+	vertexNames.push_back(string("__aux"));
 	return vertexNames.size() - 1;
+}
+
+void Problem::printVertexNames(ostream &out)
+{
+	for(unsigned int i = 0; i < this->vertexNames.size(); ++i)
+		out << "(" << i << "=" << this->vertexNames[i] << ")";
+	out << endl;
 }

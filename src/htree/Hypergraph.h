@@ -87,16 +87,16 @@ public:
 	void divideNodes(int *iPartitioning, Hypergraph ***Subgraphs, Hyperedge ***Separator);
 
 	// Returns nodes in the same order as they are stored in the hypergraph
-	Node **getInputOrder();
+	Node **getInputOrder(int preElim = 0);
 
 	// Returns nodes in the order determined by the minimum induced width (MIW) heuristic
-	Node **getMIWOrder();
+	Node **getMIWOrder(int preElim = 0);
 
 	// Returns nodes in the order determined by the minimum fill-in (MF) heuristic
-	Node **getMFOrder();
+	Node **getMFOrder(int preElim = 0);
 
 	// Returns nodes in the order determined by the maximum cardinality search (MCS) heuristic
-	Node **getMCSOrder();
+	Node **getMCSOrder(int preElim = 0);
 
 	// label all edges consecutively
 	void labelEdgesConsecutively();

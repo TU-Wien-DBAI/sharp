@@ -651,7 +651,7 @@ Comments:
 ------------------------------------------------------------------------------------------------
 */
 
-Hypertree *H_BucketElim::buildHypertree(Hypergraph *HGraph, int iHeuristic, bool bDual)
+Hypertree *H_BucketElim::buildHypertree(Hypergraph *HGraph, int iHeuristic, int preElim, bool bDual)
 {
 	Hypertree *HTree;
 	Node **VarOrder = NULL;
@@ -661,13 +661,13 @@ Hypertree *H_BucketElim::buildHypertree(Hypergraph *HGraph, int iHeuristic, bool
 
 	// Determine the underlying variable order
 	switch(iHeuristic) {
-		case BE_INP_ORDER: VarOrder = HGraph->getInputOrder();
+		case BE_INP_ORDER: VarOrder = HGraph->getInputOrder(preElim);
 			break;
-		case BE_MIW_ORDER: VarOrder = HGraph->getMIWOrder();
+		case BE_MIW_ORDER: VarOrder = HGraph->getMIWOrder(preElim);
 			break;
-		case BE_MF_ORDER: VarOrder = HGraph->getMFOrder();
+		case BE_MF_ORDER: VarOrder = HGraph->getMFOrder(preElim);
 			break;
-		case BE_MCS_ORDER: VarOrder = HGraph->getMCSOrder();
+		case BE_MCS_ORDER: VarOrder = HGraph->getMCSOrder(preElim);
 			break;
 		default: writeErrorMsg("Unknown variable order heuristic.", "H_BucketElim::buildHypertree");
 	}

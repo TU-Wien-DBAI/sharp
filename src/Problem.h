@@ -7,6 +7,12 @@
 #include "htree/Hypergraph.h"
 #include "sharp/AbstractAlgorithm.h"
 
+enum DecompositionOptions
+{
+	None = 0,
+	BipartiteGraph = 1
+};
+
 class Problem
 {
 public:
@@ -23,11 +29,17 @@ public:
 	// - the solution for the problem is returned
 	Solution *calculateSolution(Instantiator *instantiator);
 
+	// set the decomposition options for the decomposition routine
+	void setDecompositionOptions(DecompositionOptions options = None, void *parameter = NULL);
+
 	// gets the internal ID of a vertex by its name
 	Vertex getVertexId(std::string vertexName);
 
 	// gets the name of a vertex by its internal ID
 	std::string getVertexName(Vertex vertexId);
+
+	// prints the name mappings (for debug or verbose output)
+	void printVertexNames(ostream &out);
 
 protected: 
 	// called by calculateSolution if the problem has not yet been read
@@ -39,8 +51,9 @@ protected:
 	// called by the calculateSolution method, after preprocessing
 	virtual Hypergraph *buildHypergraphRepresentation() = 0;
 
-	// helper method, creates hypergraph from vertex- and edge-sets
-	static Hypergraph *createHypergraphFromSets(VertexSet vertices, EdgeSet edges);
+	// helper methods, creates graph from vertex- and edge-sets
+	static Hypergraph *createGraphFromSets(VertexSet vertices, EdgeSet edges);
+	static Hypergraph *createGraphFromDisjointSets(VertexSet v1, VertexSet v2, EdgeSet edges);
 
 	// stores a vertex name, assigns a new internal ID if it doesn't exist
 	Vertex storeVertexName(std::string name);
@@ -57,6 +70,16 @@ private:
 
 	// private: the algorithm that is used to solve the problem
 	AbstractAlgorithm *algorithm;
+
+	// private: stores if the input has already been parsed
+	bool parsed;
+
+	// private: the decomposition options
+	DecompositionOptions decompositionOptions;
+
+	// private: the decomposition parameter (if any)
+	void *decompositionParameter;
 };
+
 
 #endif //PROBLEM_H_

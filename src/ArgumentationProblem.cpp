@@ -258,7 +258,7 @@ Hypergraph *ArgumentationProblem::buildHypergraphRepresentation()
 	printAF(args, attacks, attacksAdjacency);
 #endif
 		
-	return Problem::createHypergraphFromSets(args, attacks);
+	return Problem::createGraphFromSets(args, attacks);
 }
 
 
