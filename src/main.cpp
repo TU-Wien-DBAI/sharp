@@ -32,8 +32,9 @@ enum Algorithm
 	MinSAT,
 	ASP,
 	HCFASP,
-	HCF,
-	AF
+	AF_ADM,
+	AF_PREF,
+	HCF
 };
 
 enum OutputType
@@ -62,7 +63,7 @@ int main(int argc, char **argv)
 	char *filename = NULL;
 	ifstream file;
 	istream *stream = &std::cin;
-	char *credulousAcc = NULL;
+	char *acceptanceArgument = NULL;
 
 	while((arg = getopt(argc, argv, "a:bs:o:f:tc:")) != EOF)
 	{
@@ -75,8 +76,9 @@ int main(int argc, char **argv)
 			else if(!strcmp(optarg, "minsat")) algorithm = MinSAT;
 			else if(!strcmp(optarg, "asp")) algorithm = ASP;
 			else if(!strcmp(optarg, "hcfasp")) algorithm = HCFASP;
+			else if(!strcmp(optarg, "af_preferred")) algorithm = AF_PREF;
+			else if(!strcmp(optarg, "af_admissible")) algorithm = AF_ADM;
 			else if(!strcmp(optarg, "hcf")) algorithm = HCF;
-			else if(!strcmp(optarg, "af")) algorithm = AF;
 			else usage();
 			++argCount;
 			aOpt = true;
@@ -113,7 +115,7 @@ int main(int argc, char **argv)
 			break;
 		case 'c':
 			if(credOpt || !optarg) usage();
-			credulousAcc = optarg;
+			acceptanceArgument = optarg;
 			credOpt = true;
 			++argCount;
 			break;
@@ -176,11 +178,14 @@ int main(int argc, char **argv)
 	case HCFASP:
 		problem = new DatalogProblem(stream, DatalogProblem::OLDHCF);
 		break;
+	case AF_ADM:
+		problem = new ArgumentationProblem(stream, acceptanceArgument, ArgumentationProblem::AF_ADM);
+		break;
+	case AF_PREF:
+		problem = new ArgumentationProblem(stream, acceptanceArgument, ArgumentationProblem::AF_PREF);
+		break;
 	case HCF:
 		problem = new DatalogProblem(stream, DatalogProblem::NEWHCF);
-		break;
-	case AF:
-		problem = new ArgumentationProblem(stream, credulousAcc);
 		break;
 	default:
 		C0(0 /*ERROR: Invalid algorithm selection*/);
@@ -212,7 +217,7 @@ static void usage()
 		<< "\t-t\t\tperform only tree decomposition step" << endl
 		<< "\t-s seed\t\tinitialize random number generator with <seed>." << endl
 		<< "\t-f file\t\tthe file to read from" << endl
-		<< "\t-a alg\t\talgorithm, one of {sat, minsat, asp (default), hcfasp, hcf, af}" << endl
+		<< "\t-a alg\t\talgorithm, one of {sat, minsat, asp (default), hcfasp, hcf, af_preferred, af_admissible}" << endl
 		<< "\t-o output\toutput type, one of {enum (default), count, yesno}" << endl
 		<< "\t-c\t\tchecks if credulous acceptance holds for the given argument (just with AFs)" << endl
 		;

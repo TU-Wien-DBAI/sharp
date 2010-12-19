@@ -13,6 +13,10 @@
 #include "Global.h"
 #include "Problem.h"
 
+//colorings for the arguments
+enum Coloring {ATT, DEF, IN, OUT};
+
+typedef std::vector<Coloring> ColoringVector;
 typedef Vertex Argument;
 typedef VertexSet ArgumentSet;
 typedef std::map<Argument, std::string> ArgumentMap;
@@ -24,7 +28,7 @@ class ArgumentationProblem : public Problem
 {
 public:
 	//Constructor/Destructor
-	ArgumentationProblem(std::istream *stream, char *credulousAcc);
+	ArgumentationProblem(std::istream *stream, char *acceptanceArgument, int type);
 	virtual ~ArgumentationProblem();
 	
 	//This method is called from the parser when a new argument appears.
@@ -43,6 +47,10 @@ public:
 	
 	//Get set of arguments attacked by the given arg.
 	ArgumentSet *getAttacksFromArg(Argument arg); 
+
+	//Constants for algorithm selection in main.cpp
+	static const int AF_ADM = 0;
+	static const int AF_PREF = 1;
 
 protected:
 	//Parses the information about the argumentation framework from the input file.

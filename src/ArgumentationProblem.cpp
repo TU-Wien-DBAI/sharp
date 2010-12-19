@@ -9,7 +9,8 @@
 
 #include "ArgumentationProblem.h"
 #include "input/ArgumentationParser.h"
-#include "sharp/Argumentation.h"
+#include "sharp/AdmissibleArgumentation.h"
+#include "sharp/PreferredArgumentation.h"
 
 #undef yyFlexLexer
 #define yyFlexLexer ArgumentationFlexLexer
@@ -21,8 +22,9 @@ using namespace std;
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-ArgumentationProblem::ArgumentationProblem(istream *stream, char *credulousAcc)
-	: Problem(new ArgumentationAlgorithm(this, credulousAcc))
+ArgumentationProblem::ArgumentationProblem(istream *stream, char *acceptanceArgument, int type)
+	: Problem(type == ArgumentationProblem::AF_ADM ? (AbstractAlgorithm*) new AdmissibleArgumentationAlgorithm(this, acceptanceArgument) 
+	: 	 					 (AbstractAlgorithm*) new PreferredArgumentationAlgorithm(this, acceptanceArgument))
 {
 	this->parser = new ArgumentationParser(new ArgumentationFlexLexer(), stream, this);
 }
