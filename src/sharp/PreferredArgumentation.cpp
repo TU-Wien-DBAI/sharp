@@ -12,10 +12,34 @@
 using namespace std;
 
 #if defined(VERBOSE) && defined(DEBUG)
+
+/*
+***Description***
+Pretty print for a coloring vector
+
+INPUT: c: the coloring vector
+       tab: tabs between colors if true, otherwise no tabs but ';'
+*/
+static void printColoring (ColoringVector c, bool tab)
+{
+	for(ColoringVector::iterator colIt = c.begin(); colIt != c.end(); ++colIt)
+	{
+		string col;
+
+		if (*colIt == 0) col = "Att";
+		else if (*colIt == 1) col = "Def";
+		else if (*colIt == 2) col = "In";
+		else if (*colIt == 3) col = "Out";
+
+		if (tab) cout << col << "\t";
+		else cout << col << ";";
+	}
+}
+
 static void printTuples(TupleSet *tuples, const ExtendedHypertree *node, ArgumentationProblem *problem)
 {
         cout << endl << "Colorings for node " << node << ":" << endl;
-        cout << "Nbr\t";
+        //cout << "Coloring ID\t";
 		for(VertexSet::iterator it = node->getVertices().begin();
 			it != node->getVertices().end();
 			++it) 
@@ -23,33 +47,33 @@ static void printTuples(TupleSet *tuples, const ExtendedHypertree *node, Argumen
 			cout << problem->getArgumentString((Argument)*it) << "\t";
 		}
 		
-		cout << "cred\tcertificates";
+		cout << "skep\tcertificates";
  
 		cout << endl;
  
         for(TupleSet::iterator it = tuples->begin(); it != tuples->end(); ++it)
         {
-			cout << ((PreferredArgumentationTuple *)it->first)->coloringNbr << "\t";
+			//cout << &(((PreferredArgumentationTuple *)it->first)->certificates) << "\t";
 			
 			ColoringVector c = ((PreferredArgumentationTuple *)it->first)->colorings;
                     
-            for(ColoringVector::iterator colIt = c.begin(); colIt != c.end(); ++colIt)
-            {
-				string col;
-				
-				if (*colIt == 0) col = "Att";
-				else if (*colIt == 1) col = "Def";
-				else if (*colIt == 2) col = "In";
-				else if (*colIt == 3) col = "Out";
-				
-				cout << col << "\t";
-			}      
+            printColoring(c, true);
 			
 			cout << ((PreferredArgumentationTuple *)it->first)->bScepticalAcc << "\t";
-			printIntSet(((PreferredArgumentationTuple *)it->first)->certificates);
+
+			CertificateSet cert = ((PreferredArgumentationTuple *)it->first)->certificates;
+
+            for(CertificateSet::iterator certIt = cert.begin(); certIt != cert.end(); ++certIt)
+            {
+				printColoring(*certIt, false);
+				cout << "\t";
+			}
+
 			cout << endl;	
         }
 }
+
+
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -172,9 +196,6 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypert
 		//calculate set with args attacked by cfSet
 		set<Argument> attByCF = this->attackedBySet(&cfSets[i], problem);
 
-		//in this case, the coloringnbr is simply i+1
-		argTuple.coloringNbr = i+1;
-
 		//calculate coloring for every argument
 		for(VertexSet::iterator it = arguments.begin();
 			it != arguments.end();
@@ -183,6 +204,9 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypert
 			//empty set => arg is out
 			if (cfSets[i].size() == 0)
 			{
+				//set Sceptical acceptance flag if current arg equals intScepticalAcc
+				if(*it == intScepticalAcc) argTuple.bScepticalAcc = true;
+
 				(argTuple.colorings).push_back(OUT);
 				//cout << "Calculated OUT for tupel " << i << ", Argument " << *it << endl;
 			}
@@ -190,9 +214,6 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypert
 			//cfSets contains arg => In
 			else if ((cfSets[i]).count(*it) > 0)
 			{
-				//set Sceptical acceptance flag if current arg equals intScepticalAcc
-				if(*it == intScepticalAcc) argTuple.bScepticalAcc = true;
-				
 				(argTuple.colorings).push_back(IN);
 				//cout << "Calculated IN for tupel " << i << ", Argument " << *it << endl;
 			} 
@@ -200,6 +221,9 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypert
 			//call attCheck to decide if IN-args are attacked by another arg
 			else if (this->attCheck(&cfSets[i], (Argument) *it, problem)) 
 			{
+				//set Sceptical acceptance flag if current arg equals intScepticalAcc
+				if(*it == intScepticalAcc) argTuple.bScepticalAcc = true;
+
 				(argTuple.colorings).push_back(ATT);
 				//cout << "Calculated ATT for tupel " << i << ", Argument " << *it << endl;
 			}
@@ -207,6 +231,9 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypert
 			//if list of args attacked by conflict free sets contains arg => Def
 			else if (attByCF.count(*it) > 0)
 			{
+				//set Sceptical acceptance flag if current arg equals intScepticalAcc
+				if(*it == intScepticalAcc) argTuple.bScepticalAcc = true;
+
 				(argTuple.colorings).push_back(DEF);
 				//cout << "Calculated DEF for tupel " << i << ", Argument " << *it << endl;
 			}
@@ -228,8 +255,8 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypert
 				ColoringVector c2 = ((PreferredArgumentationTuple *)inner_it->first)->colorings;	
 				if (this->isSubset(c1, c2)) 
 				{
-					set<int> *certificates = &((PreferredArgumentationTuple *)it->first)->certificates;
-					certificates->insert(((PreferredArgumentationTuple *)inner_it->first)->coloringNbr);
+					CertificateSet *certificates = &((PreferredArgumentationTuple *)it->first)->certificates;
+					certificates->insert((((PreferredArgumentationTuple *)inner_it->first)->colorings));
 				}
 			}
 		}	
@@ -503,8 +530,12 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateRemovalNode(const ExtendedHyp
 
 	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
+	CertificateSet deletedColorings;
+	map<ColoringVector, ColoringVector> updateMap;
 	
-	/*const ArgumentSet arguments = (ArgumentSet) node->getVertices();
+	int delIndex = 0;
+
+	const ArgumentSet arguments = (ArgumentSet) node->getVertices();
 	const ArgumentSet childArguments = (ArgumentSet) (node->firstChild())->getVertices();
 	
 	//iterate through tuples and generate new tupleset
@@ -517,6 +548,7 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateRemovalNode(const ExtendedHyp
 		
 		//take over bScepticalAcc
 		argTuple.bScepticalAcc = ((PreferredArgumentationTuple *)it->first)->bScepticalAcc;
+		argTuple.certificates = ((PreferredArgumentationTuple *)it->first)->certificates;
 		
 		for(set<Argument>::iterator it2 = childArguments.begin(); it2 != childArguments.end(); ++it2)
 		{
@@ -531,6 +563,7 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateRemovalNode(const ExtendedHyp
 			else if ((*it2 == node->getDifference()) && childColoring[index] == ATT)
 			{
 				insertFlag = false;
+				delIndex = index;
 				break;
 			}
 			
@@ -541,10 +574,46 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateRemovalNode(const ExtendedHyp
 		{
 			//add tuple to tuple set with alternative operation 'union'
 			addToTupleSet(&argTuple, it->second, ts, Union);
-		}	
+
+			updateMap.insert(pair<ColoringVector, ColoringVector>(childColoring, argTuple.colorings));
+		}
+		else deletedColorings.insert(childColoring);
 	}
-		
-	delete base;*/
+
+	//delete all certificates which are equal to deleted colorings
+	for(CertificateSet::iterator delIt = deletedColorings.begin(); delIt != deletedColorings.end(); ++delIt)
+	{
+		for(TupleSet::iterator it = ts->begin(); it != ts->end(); ++it)
+		{
+			CertificateSet *c = &(((PreferredArgumentationTuple *)it->first)->certificates);
+
+			if (c->count(*delIt) > 0)
+			{
+				c->erase(*delIt);
+			}
+		}
+	}
+
+	//update certificates (replace with colorings without the deleted argument)
+	for(TupleSet::iterator it = ts->begin(); it != ts->end(); ++it)
+	{
+		CertificateSet *c = &(((PreferredArgumentationTuple *)it->first)->certificates);
+		CertificateSet newCertificates;
+
+		for(CertificateSet::iterator cit = c->begin(); cit != c->end(); ++cit)
+		{
+			map<ColoringVector, ColoringVector>::iterator iter = updateMap.find(*cit);
+
+			if( iter != updateMap.end() ) {
+				newCertificates.insert(iter->second);
+		    }
+		}
+
+		((PreferredArgumentationTuple *)it->first)->certificates = newCertificates;
+	}
+
+
+	delete base;
 
 #if defined(VERBOSE) && defined(DEBUG)
 	printTuples(ts, node, problem);
@@ -741,3 +810,5 @@ bool PreferredArgumentationAlgorithm::isSubset (ColoringVector v1, ColoringVecto
 	
 	return true; 
 }
+
+

@@ -10,6 +10,8 @@
 #include "AbstractAlgorithm.h"
 #include "../ArgumentationProblem.h"
 
+typedef std::set<ColoringVector> CertificateSet;
+
 class PreferredArgumentationTuple : public Tuple
 {
 public:
@@ -22,9 +24,9 @@ public:
 	//true, if credulous acceptance for the given variable holds
 	bool bScepticalAcc;
 	
-	//std::set<ColoringVector *> certificates;
-	int coloringNbr;
-	std::set<int> certificates;
+	CertificateSet certificates;
+	//int coloringNbr;
+	//std::set<int> certificates;
 
 	virtual bool operator<(const Tuple &other) const;
 	virtual bool operator==(const Tuple &other) const;
@@ -68,6 +70,9 @@ private:
 	
 	//Returns true, if the first argument is a subset of the second one (just args with IN)
 	bool isSubset (ColoringVector v1, ColoringVector v2);
+
+	//pretty print for coloringvector
+	//void printColoring (ColoringVector c, bool tab);
 };
 
 #endif
