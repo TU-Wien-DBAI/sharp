@@ -21,8 +21,8 @@ public:
 	//used for the mapping Argument<>Coloring
 	ColoringVector colorings;
 		
-	//true, if credulous acceptance for the given variable holds
-	bool bScepticalAcc;
+	//true, if skeptical acceptance for the given argument does not hold
+	bool bSkepticalAcc;
 	
 	CertificateSet certificates;
 	//int coloringNbr;
@@ -49,8 +49,8 @@ protected:
 
 protected:
 	ArgumentationProblem *problem;
-	Argument intScepticalAcc;
-	char *scepticalAcc;
+	Argument intSkepticalAcc;
+	char *skepticalAcc;
 	
 private:
 	//Calculates all conflict free sets

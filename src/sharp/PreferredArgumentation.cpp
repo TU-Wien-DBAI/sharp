@@ -59,7 +59,7 @@ static void printTuples(TupleSet *tuples, const ExtendedHypertree *node, Argumen
                     
             printColoring(c, true);
 			
-			cout << ((PreferredArgumentationTuple *)it->first)->bScepticalAcc << "\t";
+			cout << ((PreferredArgumentationTuple *)it->first)->bSkepticalAcc << "\t";
 
 			CertificateSet cert = ((PreferredArgumentationTuple *)it->first)->certificates;
 
@@ -82,7 +82,7 @@ static void printTuples(TupleSet *tuples, const ExtendedHypertree *node, Argumen
 
 PreferredArgumentationTuple::PreferredArgumentationTuple() 
 {
-	bScepticalAcc = false;
+	bSkepticalAcc = false;
 }
 
 PreferredArgumentationTuple::~PreferredArgumentationTuple() { }
@@ -90,15 +90,43 @@ PreferredArgumentationTuple::~PreferredArgumentationTuple() { }
 bool PreferredArgumentationTuple::operator<(const Tuple &other) const
 {
 	PreferredArgumentationTuple &o = (PreferredArgumentationTuple &)other;
-	return (this->colorings < o.colorings); //&&
-	        //this->certificates < o.certificates);
-}
+
+	/*bool cert = true;
+
+	if ((this->certificates).size() == (o.certificates).size())
+	{
+		cert = false;
+	}
+	else
+	{
+		for(CertificateSet::iterator it1 = (this->certificates).begin(); it1 != (this->certificates).end(); ++it1)
+		{
+			if ((o.certificates).count(*it1) != 0) cert = false;
+		}
+	}*/
+
+	return ((this->colorings < o.colorings)
+			|| ((this->colorings == o.colorings) && (this->certificates < o.certificates)));
+
+	}
 
 bool PreferredArgumentationTuple::operator==(const Tuple &other) const
 {
 	PreferredArgumentationTuple &o = (PreferredArgumentationTuple &)other;
-	return (this->colorings == o.colorings);// &&
-			//this->certificates == o.certificates);
+	bool cert = true;
+
+	if ((this->certificates).size() != (o.certificates).size())
+	{
+		cert = false;
+	}
+	else
+	{
+		for(CertificateSet::iterator it1 = (this->certificates).begin(); it1 != (this->certificates).end(); ++it1)
+		{
+			if ((o.certificates).count(*it1) == 0) cert = false;
+		}
+	}
+	return (cert && (this->colorings == o.colorings));
 }
 
 int PreferredArgumentationTuple::hash() const
@@ -107,17 +135,17 @@ int PreferredArgumentationTuple::hash() const
 	return -1;
 }
 
-PreferredArgumentationAlgorithm::PreferredArgumentationAlgorithm(Problem *problem, char *scepticalAcc)
+PreferredArgumentationAlgorithm::PreferredArgumentationAlgorithm(Problem *problem, char *skepticalAcc)
 	: AbstractAlgorithm(problem)
 {
 	this->problem = (ArgumentationProblem *)problem;
-	this->scepticalAcc = scepticalAcc;
-	this->intScepticalAcc = -1;
+	this->skepticalAcc = skepticalAcc;
+	this->intSkepticalAcc = -1;
 
 #if defined(VERBOSE) && defined(DEBUG)
-	if (this->scepticalAcc != NULL)
+	if (this->skepticalAcc != NULL)
 	{	
-		cout << endl << "Algorithm will check sceptical acceptance for '" << scepticalAcc << "'." << endl; //(code: " << intScepticalAcc << ")." << endl;	
+		cout << endl << "Algorithm will check skeptical acceptance for '" << skepticalAcc << "'." << endl; //(code: " << intSkepticalAcc << ")." << endl;
 	}
 #endif
 	
@@ -151,18 +179,18 @@ Solution *PreferredArgumentationAlgorithm::selectSolution(TupleSet *tuples, cons
 		
 		if (!containsAtt)
 		{
-			if(((PreferredArgumentationTuple *)it->first)->bScepticalAcc) credAcc = true;
+			if(((PreferredArgumentationTuple *)it->first)->bSkepticalAcc) credAcc = true;
 			s = this->instantiator->combine(Union, s, it->second);
 		}
 	}
 
 	if (credAcc)
 	{
-		cout << endl << "Sceptical acceptance holds for the requested variable '" << scepticalAcc << "'." << endl;
+		cout << endl << "Skeptical acceptance holds for the requested variable '" << skepticalAcc << "'." << endl;
 	} 	
-	else if (scepticalAcc != NULL && strlen(scepticalAcc) > 0)
+	else if (skepticalAcc != NULL && strlen(skepticalAcc) > 0)
 	{
-		cout << endl << "Sceptical acceptance does not hold for the requested variable '" << scepticalAcc << "'." << endl;
+		cout << endl << "Skeptical acceptance does not hold for the requested variable '" << skepticalAcc << "'." << endl;
 	} 	
 
 	cout << endl;*/
@@ -179,10 +207,10 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypert
 	TupleSet *ts = new TupleSet();
 	const ArgumentSet arguments = (ArgumentSet) node->getVertices();
 
-	//get integer value for sceptical acceptance argument 
-	if (intScepticalAcc == -1 && this->scepticalAcc != NULL)
+	//get integer value for skeptical acceptance argument
+	if (intSkepticalAcc == -1 && this->skepticalAcc != NULL)
 	{
-		intScepticalAcc = problem->getVertexId(this->scepticalAcc);
+		intSkepticalAcc = problem->getVertexId(this->skepticalAcc);
 	}
 
 	//calculate conflict free sets
@@ -204,8 +232,8 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypert
 			//empty set => arg is out
 			if (cfSets[i].size() == 0)
 			{
-				//set Sceptical acceptance flag if current arg equals intScepticalAcc
-				if(*it == intScepticalAcc) argTuple.bScepticalAcc = true;
+				//set Skeptical acceptance flag if current arg equals intSkepticalAcc
+				if(*it == intSkepticalAcc) argTuple.bSkepticalAcc = true;
 
 				(argTuple.colorings).push_back(OUT);
 				//cout << "Calculated OUT for tupel " << i << ", Argument " << *it << endl;
@@ -221,8 +249,8 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypert
 			//call attCheck to decide if IN-args are attacked by another arg
 			else if (this->attCheck(&cfSets[i], (Argument) *it, problem)) 
 			{
-				//set Sceptical acceptance flag if current arg equals intScepticalAcc
-				if(*it == intScepticalAcc) argTuple.bScepticalAcc = true;
+				//set Skeptical acceptance flag if current arg equals intSkepticalAcc
+				if(*it == intSkepticalAcc) argTuple.bSkepticalAcc = true;
 
 				(argTuple.colorings).push_back(ATT);
 				//cout << "Calculated ATT for tupel " << i << ", Argument " << *it << endl;
@@ -231,8 +259,8 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypert
 			//if list of args attacked by conflict free sets contains arg => Def
 			else if (attByCF.count(*it) > 0)
 			{
-				//set Sceptical acceptance flag if current arg equals intScepticalAcc
-				if(*it == intScepticalAcc) argTuple.bScepticalAcc = true;
+				//set Skeptical acceptance flag if current arg equals intSkepticalAcc
+				if(*it == intSkepticalAcc) argTuple.bSkepticalAcc = true;
 
 				(argTuple.colorings).push_back(DEF);
 				//cout << "Calculated DEF for tupel " << i << ", Argument " << *it << endl;
@@ -311,9 +339,9 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateBranchNode(const ExtendedHype
 			{
 				PreferredArgumentationTuple &argTuple = *new PreferredArgumentationTuple();
 				
-				//calculate bScepticalAcc
-				argTuple.bScepticalAcc = ((PreferredArgumentationTuple *)lit->first)->bScepticalAcc ||
-										 ((PreferredArgumentationTuple *)rit->first)->bScepticalAcc;
+				//calculate bSkepticalAcc
+				argTuple.bSkepticalAcc = ((PreferredArgumentationTuple *)lit->first)->bSkepticalAcc ||
+										 ((PreferredArgumentationTuple *)rit->first)->bSkepticalAcc;
 				
 				//calculate colorings
 				int index = 0;
@@ -380,7 +408,10 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 	TupleSet *base = this->evaluateNode(node->firstChild());
 	TupleSet *ts = new TupleSet();
 	
-	/*const ArgumentSet arguments = (ArgumentSet) node->getVertices();
+	map<ColoringVector, CertificateSet> updateMap;
+	int newArgIndex = -1;
+
+	const ArgumentSet arguments = (ArgumentSet) node->getVertices();
 	const ArgumentSet childArguments = (ArgumentSet) (node->firstChild())->getVertices();
 
 	//iterate through tuples and generate new tupleset
@@ -390,8 +421,9 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 		ColoringVector childColoring = ((PreferredArgumentationTuple *)it->first)->colorings;
 		bool addTuple = false;
 		
-		//take over bScepticalAcc
-		argTuple.bScepticalAcc = ((PreferredArgumentationTuple *)it->first)->bScepticalAcc;
+		//take over bSkepticalAcc and certificates
+		argTuple.bSkepticalAcc = ((PreferredArgumentationTuple *)it->first)->bSkepticalAcc;
+		argTuple.certificates = ((PreferredArgumentationTuple *)it->first)->certificates;
 
 		ArgumentSet in = this->getInArgs(&childArguments, &childColoring);
 				
@@ -402,12 +434,15 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 			//current arg is not the new one
 			if (*it2 != node->getDifference())
 			{
-				(argTuple.colorings).push_back(childColoring[index]);	
+				(argTuple.colorings).push_back(childColoring[index]);
 				index++;
 			}
 			//current arg is the new one
 			else
 			{
+				//new argument is at the current index
+				newArgIndex = index;
+
 				//calculate coloring of new arg
 				set<Argument> attByIn = this->attackedBySet(&in, problem);
 				
@@ -446,8 +481,9 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 		{	
 			PreferredArgumentationTuple &additionalArgTuple = *new PreferredArgumentationTuple();	
 			
-			//take over bScepticalAcc
-			additionalArgTuple.bScepticalAcc = ((PreferredArgumentationTuple *)it->first)->bScepticalAcc;
+			//take over bSkepticalAcc and certificates
+			additionalArgTuple.bSkepticalAcc = ((PreferredArgumentationTuple *)it->first)->bSkepticalAcc;
+			additionalArgTuple.certificates = ((PreferredArgumentationTuple *)it->first)->certificates;
 			
 			index = 0;
 			for(set<Argument>::iterator it2 = arguments.begin(); it2 != arguments.end(); ++it2)
@@ -457,8 +493,8 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 				{
 					(additionalArgTuple.colorings).push_back(IN);	
 					
-					//set Sceptical acceptance flag if current arg equals intScepticalAcc
-					if(*it2 == intScepticalAcc) additionalArgTuple.bScepticalAcc = true;
+					//set Skeptical acceptance flag if current arg equals intSkepticalAcc
+					if(*it2 == intSkepticalAcc) additionalArgTuple.bSkepticalAcc = true;
 				}
 				//current arg is not the new one
 				else
@@ -468,8 +504,8 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 					{
 						(additionalArgTuple.colorings).push_back(IN);	
 					
-						//set Sceptical acceptance flag if current arg equals intScepticalAcc
-						if(*it2 == intScepticalAcc) additionalArgTuple.bScepticalAcc = true;
+						//set Skeptical acceptance flag if current arg equals intSkepticalAcc
+						if(*it2 == intSkepticalAcc) additionalArgTuple.bSkepticalAcc = true;
 					}
 					
 					//DEF if the new arg attacks the current arg or if the corresponding child arg is DEF 
@@ -506,14 +542,100 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 			Solution *s = this->instantiator->addDifference(it->second,	node->getDifference());
 			
 			//add new tuple to tuple set with alternative operation 'union'
+			//updateMap.insert(pair<ColoringVector, ColoringVector>(childColoring, CertificateSet::value_type(additionalArgTuple.colorings)));
+			updateMap[childColoring].insert(CertificateSet::value_type(additionalArgTuple.colorings));
+
+			//cout << "AdditionalArgTuple: "; printColoring(additionalArgTuple.colorings, false); cout << "cert: " << (additionalArgTuple.certificates).size() << endl;
+
 			addToTupleSet(&additionalArgTuple, s, ts, Union);
 		}	
-		
+
 		//add 'old' tuple to tuple set with alternative operation 'union'
+		//updateMap.insert(pair<ColoringVector, ColoringVector>(childColoring, CertificateSet::value_type(argTuple.colorings)));
+		updateMap[childColoring].insert(CertificateSet::value_type(argTuple.colorings));
+
+		//cout << "ArgTuple: "; printColoring(argTuple.colorings, false); cout << "cert: " << (argTuple.certificates).size() << endl;
+
 		addToTupleSet(&argTuple, it->second, ts, Union);
 	}	
 
-	delete base;*/
+	//calculate certificates
+	for(TupleSet::iterator it = ts->begin(); it != ts->end(); ++it)
+	{
+		CertificateSet *c = &(((PreferredArgumentationTuple *)it->first)->certificates);
+		CertificateSet newCertificates;
+
+		//distinguish between coloring 'IN' or not 'IN' of the new Argument
+		if ((((PreferredArgumentationTuple *)it->first)->colorings)[newArgIndex] == IN)
+		{
+
+			for(CertificateSet::iterator cit = c->begin(); cit != c->end(); ++cit)
+			{
+				map<ColoringVector, CertificateSet>::iterator iter = updateMap.find(*cit);
+
+				if( iter != updateMap.end() )
+				{
+					for(CertificateSet::iterator updateIt = (iter->second).begin(); updateIt != (iter->second).end(); ++updateIt)
+					{
+						if ((*updateIt)[newArgIndex] == IN) newCertificates.insert(*updateIt);
+					}
+				}
+			}
+
+			((PreferredArgumentationTuple *)it->first)->certificates = newCertificates;
+		}
+		else
+		{
+			for(CertificateSet::iterator cit = c->begin(); cit != c->end(); ++cit)
+			{
+				map<ColoringVector, CertificateSet>::iterator iter = updateMap.find(*cit);
+
+				if( iter != updateMap.end() )
+				{
+					newCertificates.insert((iter->second).begin(), (iter->second).end());
+				}
+			}
+
+			CertificateSet *s;
+
+			//search for certificateset with current coloring
+			for(map<ColoringVector, CertificateSet>::iterator updateIt = updateMap.begin(); updateIt != updateMap.end(); ++updateIt)
+			{
+				ColoringVector col = ((PreferredArgumentationTuple *)it->first)->colorings;
+				if((updateIt->second).count(col) > 0)
+				{
+					s = &(updateIt->second);
+					break;
+				}
+			}
+
+			//search for coloring where the new argument is 'IN' in this certificateset
+			for(CertificateSet::iterator sit = s->begin(); sit != s->end(); ++sit)
+			{
+				if ((*sit)[newArgIndex] == IN)
+				{
+					newCertificates.insert(*sit);
+					break;
+				}
+			}
+
+
+			/*for(TupleSet::iterator tupleIt = ts->begin(); tupleIt != ts->end(); ++tupleIt)
+			{
+				ColoringVector col = ((PreferredArgumentationTuple *)tupleIt->first)->colorings;
+
+				if (col[newArgIndex] == IN)
+				{
+					newCertificates.insert(col);
+					break;
+				}
+			}*/
+
+			((PreferredArgumentationTuple *)it->first)->certificates = newCertificates;
+		}
+	}
+
+	delete base;
 	
 #if defined(VERBOSE) && defined(DEBUG)
 	printTuples(ts, node, problem);
@@ -546,8 +668,8 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateRemovalNode(const ExtendedHyp
 		int index = 0;
 		ColoringVector childColoring = ((PreferredArgumentationTuple *)it->first)->colorings;
 		
-		//take over bScepticalAcc
-		argTuple.bScepticalAcc = ((PreferredArgumentationTuple *)it->first)->bScepticalAcc;
+		//take over bSkepticalAcc
+		argTuple.bSkepticalAcc = ((PreferredArgumentationTuple *)it->first)->bSkepticalAcc;
 		argTuple.certificates = ((PreferredArgumentationTuple *)it->first)->certificates;
 		
 		for(set<Argument>::iterator it2 = childArguments.begin(); it2 != childArguments.end(); ++it2)
