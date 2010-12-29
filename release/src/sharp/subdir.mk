@@ -5,6 +5,7 @@ CPP_SRCS += \
 ../src/sharp/AnswerSet.cpp \
 ../src/sharp/AdmissibleArgumentation.cpp \
 ../src/sharp/PreferredArgumentation.cpp \
+../src/sharp/AbstractArgumentation.cpp \
 ../src/sharp/HeadCycleFreeAnswerSet.cpp \
 ../src/sharp/HCFAnswerSet.cpp \
 ../src/sharp/Circumscription.cpp \
@@ -16,6 +17,7 @@ OBJS += \
 ./src/sharp/AnswerSet.o \
 ./src/sharp/AdmissibleArgumentation.o \
 ./src/sharp/PreferredArgumentation.o \
+./src/sharp/AbstractArgumentation.o \
 ./src/sharp/HeadCycleFreeAnswerSet.o \
 ./src/sharp/HCFAnswerSet.o \
 ./src/sharp/Circumscription.o \
@@ -27,6 +29,7 @@ CPP_DEPS += \
 ./src/sharp/AnswerSet.d \
 ./src/sharp/AdmissibleArgumentation.d \
 ./src/sharp/PreferredArgumentation.d \
+./src/sharp/AbstractArgumentation.d \
 ./src/sharp/HeadCycleFreeAnswerSet.d \
 ./src/sharp/HCFAnswerSet.d \
 ./src/sharp/Circumscription.d \

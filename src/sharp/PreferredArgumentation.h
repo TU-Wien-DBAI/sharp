@@ -7,8 +7,7 @@
 #ifndef PREFARGUMENTATIONPROGRAM_H_
 #define PREFARGUMENTATIONPROGRAM_H_
 
-#include "AbstractAlgorithm.h"
-#include "../ArgumentationProblem.h"
+#include "AbstractArgumentation.h"
 
 typedef std::set<ColoringVector> CertificateSet;
 
@@ -23,7 +22,7 @@ public:
 		
 	//true, if skeptical acceptance for the given argument does not hold
 	bool bSkepticalAcc;
-	
+
 	CertificateSet certificates;
 	//int coloringNbr;
 	//std::set<int> certificates;
@@ -33,7 +32,7 @@ public:
 	virtual int hash() const;
 };
 
-class PreferredArgumentationAlgorithm : public AbstractAlgorithm
+class PreferredArgumentationAlgorithm : public AbstractArgumentationAlgorithm
 {
 public:
 	PreferredArgumentationAlgorithm(Problem *problem, char *credulousAcc);
@@ -48,31 +47,15 @@ protected:
 	virtual TupleSet *evaluateRemovalNode(const ExtendedHypertree *node);
 
 protected:
-	ArgumentationProblem *problem;
 	Argument intSkepticalAcc;
 	char *skepticalAcc;
 	
 private:
-	//Calculates all conflict free sets
-	std::vector< ArgumentSet > conflictFreeSets(const ArgumentSet *args);
-	
-	//Calculates a set of arguments attacked by the given args
-	ArgumentSet attackedBySet(const ArgumentSet *args, ArgumentationProblem *problem);
-	
-	//Decides if the given arg has the coloring ATT
-	bool attCheck(const ArgumentSet *args, Argument arg, ArgumentationProblem *problem);
-	
-	//Returns the set of arguments which are colored 'IN' in the ColoringVector
-	ArgumentSet getInArgs(const ArgumentSet *args, ColoringVector *colorings);
-	
-	//Tries to insert a new element in the tupleset
-	void addToTupleSet(Tuple *t, Solution *s, TupleSet *ts, Operation op);
-	
 	//Returns true, if the first argument is a subset of the second one (just args with IN)
 	bool isSubset (ColoringVector v1, ColoringVector v2);
 
-	//pretty print for coloringvector
-	//void printColoring (ColoringVector c, bool tab);
+	//Compares the given ColoringVector with every element in the given CertificateSet and returns a correspondig subset where the IN-args are equal to the ColoringVector.
+	CertificateSet getEqualInSets(ColoringVector cv, CertificateSet certs, ArgumentSet args);
 };
 
 #endif
