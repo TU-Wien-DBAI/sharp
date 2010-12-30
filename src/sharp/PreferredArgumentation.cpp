@@ -143,7 +143,7 @@ Solution *PreferredArgumentationAlgorithm::selectSolution(TupleSet *tuples, cons
 {
 	
 	Solution *s = this->instantiator->createEmptySolution();
-	bool skepAcc = true;
+	bool skepAcc = false;
 	ColoringVector colorings;
 	CertificateSet deletedColorings;
 	TupleSet tmpSolutions;
@@ -195,15 +195,15 @@ Solution *PreferredArgumentationAlgorithm::selectSolution(TupleSet *tuples, cons
 	//insert final solutions into framework
 	for(TupleSet::iterator it = finalSolutions.begin(); it != finalSolutions.end(); ++it)
 	{
-		if(((PreferredArgumentationTuple *)it->first)->bSkepticalAcc) skepAcc = false;
+		if(((PreferredArgumentationTuple *)it->first)->bSkepticalAcc) skepAcc = true;
 		s = this->instantiator->combine(Union, s, it->second);
 	}
 
-	if (skepAcc && (skepticalAcc != NULL && strlen(skepticalAcc) > 0))
+	if (!skepAcc && (skepticalAcc != NULL && strlen(skepticalAcc) > 0))
 	{
 		cout << endl << "Skeptical acceptance holds for the requested variable '" << skepticalAcc << "'." << endl;
 	} 	
-	else if (!skepAcc && (skepticalAcc != NULL && strlen(skepticalAcc) > 0))
+	else if (skepAcc && (skepticalAcc != NULL && strlen(skepticalAcc) > 0))
 	{
 		cout << endl << "Skeptical acceptance does not hold for the requested variable '" << skepticalAcc << "'." << endl;
 	} 	
@@ -285,6 +285,9 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypert
 			else
 			{
 				(argTuple.colorings).push_back(OUT);
+
+				//set Skeptical acceptance flag if current arg equals intSkepticalAcc
+				if(*it == intSkepticalAcc) argTuple.bSkepticalAcc = true;
 			}
 		}		
 		
