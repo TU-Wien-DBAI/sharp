@@ -261,16 +261,6 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypert
 				//cout << "Calculated IN for tupel " << i << ", Argument " << *it << endl;
 			} 
 		
-			//call attCheck to decide if IN-args are attacked by another arg
-			else if (this->attCheck(&cfSets[i], (Argument) *it, problem)) 
-			{
-				//set Skeptical acceptance flag if current arg equals intSkepticalAcc
-				if(*it == intSkepticalAcc) argTuple.bSkepticalAcc = true;
-
-				(argTuple.colorings).push_back(ATT);
-				//cout << "Calculated ATT for tupel " << i << ", Argument " << *it << endl;
-			}
-		
 			//if list of args attacked by conflict free sets contains arg => Def
 			else if (attByCF.count(*it) > 0)
 			{
@@ -281,6 +271,16 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypert
 				//cout << "Calculated DEF for tupel " << i << ", Argument " << *it << endl;
 			}
 
+			//call attCheck to decide if IN-args are attacked by another arg
+			else if (this->attCheck(&cfSets[i], (Argument) *it, problem)) 
+			{
+				//set Skeptical acceptance flag if current arg equals intSkepticalAcc
+				if(*it == intSkepticalAcc) argTuple.bSkepticalAcc = true;
+
+				(argTuple.colorings).push_back(ATT);
+				//cout << "Calculated ATT for tupel " << i << ", Argument " << *it << endl;
+			}
+		
 			//otherwise OUT
 			else
 			{
