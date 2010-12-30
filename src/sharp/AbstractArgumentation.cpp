@@ -95,15 +95,15 @@ OUTPUT:	a set with all args attacked by the given args
 */
 ArgumentSet AbstractArgumentationAlgorithm::attackedBySet(const ArgumentSet *args, ArgumentationProblem *problem)
 {
-	ArgumentSet result = *new ArgumentSet();
+	ArgumentSet result; // = *new ArgumentSet();
 
-	for(set<Argument>::iterator it = args->begin(); it != args->end(); ++it)
+	for(ArgumentSet::iterator it = args->begin(); it != args->end(); ++it)
 	{
 		ArgumentSet *attackedElements = problem->getAttacksFromArg(*it);
 
 		if (attackedElements != NULL)
 		{
-			for(set<Argument>::iterator it2 = attackedElements->begin(); it2 != attackedElements->end(); ++it2)
+			for(ArgumentSet::iterator it2 = attackedElements->begin(); it2 != attackedElements->end(); ++it2)
 			{
 				result.insert(*it2);
 			}
@@ -127,16 +127,9 @@ bool AbstractArgumentationAlgorithm::attCheck(const ArgumentSet *args, Argument 
 	//calculate intersection if current argument attacks elements
 	if (attackedElements != NULL)
 	{
-		vector<int> v(attackedElements->size());
-		vector<int>::iterator vit;
-
-		vit = set_intersection (args->begin(), args->end(), attackedElements->begin(), attackedElements->end(), v.begin());
-
-		//check if intersection contains elements
-		//if so => given set is attacked by the given arg
-		if (int(vit - v.begin()) > 0)
+		for (ArgumentSet::iterator it = attackedElements->begin(); it != attackedElements->end(); ++it)
 		{
-			return true;
+			if (args->count(*it) > 0) return true;
 		}
 	}
 

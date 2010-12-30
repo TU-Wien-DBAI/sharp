@@ -199,11 +199,11 @@ Solution *PreferredArgumentationAlgorithm::selectSolution(TupleSet *tuples, cons
 		s = this->instantiator->combine(Union, s, it->second);
 	}
 
-	if (skepAcc)
+	if (skepAcc && (skepticalAcc != NULL && strlen(skepticalAcc) > 0))
 	{
 		cout << endl << "Skeptical acceptance holds for the requested variable '" << skepticalAcc << "'." << endl;
 	} 	
-	else if (skepticalAcc != NULL && strlen(skepticalAcc) > 0)
+	else if (!skepAcc && (skepticalAcc != NULL && strlen(skepticalAcc) > 0))
 	{
 		cout << endl << "Skeptical acceptance does not hold for the requested variable '" << skepticalAcc << "'." << endl;
 	} 	
@@ -279,6 +279,12 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypert
 
 				(argTuple.colorings).push_back(DEF);
 				//cout << "Calculated DEF for tupel " << i << ", Argument " << *it << endl;
+			}
+
+			//otherwise OUT
+			else
+			{
+				(argTuple.colorings).push_back(OUT);
 			}
 		}		
 		
@@ -447,9 +453,6 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 				if (*it2 == node->getDifference())
 				{
 					(additionalArgTuple.colorings).push_back(IN);	
-					
-					//set Skeptical acceptance flag if current arg equals intSkepticalAcc
-					if(*it2 == intSkepticalAcc) additionalArgTuple.bSkepticalAcc = true;
 				}
 				//current arg is not the new one
 				else
@@ -458,9 +461,6 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 					if (childColoring[index] == IN)
 					{
 						(additionalArgTuple.colorings).push_back(IN);	
-					
-						//set Skeptical acceptance flag if current arg equals intSkepticalAcc
-						if(*it2 == intSkepticalAcc) additionalArgTuple.bSkepticalAcc = true;
 					}
 					
 					//DEF if the new arg attacks the current arg or if the corresponding child arg is DEF 
@@ -469,23 +469,32 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 							  childColoring[index] == DEF)
 					{
 						(additionalArgTuple.colorings).push_back(DEF);	
+
+						//set Skeptical acceptance flag if current arg equals intSkepticalAcc
+						if(*it2 == intSkepticalAcc) additionalArgTuple.bSkepticalAcc = true;
 					}
 					
 					//OUT if the corresponding child arg is OUT and there is no attack from 
 					//the current arg to the new one or otherwise
-					else if  (problem->getAttacksFromArg(node->getDifference()) != NULL &&
-							 (problem->getAttacksFromArg(node->getDifference()))->count(*it2) == 0 &&
-							  problem->getAttacksFromArg(*it2) != NULL &&
-							 (problem->getAttacksFromArg(*it2))->count(node->getDifference()) == 0 &&	
+					else if  ((problem->getAttacksFromArg(node->getDifference()) == NULL ||
+							 (problem->getAttacksFromArg(node->getDifference()))->count(*it2) == 0) &&
+							  (problem->getAttacksFromArg(*it2) == NULL ||
+							 (problem->getAttacksFromArg(*it2))->count(node->getDifference()) == 0) &&
 							  childColoring[index] == OUT)
 					{
-						(additionalArgTuple.colorings).push_back(DEF);	
+						(additionalArgTuple.colorings).push_back(OUT);
+
+						//set Skeptical acceptance flag if current arg equals intSkepticalAcc
+						if(*it2 == intSkepticalAcc) additionalArgTuple.bSkepticalAcc = true;
 					}
 					
 					//ATT otherwise
 					else
 					{
 						(additionalArgTuple.colorings).push_back(ATT);	
+
+						//set Skeptical acceptance flag if current arg equals intSkepticalAcc
+						if(*it2 == intSkepticalAcc) additionalArgTuple.bSkepticalAcc = true;
 					}
 					
 					index++;
@@ -561,16 +570,23 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 
 				if( iter != updateMap.end() )
 				{
-					newCertificates.insert((iter->second).begin(), (iter->second).end());
+					//newCertificates.insert((iter->second).begin(), (iter->second).end());
+					for(CertificateSet::iterator updateIt = (iter->second).begin(); updateIt != (iter->second).end(); ++updateIt)
+					{
+						newCertificates.insert(*updateIt);
+					}
+
 				}
 			}
 
 			CertificateSet *s;
 
 			//search for certificateset with current coloring
+			ColoringVector col = ((PreferredArgumentationTuple *)it->first)->colorings;
+
 			for(map<ColoringVector, CertificateSet>::iterator updateIt = updateMap.begin(); updateIt != updateMap.end(); ++updateIt)
 			{
-				ColoringVector col = ((PreferredArgumentationTuple *)it->first)->colorings;
+
 				if((updateIt->second).count(col) > 0)
 				{
 					s = &(updateIt->second);
@@ -737,7 +753,7 @@ CertificateSet PreferredArgumentationAlgorithm::getEqualInSets(ColoringVector cv
 		//check if IN-sets are equal => generate new tuple
 		if ((cvIn.size() == certIn.size()) && (equal(cvIn.begin(), cvIn.end(), certIn.begin())))
 		{
-			resultCerts.insert(*cit);
+			resultCerts.insert(this->getBranchColorings(cv, tmpVector, args));
 		}
 	}
 

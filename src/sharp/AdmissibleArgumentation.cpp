@@ -42,7 +42,27 @@ static void printTuples(TupleSet *tuples, const ExtendedHypertree *node, Argumen
 				cout << col << "\t";
 			}      
 			
-			cout << ((AdmissibleArgumentationTuple *)it->first)->bCredulousAcc << endl;			
+			cout << ((AdmissibleArgumentationTuple *)it->first)->bCredulousAcc << "\t";
+
+			SolutionContent *sc = (it->second)->getContent();
+			EnumerationSolutionContent *sol = (EnumerationSolutionContent *)sc;
+
+			//cout << "Solutions: " << sol->enumerations.size() << endl;
+			cout << "{";
+			string osep = "";
+			for(set<set<int> >::iterator oit = sol->enumerations.begin(); oit != sol->enumerations.end(); ++oit)
+			{
+				cout << osep << "{";
+				string isep = "";
+				for(set<int>::iterator iit = oit->begin(); iit != oit->end(); ++iit)
+				{
+					cout << isep << problem->getVertexName(*iit);
+					isep = ",";
+				}
+				cout << "}" << flush;
+				osep = ",";
+			}
+			cout << "}" << endl;
         }
 }
 #endif
@@ -154,7 +174,7 @@ TupleSet *AdmissibleArgumentationAlgorithm::evaluateLeafNode(const ExtendedHyper
 	}
 
 	//calculate conflict free sets
-	vector< set<Argument> > cfSets = this->conflictFreeSets(&arguments);
+	vector< ArgumentSet > cfSets = this->conflictFreeSets(&arguments);
 	
 	//go through conflict free sets and calculate colorings
 	for(unsigned int i=0; i < (cfSets.size()); ++i)
@@ -162,10 +182,10 @@ TupleSet *AdmissibleArgumentationAlgorithm::evaluateLeafNode(const ExtendedHyper
 		AdmissibleArgumentationTuple &argTuple = *new AdmissibleArgumentationTuple();
 	
 		//calculate set with args attacked by cfSet
-		set<Argument> attByCF = this->attackedBySet(&cfSets[i], problem);
+		ArgumentSet attByCF = this->attackedBySet(&cfSets[i], problem);
 
 		//calculate coloring for every argument
-		for(VertexSet::iterator it = arguments.begin();
+		for(ArgumentSet::iterator it = arguments.begin();
 			it != arguments.end();
 			++it) 
 		{
@@ -187,21 +207,25 @@ TupleSet *AdmissibleArgumentationAlgorithm::evaluateLeafNode(const ExtendedHyper
 				//cout << "Calculated IN for tupel " << i << ", Argument " << *it << endl;
 			} 
 		
-			//call attCheck to decide if IN-args are attacked by another arg
-			else if (this->attCheck(&cfSets[i], (Argument) *it, problem)) 
-			{
-				(argTuple.colorings).push_back(ATT);
-				//cout << "Calculated ATT for tupel " << i << ", Argument " << *it << endl;
-			}
-		
 			//if list of args attacked by conflict free sets contains arg => Def
 			else if (attByCF.count(*it) > 0)
 			{
 				(argTuple.colorings).push_back(DEF);
 				//cout << "Calculated DEF for tupel " << i << ", Argument " << *it << endl;
 			}
-		
-			
+
+			//call attCheck to decide if IN-args are attacked by another arg
+			else if (this->attCheck(&cfSets[i], (Argument) *it, problem)) 
+			{
+				(argTuple.colorings).push_back(ATT);
+				//cout << "Calculated ATT for tupel " << i << ", Argument " << *it << endl;
+			}
+
+			//otherwise OUT
+			else
+			{
+				(argTuple.colorings).push_back(OUT);
+			}
 		}		
 		
 		ts->insert(TupleSet::value_type(&argTuple, this->instantiator->createLeafSolution(cfSets[i])));
@@ -350,13 +374,18 @@ TupleSet *AdmissibleArgumentationAlgorithm::evaluateIntroductionNode(const Exten
 					
 					//OUT if the corresponding child arg is OUT and there is no attack from 
 					//the current arg to the new one or otherwise
-					else if  (problem->getAttacksFromArg(node->getDifference()) != NULL &&
+					/*else if  (problem->getAttacksFromArg(node->getDifference()) != NULL &&
 							 (problem->getAttacksFromArg(node->getDifference()))->count(*it2) == 0 &&
 							  problem->getAttacksFromArg(*it2) != NULL &&
 							 (problem->getAttacksFromArg(*it2))->count(node->getDifference()) == 0 &&	
+							  childColoring[index] == OUT)*/
+					else if  ((problem->getAttacksFromArg(node->getDifference()) == NULL ||
+							 (problem->getAttacksFromArg(node->getDifference()))->count(*it2) == 0) &&
+							  (problem->getAttacksFromArg(*it2) == NULL ||
+							 (problem->getAttacksFromArg(*it2))->count(node->getDifference()) == 0) &&
 							  childColoring[index] == OUT)
 					{
-						(additionalArgTuple.colorings).push_back(DEF);	
+						(additionalArgTuple.colorings).push_back(OUT);
 					}
 					
 					//ATT otherwise
