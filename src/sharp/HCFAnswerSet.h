@@ -7,7 +7,7 @@
 #include "AnswerSet.h"
 
 #ifndef DERIVED
-#define DERIVED (-1)
+#define DERIVED 0
 #endif
 
 typedef std::map<Vertex, VertexSet> Graph;

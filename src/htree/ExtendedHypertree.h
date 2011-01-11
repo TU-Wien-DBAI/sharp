@@ -28,7 +28,7 @@ public:
 
 	const VertexSet &getVertices() const;
 	int getType() const;
-	int getDifference() const;
+	Vertex getDifference() const;
 	bool isRoot() const;
 
 	ExtendedHypertree *parent() const;
@@ -37,7 +37,7 @@ public:
 
 private:
 	TreeNodeType type;
-	int difference;
+	Vertex difference;
 
 	VertexSet vertices;
 	

@@ -35,6 +35,9 @@ public:
 	// gets the internal ID of a vertex by its name
 	Vertex getVertexId(std::string vertexName);
 
+	// gets the number of vertices currently stored
+	unsigned int getVertexCount();
+
 	// gets the name of a vertex by its internal ID
 	std::string getVertexName(Vertex vertexId);
 

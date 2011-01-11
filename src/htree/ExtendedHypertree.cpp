@@ -14,7 +14,7 @@ using namespace std;
 ExtendedHypertree::ExtendedHypertree(Hypertree *node) : Hypertree()
 {
 	this->type = Unevaluated;
-	this->difference = -1;
+	this->difference = VERTEXNOTFOUND;
 	
 	this->MyParent = node->getParent();
 
@@ -44,7 +44,7 @@ ExtendedHypertree::ExtendedHypertree(VertexSet &vertices) : Hypertree()
 {
 	this->vertices = vertices;
 	this->type = Unevaluated;
-	this->difference = -1;
+	this->difference = VERTEXNOTFOUND;
 }
 
 ExtendedHypertree::~ExtendedHypertree() { }
@@ -69,7 +69,7 @@ TreeNodeType ExtendedHypertree::calculateType()
 	if(this->MyChildren.size() == 2) return Branch;
 
 	ExtendedHypertree *child = this->firstChild();
-	vector<int> diff(1);
+	vector<Vertex> diff(1);
 
 	if(child->vertices.size() != this->vertices.size() && containsAll(child->vertices, this->vertices))
 	{
@@ -93,7 +93,7 @@ int ExtendedHypertree::getType() const
 	return this->type;
 }
 
-int ExtendedHypertree::getDifference() const
+Vertex ExtendedHypertree::getDifference() const
 {
 	return this->difference;
 }
@@ -140,12 +140,12 @@ void ExtendedHypertree::adapt()
 
 	unsigned int changes;
 
-	list<int> currentVertices(this->parent()->vertices.begin(), this->parent()->vertices.end());
+	list<Vertex> currentVertices(this->parent()->vertices.begin(), this->parent()->vertices.end());
 
-	vector<int> redVertices(currentVertices.size());
-	vector<int> greenVertices(this->vertices.size());
+	vector<Vertex> redVertices(currentVertices.size());
+	vector<Vertex> greenVertices(this->vertices.size());
 
-	vector<int>::iterator it
+	vector<Vertex>::iterator it
 		= set_difference(this->parent()->vertices.begin(), this->parent()->vertices.end(), 
 				this->vertices.begin(), this->vertices.end(), redVertices.begin());
 	redVertices.resize(it - redVertices.begin());
@@ -166,7 +166,7 @@ void ExtendedHypertree::adapt()
 	for(it = greenVertices.begin(); changes > 1 && it != greenVertices.end(); ++it)
 	{
 		currentVertices.push_back(*it);
-		createChild(this, set<int>(currentVertices.begin(), currentVertices.end()));
+		createChild(this, VertexSet(currentVertices.begin(), currentVertices.end()));
 		--changes;
 	}
 }
@@ -202,7 +202,7 @@ void ExtendedHypertree::print()
         else if(type != Leaf) cout << ", child: " << eht->firstChild();
 
         cout << ", vertices: ";
-        for(set<int>::const_iterator it = eht->getVertices().begin(); it != eht->getVertices().end(); ++it) cout << *it << ", ";
+        for(VertexSet::const_iterator it = eht->getVertices().begin(); it != eht->getVertices().end(); ++it) cout << *it << ", ";
         cout << "difference: " << eht->getDifference() << ", ";
         cout << "END" << endl;
 

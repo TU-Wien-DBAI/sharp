@@ -491,15 +491,19 @@ HCFAnswerSetTuple *HCFAnswerSetAlgorithm::copyTupleAddPositiveVariable(HCFAnswer
 
 	for(RuleSet::const_iterator it = rules.begin(); it != rules.end(); ++it)
 	{
-		map<Variable, bool>::const_iterator sit;
+		//map<Variable, bool>::const_iterator sit;
 
 		bool ingraph = x.graph.find(*it) != x.graph.end();
-		bool inhead = this->problem->getHeadMap()[*it].find(v) != this->problem->getHeadMap()[*it].end();
-		bool inrule = (sit = this->problem->getSignMap()[*it].find(v)) != this->problem->getSignMap()[*it].end();
-		bool inposbody = inrule && sit->second;
-		bool innegbody = inrule && !sit->second && !inhead;
+		//bool inhead = this->problem->getHeadMap()[*it].find(v) != this->problem->getHeadMap()[*it].end();
+		bool inhead = this->isInRuleHead(*it, v);
+		//bool inrule = (sit = this->problem->getSignMap()[*it].find(v)) != this->problem->getSignMap()[*it].end();
+		bool inrule = this->isInRuleBody(*it, v);
+		//bool inposbody = inrule && sit->second;
+		bool inposbody = inrule && !this->isInNegativeRuleBody(*it, v);
+		//bool innegbody = inrule && !sit->second && !inhead;
+		bool innegbody = inrule && !inposbody && !inhead;
 		bool isderived = ingraph && x.graph[*it].find(DERIVED) != x.graph[*it].end();
-
+		
 		if(ingraph)
 		{
 			if(innegbody) { delete t; return NULL; } // if the rule is in the graph but v is in the neg. body, abort
@@ -532,14 +536,19 @@ HCFAnswerSetTuple *HCFAnswerSetAlgorithm::copyTupleAddNegativeVariable(HCFAnswer
 	for(RuleSet::const_iterator it = rules.begin(); it != rules.end(); ++it)
 	{
 		// check if the variable is contained in some rule
-		map<Variable, bool>::const_iterator sit;
-		if((sit = this->problem->getSignMap()[*it].find(v)) != this->problem->getSignMap()[*it].end())
+		//map<Variable, bool>::const_iterator sit;
+		//if((sit = this->problem->getSignMap()[*it].find(v)) != this->problem->getSignMap()[*it].end())
+		if(this->isInRuleBody(*it, v))
 		{
+			//
+			bool inposbody = !this->isInNegativeRuleBody(*it, v);
 			if(x.graph.find(*it) != x.graph.end()) // if rule is in the graph (i.e. a proof rule)
 			{
-				if(sit->second) { delete t; return NULL; } // abort if v is in positive body
+				//if(sit->second) { delete t; return NULL; } // abort if v is in positive body
+				if(inposbody) { delete t; return NULL; } // abort if v is in positive body
 			}
-			else if(sit->second) // if rule is not in the graph and v occurs in pos. body
+			//else if(sit->second) // if rule is not in the graph and v occurs in pos. body
+			else if(inposbody) // if rule is not in the graph and v occurs in pos. body
 			{
 				t->satisfied.insert(*it); // set rule to satisfied
 			}
@@ -557,13 +566,17 @@ HCFAnswerSetTuple *HCFAnswerSetAlgorithm::copyTupleAddProofRule(HCFAnswerSetTupl
 	int headcount = 0;
 	for(VariableSet::const_iterator it = variables.begin(); it != variables.end(); ++it)
 	{
-		map<Variable, bool>::const_iterator sit;
+		//map<Variable, bool>::const_iterator sit;
 
 		bool ingraph = x.graph.find(*it) != x.graph.end();
-		bool inhead = this->problem->getHeadMap()[r].find(*it) != this->problem->getHeadMap()[r].end();
-		bool inrule = (sit = this->problem->getSignMap()[r].find(*it)) != this->problem->getSignMap()[r].end();
-		bool inposbody = inrule && sit->second;
-		bool innegbody = inrule && !sit->second && !inhead;
+		//bool inhead = this->problem->getHeadMap()[r].find(*it) != this->problem->getHeadMap()[r].end();
+		bool inhead = this->isInRuleHead(r, *it);
+		//bool inrule = (sit = this->problem->getSignMap()[r].find(*it)) != this->problem->getSignMap()[r].end();
+		bool inrule = this->isInRuleBody(r, *it);
+		//bool inposbody = inrule && sit->second;
+		bool inposbody = inrule && !this->isInNegativeRuleBody(r, *it);
+		//bool innegbody = inrule && !sit->second && !inhead;
+		bool innegbody = inrule && !inposbody && !inhead;
 	
 		if(ingraph && inhead) // if we found a head variable
 		{
@@ -596,9 +609,10 @@ HCFAnswerSetTuple *HCFAnswerSetAlgorithm::copyTupleAddNonProofRule(HCFAnswerSetT
 
 	for(VariableSet::const_iterator it = variables.begin(); it != variables.end(); ++it)
 	{
-		map<Variable, bool>::const_iterator sit;
-		if((sit = this->problem->getSignMap()[r].find(*it)) != this->problem->getSignMap()[r].end() // if some variable is containted in the rule
-				&& !((x.graph.find(*it) != x.graph.end()) ^ !sit->second)) // and it satisfies the rule
+		//map<Variable, bool>::const_iterator sit;
+		//if((sit = this->problem->getSignMap()[r].find(*it)) != this->problem->getSignMap()[r].end() // if some variable is containted in the rule
+		//		&& !((x.graph.find(*it) != x.graph.end()) ^ !sit->second)) // and it satisfies the rule
+		if(this->isInRuleBody(r, *it) && !((x.graph.find(*it) != x.graph.end()) ^ this->isInNegativeRuleBody(r, *it)))
 		{
 			t->satisfied.insert(r); // set it to satisfied
 			break;

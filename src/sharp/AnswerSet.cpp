@@ -40,7 +40,7 @@ bool AnswerSetTuple::operator<(const Tuple &other) const
 
 bool AnswerSetTuple::operator==(const Tuple &other) const
 {
-	equal_to<set<int> > ieq;
+	equal_to<set<Vertex> > ieq;
 	equal_to<set<Atom> > aeq;
 	AnswerSetTuple &o = (AnswerSetTuple &)other;
 
@@ -83,10 +83,27 @@ RuleSet AnswerSetAlgorithm::getRules(const ExtendedHypertree *node)
 	return rules;
 }
 
+bool AnswerSetAlgorithm::isInRuleBody(Rule r, Variable v)
+{
+	return this->problem->isInRuleBody(r, v);
+}
+
+bool AnswerSetAlgorithm::isInNegativeRuleBody(Rule r, Variable v)
+{
+	return this->problem->isInNegativeRuleBody(r, v);
+}
+
+bool AnswerSetAlgorithm::isInRuleHead(Rule r, Variable v)
+{
+	return this->problem->isInRuleHead(r, v);
+}
+
+
+
 Solution *AnswerSetAlgorithm::selectSolution(TupleSet *tuples, const ExtendedHypertree *root)
 {
 	Solution *s = this->instantiator->createEmptySolution();
-	equal_to<set<int> > eq;
+	equal_to<set<Vertex> > eq;
 	RuleSet rules = getRules(root);
 
 	for(TupleSet::iterator it = tuples->begin(); it != tuples->end(); ++it)

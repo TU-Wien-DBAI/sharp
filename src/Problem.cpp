@@ -9,12 +9,17 @@
 
 using namespace std;
 
+static Timer t;
+
 Problem::Problem(AbstractAlgorithm *algorithm)
 {
 	this->algorithm = algorithm;
 	this->parsed = false;
 
 	this->setDecompositionOptions();
+	
+	// start numbering of vertices at 1 instead of 0
+	this->createAuxiliaryVertex();
 }
 
 Problem::~Problem()
@@ -47,10 +52,6 @@ Solution *Problem::calculateSolution(Instantiator *instantiator)
 	// when decomposing a default graph
 	else 
 		ht = be.buildHypertree(hg, BE_MIW_ORDER);
-
-	ht->swapChiLambda();
-        ht->shrink(true);
-        ht->swapChiLambda();
 
 	ht = new ExtendedHypertree(ht);
 	((ExtendedHypertree *)ht)->normalize();
@@ -132,6 +133,11 @@ Vertex Problem::storeVertexName(string name)
 	vertexNames.push_back(name);
 	reverseVertexNames.insert(ReverseNameMap::value_type(name, vertexNames.size() - 1));
 
+	return vertexNames.size() - 1;
+}
+
+unsigned int Problem::getVertexCount()
+{
 	return vertexNames.size() - 1;
 }
 

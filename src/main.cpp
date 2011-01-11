@@ -236,11 +236,11 @@ static void printSolution(SolutionContent *sc, OutputType output, Problem *p)
 		cout << "Solutions: " << sol->enumerations.size() << endl;
 		cout << "{";
 		string osep = "";
-		for(set<set<int> >::iterator oit = sol->enumerations.begin(); oit != sol->enumerations.end(); ++oit)
+		for(set<VertexSet>::iterator oit = sol->enumerations.begin(); oit != sol->enumerations.end(); ++oit)
 		{
 			cout << osep << "{";
 			string isep = "";
-			for(set<int>::iterator iit = oit->begin(); iit != oit->end(); ++iit)
+			for(VertexSet::iterator iit = oit->begin(); iit != oit->end(); ++iit)
 			{
 				cout << isep << p->getVertexName(*iit);
 				isep = ",";

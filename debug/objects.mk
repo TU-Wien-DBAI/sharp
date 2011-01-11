@@ -1,3 +1,3 @@
 USER_OBJS :=
 
-LIBS := -lgmpxx -lgmp
+LIBS := -lgmpxx -lgmp -lprofiler -ltcmalloc

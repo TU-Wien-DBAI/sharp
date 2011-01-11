@@ -12,7 +12,7 @@ Partition Helper::partition(const set<Variable> &variables)
 	typedef set<Variable> set_t;
         typedef set_t::iterator iter_t;
 
-	int size = int(pow(2.0f, (int)variables.size()));
+	unsigned int size = (unsigned int)pow(2.0f, (int)variables.size());
 
         vector<set_t> positives, negatives; positives.reserve(size); negatives.reserve(size);
         vector<iter_t> elements;
@@ -48,21 +48,21 @@ set<Rule> Helper::trueRules(	const set<Variable> &positives,
 {
 
 	//FIXME very slow, utilize the fact that sets are sorted
-        set<int> truerules;
+        set<Rule> truerules;
 
-        for(set<int>::const_iterator r = rules.begin(); r != rules.end(); ++r)
+        for(set<Rule>::const_iterator r = rules.begin(); r != rules.end(); ++r)
         {
                 SignMap::const_iterator posneg = signs.find(*r);
 
                 bool add = false;
-                for(set<int>::const_iterator var = positives.begin(); !add && var != positives.end(); ++var)
+                for(set<Variable>::const_iterator var = positives.begin(); !add && var != positives.end(); ++var)
                 {
-                        map<int, bool>::const_iterator it = posneg->second.find(*var);
+                        map<Variable, bool>::const_iterator it = posneg->second.find(*var);
                         add = it != posneg->second.end() && !it->second;
                 }
-                for(set<int>::const_iterator var = negatives.begin(); !add && var != negatives.end(); ++var)
+                for(set<Variable>::const_iterator var = negatives.begin(); !add && var != negatives.end(); ++var)
                 {
-                        map<int, bool>::const_iterator it = posneg->second.find(*var);
+                        map<Variable, bool>::const_iterator it = posneg->second.find(*var);
                         add = it != posneg->second.end() && it->second;
                 }
 
@@ -122,8 +122,8 @@ bool Helper::trueRule(	const set<Variable> &positives,
 {
 	bool add = false;
 	SignMap::const_iterator posneg = signs.find(rule);
-	set<int>::iterator pit = positives.begin(), ait = all.begin();
-	for(map<int, bool>::const_iterator pnit = posneg->second.begin(); !add && pnit != posneg->second.end(); ++pnit)
+	set<Variable>::iterator pit = positives.begin(), ait = all.begin();
+	for(map<Variable, bool>::const_iterator pnit = posneg->second.begin(); !add && pnit != posneg->second.end(); ++pnit)
 	{
 		while(pit != positives.end() && *pit < pnit->first) ++pit;
 		if(pit != positives.end() && *pit == pnit->first) { if(!pnit->second) { add = true; continue; } else continue; }

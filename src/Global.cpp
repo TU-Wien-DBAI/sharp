@@ -8,34 +8,34 @@
 
 using namespace std;
 
-bool containsAll(const set<int> &a, const set<int> &b)
+bool containsAll(const set<unsigned int> &a, const set<unsigned int> &b)
 {
 	if(a.size() < b.size()) return false;
 
-	vector<int> temp(b.size());
-	vector<int>::iterator it;
+	vector<unsigned int> temp(b.size());
+	vector<unsigned int>::iterator it;
 
 	it = set_intersection(a.begin(), a.end(), b.begin(), b.end(), temp.begin());
 
 	if(it - temp.begin() == (int)b.size()) return true; else return false;
 }
 
-void printIntSet(const set<int> &toprint)
+void printIntSet(const set<unsigned int> &toprint)
 {
 	const char *prefix = "";
 
-	for(set<int>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
+	for(set<unsigned int>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
 	{
 		cout << prefix << *it;
 		prefix = ", ";
 	}	
 }
 
-void printIntList(const list<int> &toprint)
+void printIntList(const list<unsigned int> &toprint)
 {
 	const char *prefix = "";
 	
-	for(list<int>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
+	for(list<unsigned int>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
 	{
 		cout << prefix << *it;
 		prefix = ", ";
@@ -48,10 +48,30 @@ void printBoolList(const list<bool> &toprint)
 	
 	for(list<bool>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
 	{
-		cout << prefix << (*it ? "t" : "f");
+		cout << prefix << (*it ? "1" : "0");
 		prefix = ", ";
 	}
 }
+
+void printIntVector(const vector<Vertex> &toprint)
+{
+        const char *prefix = "";
+
+        for(vector<unsigned int>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
+        {
+                cout << prefix << *it;
+                prefix = ",";
+        }
+}
+
+void printBoolVector(const vector<bool> &toprint)
+{
+        for(vector<bool>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
+        {
+                cout << (*it ? "1" : "0");
+        }
+}
+
 
 Timer::Timer() 
 {

@@ -81,7 +81,7 @@ Solution *HeadCycleFreeAnswerSetAlgorithm::selectSolution(TupleSet *tuples, cons
 {
 	Solution *s = this->instantiator->createEmptySolution();
 
-	equal_to<set<int> > eq;
+	equal_to<set<Vertex> > eq;
 	RuleSet rules = getRules(root);
 
 	for(TupleSet::iterator it = tuples->begin(); it != tuples->end(); ++it)
@@ -864,7 +864,7 @@ OrderCombinations HeadCycleFreeAnswerSetAlgorithm::combineOrder(const Order &ori
 								const OrderTypes &types,
 								const set<Rule> &left,
 								const set<Rule> &right,
-								int separator,
+								Vertex separator,
 								bool separatorType)
 {
 	//TODO
@@ -1003,7 +1003,7 @@ OrderCombinations HeadCycleFreeAnswerSetAlgorithm::combineOrder(const Order &ori
 
 OrderCombinations HeadCycleFreeAnswerSetAlgorithm::combineOrder(const Order &original,
 								const OrderTypes &types,
-								int toInsert,
+								Vertex toInsert,
 								bool insertType)
 {
 	//TODO

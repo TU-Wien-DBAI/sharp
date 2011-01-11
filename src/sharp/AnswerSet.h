@@ -31,6 +31,11 @@ public:
 	VariableSet getVariables(const ExtendedHypertree *node);
 	RuleSet getRules(const ExtendedHypertree *node);
 
+        bool isInNegativeRuleBody(Rule r, Variable v);
+        bool isInRuleBody(Rule r, Variable v);
+        bool isInRuleHead(Rule r, Variable v);
+
+
 protected:
 	virtual Solution *selectSolution(TupleSet *tuples, const ExtendedHypertree *node);
 	

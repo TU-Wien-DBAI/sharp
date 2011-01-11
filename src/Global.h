@@ -12,10 +12,10 @@
 
 #include "support/support.h"
 
-bool containsAll(const std::set<int> &a, const std::set<int> &b);
+bool containsAll(const std::set<unsigned int> &a, const std::set<unsigned int> &b);
 
-typedef int Vertex;
-#define VERTEXNOTFOUND (-1)
+typedef unsigned int Vertex;
+#define VERTEXNOTFOUND (0)
 
 typedef std::set<Vertex> VertexSet;
 typedef std::set<std::pair<Vertex, Vertex> > EdgeSet;
@@ -26,18 +26,20 @@ typedef std::map<std::string, Vertex> ReverseNameMap;
 
 //old---------
 
-void printIntSet(const std::set<int> &toprint);
-void printIntList(const std::list<int> &toprint);
+void printIntSet(const VertexSet &toprint);
+void printIntList(const std::list<Vertex> &toprint);
+void printIntVector(const VertexSet &toprint);
+void printBoolVector(const std::vector<bool> &toprint);
 void printBoolList(const std::list<bool> &toprint);
 
-typedef int Variable;
-typedef int Rule;
+typedef Vertex Variable;
+typedef Vertex Rule;
 typedef std::pair<std::set<Variable>, std::set<Rule> > Atom;
 
 typedef std::map<Rule, std::map<Variable, bool> > SignMap;
 typedef std::vector<std::string> NameMap;
 typedef std::vector<std::set<Variable> > HeadMap;
-typedef std::list<int> Order;
+typedef std::list<Vertex> Order;
 typedef std::list<bool> OrderTypes;
 typedef std::list<std::pair<Order, OrderTypes> > OrderCombinations;
 

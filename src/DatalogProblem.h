@@ -22,6 +22,8 @@ typedef std::map<Rule, std::map<Variable, bool> > SignMap;
 typedef std::vector<VariableSet> HeadMap;
 typedef std::vector<DatalogVertexType> TypeMap;
 
+typedef std::vector<std::vector<bool> > VariableMap;
+
 class DatalogParser;
 
 class DatalogProblem : public Problem
@@ -33,6 +35,10 @@ public:
 	SignMap &getSignMap();
 	HeadMap &getHeadMap();
 	TypeMap &getTypeMap();
+
+	bool isInNegativeRuleBody(Rule r, Variable v);
+	bool isInRuleBody(Rule r, Variable v);
+	bool isInRuleHead(Rule r, Variable v);
 
 	bool isRule(Vertex v);
 	bool isVariable(Vertex v);
@@ -50,6 +56,10 @@ private:
 	SignMap signs;
 	HeadMap heads;
 	TypeMap types;
+
+	VariableMap rulebody;
+	VariableMap rulenegatives;
+	VariableMap ruleheads;
 
 	DatalogParser *parser;
 

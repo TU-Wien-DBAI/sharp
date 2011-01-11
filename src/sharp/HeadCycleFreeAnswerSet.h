@@ -73,12 +73,12 @@ public:
 						const OrderTypes &types,
 						const std::set<Rule> &left,
 						const std::set<Rule> &right,
-						int separator,
+						Vertex separator,
 						bool separatorType);
 
 	static OrderCombinations combineOrder(	const Order &original,
 						const OrderTypes &types,
-						int toInsert,
+						Vertex toInsert,
 						bool insertType);
 
 	static OrderCombinations combineOrder(	const Order &left,
