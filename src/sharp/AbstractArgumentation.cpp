@@ -191,29 +191,29 @@ calculates colorings for branch node
 INPUT: leftColoring: the left child's coloring vector
 	   rightColoring: the right child's coloring vector
 */
-ColoringVector AbstractArgumentationAlgorithm::getBranchColorings(ColoringVector leftColoring, ColoringVector rightColoring, ArgumentSet arguments)
+ColoringVector AbstractArgumentationAlgorithm::getBranchColorings(ColoringVector *leftColoring, ColoringVector *rightColoring, const ArgumentSet *arguments)
 {
 	int index = 0;
 	ColoringVector result;
 
-	for(set<Argument>::iterator it = arguments.begin(); it != arguments.end(); ++it)
+	for(set<Argument>::iterator it = arguments->begin(); it != arguments->end(); ++it)
 	{
 		//IN if both colorings are IN
-		if ((leftColoring[index] == IN) && (rightColoring[index] == IN))
+		if (((*leftColoring)[index] == IN) && ((*rightColoring)[index] == IN))
 		{
 			result.push_back(IN);
 			//cout << "Calculated IN for tupel " << i << ", Argument " << *it << endl;
 		}
 
 		//OUT if both colorings are OUT
-		else if ((leftColoring[index] == OUT) && (rightColoring[index] == OUT))
+		else if (((*leftColoring)[index] == OUT) && ((*rightColoring)[index] == OUT))
 		{
 			result.push_back(OUT);
 			//cout << "Calculated OUT for tupel " << i << ", Argument " << *it << endl;
 		}
 
 		//DEF if left or right coloring is DEF
-		else if ((leftColoring[index] == DEF) || (rightColoring[index] == DEF))
+		else if (((*leftColoring)[index] == DEF) || ((*rightColoring)[index] == DEF))
 		{
 			result.push_back(DEF);
 			//cout << "Calculated DEF for tupel " << i << ", Argument " << *it << endl;
@@ -239,13 +239,13 @@ calculates colorings for introduction node
 INPUT: leftColoring: the left child's coloring vector
 	   rightColoring: the right child's coloring vector
 */
-ColoringVector AbstractArgumentationAlgorithm::getIntroColorings(ArgumentSet *in, ColoringVector *childColoring, int difference, bool *addTuple, ArgumentSet arguments)
+ColoringVector AbstractArgumentationAlgorithm::getIntroColorings(ArgumentSet *in, ColoringVector *childColoring, Argument difference, bool *addTuple, const ArgumentSet *arguments)
 {
 
 	int index = 0;
 	ColoringVector result;
 
-	for(set<Argument>::iterator it2 = arguments.begin(); it2 != arguments.end(); ++it2)
+	for(set<Argument>::iterator it2 = arguments->begin(); it2 != arguments->end(); ++it2)
 	{
 		//current arg is not the new one
 		if (*it2 != difference)

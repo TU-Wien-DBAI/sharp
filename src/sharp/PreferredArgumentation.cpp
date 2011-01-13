@@ -55,15 +55,15 @@ static void printTuples(TupleSet *tuples, const ExtendedHypertree *node, Argumen
         {
 			//cout << &(((PreferredArgumentationTuple *)it->first)->certificates) << "\t";
 			
-			ColoringVector c = ((PreferredArgumentationTuple *)it->first)->colorings;
+			ColoringVector *c = &((PreferredArgumentationTuple *)it->first)->colorings;
                     
-            printColoring(c, true);
+            printColoring(*c, true);
 			
 			cout << ((PreferredArgumentationTuple *)it->first)->bSkepticalAcc << "\t";
 
-			CertificateSet cert = ((PreferredArgumentationTuple *)it->first)->certificates;
+			CertificateSet *cert = &((PreferredArgumentationTuple *)it->first)->certificates;
 
-            for(CertificateSet::iterator certIt = cert.begin(); certIt != cert.end(); ++certIt)
+            for(CertificateSet::iterator certIt = cert->begin(); certIt != cert->end(); ++certIt)
             {
 				printColoring(*certIt, false);
 				cout << "\t";
@@ -144,7 +144,7 @@ Solution *PreferredArgumentationAlgorithm::selectSolution(TupleSet *tuples, cons
 	
 	Solution *s = this->instantiator->createEmptySolution();
 	bool skepAcc = false;
-	ColoringVector colorings;
+	ColoringVector *colorings;
 	CertificateSet deletedColorings;
 	TupleSet tmpSolutions;
 	TupleSet finalSolutions;
@@ -152,12 +152,12 @@ Solution *PreferredArgumentationAlgorithm::selectSolution(TupleSet *tuples, cons
 
 	for(TupleSet::iterator it = tuples->begin(); it != tuples->end(); ++it)
 	{	
-		colorings = ((PreferredArgumentationTuple *)it->first)->colorings;
+		colorings = &((PreferredArgumentationTuple *)it->first)->colorings;
 		containsAtt = false;		
 		
-		for(unsigned int i=0; i < colorings.size(); i++)
+		for(unsigned int i=0; i < colorings->size(); i++)
 		{
-			if (colorings[i] == ATT) 
+			if ((*colorings)[i] == ATT)
 			{
 				containsAtt = true;
 				break;
@@ -169,7 +169,7 @@ Solution *PreferredArgumentationAlgorithm::selectSolution(TupleSet *tuples, cons
 		{
 			tmpSolutions.insert(*it);
 		}
-		else deletedColorings.insert(colorings);
+		else deletedColorings.insert(*colorings);
 	}
 
 	//delete all certificates which are equal to deleted colorings
@@ -223,7 +223,7 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypert
 	const ArgumentSet arguments = (ArgumentSet) node->getVertices();
 
 	//get integer value for skeptical acceptance argument
-	if (intSkepticalAcc == -1 && this->skepticalAcc != NULL)
+	if (this->skepticalAcc != NULL)
 	{
 		intSkepticalAcc = problem->getVertexId(this->skepticalAcc);
 	}
@@ -297,15 +297,15 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypert
 	//iterate through tupleset and calculate certificates
 	for(TupleSet::iterator it = ts->begin(); it != ts->end(); ++it)
 	{	
-		ColoringVector c1 = ((PreferredArgumentationTuple *)it->first)->colorings;
+		ColoringVector *c1 = &((PreferredArgumentationTuple *)it->first)->colorings;
 		
 		for(TupleSet::iterator inner_it = ts->begin(); inner_it != ts->end(); ++inner_it)
 		{
 			if (*it != *inner_it)
 			{
 				
-				ColoringVector c2 = ((PreferredArgumentationTuple *)inner_it->first)->colorings;	
-				if (this->isSubset(c1, c2)) 
+				ColoringVector *c2 = &((PreferredArgumentationTuple *)inner_it->first)->colorings;
+				if (this->isSubset(c1, c2))
 				{
 					CertificateSet *certificates = &((PreferredArgumentationTuple *)it->first)->certificates;
 					certificates->insert((((PreferredArgumentationTuple *)inner_it->first)->colorings));
@@ -349,16 +349,16 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateBranchNode(const ExtendedHype
 	//iterate through left tuples
 	for(TupleSet::iterator lit = left->begin(); lit != left->end(); ++lit)
 	{	
-		ColoringVector leftColoring = ((PreferredArgumentationTuple *)lit->first)->colorings;
-		ArgumentSet leftIn = this->getInArgs(&leftArguments, &leftColoring);
-		CertificateSet leftCert = ((PreferredArgumentationTuple *)lit->first)->certificates;
+		ColoringVector *leftColoring = &((PreferredArgumentationTuple *)lit->first)->colorings;
+		ArgumentSet leftIn = this->getInArgs(&leftArguments, leftColoring);
+		CertificateSet *leftCert = &((PreferredArgumentationTuple *)lit->first)->certificates;
 		
 		//iterate through right tuples and generate new tuplesets
 		for(TupleSet::iterator rit = right->begin(); rit != right->end(); ++rit)
 		{	
-			ColoringVector rightColoring = ((PreferredArgumentationTuple *)rit->first)->colorings;
-			ArgumentSet rightIn = this->getInArgs(&rightArguments, &rightColoring);
-			CertificateSet rightCert = ((PreferredArgumentationTuple *)rit->first)->certificates;
+			ColoringVector *rightColoring = &((PreferredArgumentationTuple *)rit->first)->colorings;
+			ArgumentSet rightIn = this->getInArgs(&rightArguments, rightColoring);
+			CertificateSet *rightCert = &((PreferredArgumentationTuple *)rit->first)->certificates;
 			
 			//check if IN-sets are equal => generate new tuple
 			if ((leftIn.size() == rightIn.size()) && (equal(leftIn.begin(), leftIn.end(), rightIn.begin())))
@@ -370,23 +370,24 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateBranchNode(const ExtendedHype
 										 ((PreferredArgumentationTuple *)rit->first)->bSkepticalAcc;
 				
 				//calculate colorings
-				argTuple.colorings = getBranchColorings(leftColoring, rightColoring, arguments);
+				argTuple.colorings = getBranchColorings(leftColoring, rightColoring, &arguments);
 				
 				//calculate certificates
 
 				//compare left coloring with right certificates
-				CertificateSet c1 = this->getEqualInSets(leftColoring, rightCert, arguments);
+				CertificateSet c1 = this->getEqualInSets(leftColoring, rightCert, &arguments);
 				(argTuple.certificates).insert(c1.begin(), c1.end());
 				
 				//compare right coloring with left certificates
-				CertificateSet c2 = this->getEqualInSets(rightColoring, leftCert, arguments);
+				CertificateSet c2 = this->getEqualInSets(rightColoring, leftCert, &arguments);
 				(argTuple.certificates).insert(c2.begin(), c2.end());
 
 				//compare left certificates with right certificates
 				CertificateSet c3;
-				for(CertificateSet::iterator cit = leftCert.begin(); cit != leftCert.end(); ++cit)
+				for(CertificateSet::iterator cit = leftCert->begin(); cit != leftCert->end(); ++cit)
 				{
-					c3 = this->getEqualInSets(*cit, rightCert, arguments);
+					ColoringVector tmpVector = (ColoringVector) *cit;
+					c3 = this->getEqualInSets(&tmpVector, rightCert, &arguments);
 					(argTuple.certificates).insert(c3.begin(), c3.end());
 				}
 
@@ -429,17 +430,17 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
 	{	
 		PreferredArgumentationTuple &argTuple = *new PreferredArgumentationTuple();	
-		ColoringVector childColoring = ((PreferredArgumentationTuple *)it->first)->colorings;
+		ColoringVector *childColoring = &((PreferredArgumentationTuple *)it->first)->colorings;
 		bool addTuple = false;
 		
 		//take over bSkepticalAcc and certificates
 		argTuple.bSkepticalAcc = ((PreferredArgumentationTuple *)it->first)->bSkepticalAcc;
 		argTuple.certificates = ((PreferredArgumentationTuple *)it->first)->certificates;
 
-		ArgumentSet in = this->getInArgs(&childArguments, &childColoring);
+		ArgumentSet in = this->getInArgs(&childArguments, childColoring);
 				
 		//calculate colorings
-		argTuple.colorings = getIntroColorings(&in, &childColoring, node->getDifference(), &addTuple, arguments);
+		argTuple.colorings = getIntroColorings(&in, childColoring, node->getDifference(), &addTuple, &arguments);
 		
 		if (addTuple)
 		{	
@@ -461,7 +462,7 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 				else
 				{
 					//IN if arg is the new one (see above) or if the corresponding child arg is IN
-					if (childColoring[index] == IN)
+					if ((*childColoring)[index] == IN)
 					{
 						(additionalArgTuple.colorings).push_back(IN);	
 					}
@@ -469,7 +470,7 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 					//DEF if the new arg attacks the current arg or if the corresponding child arg is DEF 
 					else if ((problem->getAttacksFromArg(node->getDifference()) != NULL &&
 					          (problem->getAttacksFromArg(node->getDifference()))->count(*it2) > 0) ||
-							  childColoring[index] == DEF)
+							  (*childColoring)[index] == DEF)
 					{
 						(additionalArgTuple.colorings).push_back(DEF);	
 
@@ -483,7 +484,7 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 							 (problem->getAttacksFromArg(node->getDifference()))->count(*it2) == 0) &&
 							  (problem->getAttacksFromArg(*it2) == NULL ||
 							 (problem->getAttacksFromArg(*it2))->count(node->getDifference()) == 0) &&
-							  childColoring[index] == OUT)
+							  (*childColoring)[index] == OUT)
 					{
 						(additionalArgTuple.colorings).push_back(OUT);
 
@@ -510,7 +511,7 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 			
 			//add new tuple to tuple set with alternative operation 'union'
 			//updateMap.insert(pair<ColoringVector, ColoringVector>(childColoring, CertificateSet::value_type(additionalArgTuple.colorings)));
-			updateMap[childColoring].insert(CertificateSet::value_type(additionalArgTuple.colorings));
+			updateMap[*childColoring].insert(CertificateSet::value_type(additionalArgTuple.colorings));
 
 			//cout << "AdditionalArgTuple: "; printColoring(additionalArgTuple.colorings, false); cout << "cert: " << (additionalArgTuple.certificates).size() << endl;
 
@@ -519,7 +520,7 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 
 		//add 'old' tuple to tuple set with alternative operation 'union'
 		//updateMap.insert(pair<ColoringVector, ColoringVector>(childColoring, CertificateSet::value_type(argTuple.colorings)));
-		updateMap[childColoring].insert(CertificateSet::value_type(argTuple.colorings));
+		updateMap[*childColoring].insert(CertificateSet::value_type(argTuple.colorings));
 
 		//cout << "ArgTuple: "; printColoring(argTuple.colorings, false); cout << "cert: " << (argTuple.certificates).size() << endl;
 
@@ -582,15 +583,15 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 				}
 			}
 
-			CertificateSet *s;
+			CertificateSet *s = new CertificateSet();
 
 			//search for certificateset with current coloring
-			ColoringVector col = ((PreferredArgumentationTuple *)it->first)->colorings;
+			ColoringVector *col = &((PreferredArgumentationTuple *)it->first)->colorings;
 
 			for(map<ColoringVector, CertificateSet>::iterator updateIt = updateMap.begin(); updateIt != updateMap.end(); ++updateIt)
 			{
 
-				if((updateIt->second).count(col) > 0)
+				if((updateIt->second).count(*col) > 0)
 				{
 					s = &(updateIt->second);
 					break;
@@ -642,7 +643,7 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateRemovalNode(const ExtendedHyp
 		PreferredArgumentationTuple &argTuple = *new PreferredArgumentationTuple();	
 		bool insertFlag = true;
 		int index = 0;
-		ColoringVector childColoring = ((PreferredArgumentationTuple *)it->first)->colorings;
+		ColoringVector *childColoring = &((PreferredArgumentationTuple *)it->first)->colorings;
 		
 		//take over bSkepticalAcc and certificates
 		argTuple.bSkepticalAcc = ((PreferredArgumentationTuple *)it->first)->bSkepticalAcc;
@@ -653,12 +654,12 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateRemovalNode(const ExtendedHyp
 			//insert coloring if current argument is not the removed one
 			if (*it2 != node->getDifference())
 			{	
-				(argTuple.colorings).push_back(childColoring[index]);	
+				(argTuple.colorings).push_back((*childColoring)[index]);
 			}
 			
 			//if current argument is the removed one and the previous coloring
 			//was ATT => do not insert into new tupleset
-			else if ((*it2 == node->getDifference()) && childColoring[index] == ATT)
+			else if ((*it2 == node->getDifference()) && (*childColoring)[index] == ATT)
 			{
 				insertFlag = false;
 				delIndex = index;
@@ -673,9 +674,9 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateRemovalNode(const ExtendedHyp
 			//add tuple to tuple set with alternative operation 'union'
 			addToTupleSet(&argTuple, it->second, ts, Union);
 
-			updateMap.insert(pair<ColoringVector, ColoringVector>(childColoring, argTuple.colorings));
+			updateMap.insert(pair<ColoringVector, ColoringVector>(*childColoring, argTuple.colorings));
 		}
-		else deletedColorings.insert(childColoring);
+		else deletedColorings.insert(*childColoring);
 	}
 
 	//delete all certificates which are equal to deleted colorings
@@ -727,11 +728,11 @@ Returns true, if the first argument is a subset of the second one (when looking 
 INPUT: v1: first colorings
        v2: second colorings
 */
-bool PreferredArgumentationAlgorithm::isSubset (ColoringVector v1, ColoringVector v2)
+bool PreferredArgumentationAlgorithm::isSubset (ColoringVector *v1, ColoringVector *v2)
 {
-	for(unsigned int i=0; i < (v1.size()); ++i)
+	for(unsigned int i=0; i < (v1->size()); ++i)
 	{
-		if ((v1[i] == IN) && (v2[i] != IN)) return false;
+		if (((*v1)[i] == IN) && ((*v2)[i] != IN)) return false;
 	}
 	
 	return true; 
@@ -743,20 +744,20 @@ Compares the given ColoringVector with every element in the given CertificateSet
 INPUT: cv: the coloring vector for comparing
        certs: the certificate set for comparing (every cv in this set will be compared)
 */
-CertificateSet PreferredArgumentationAlgorithm::getEqualInSets(ColoringVector cv, CertificateSet certs, ArgumentSet args)
+CertificateSet PreferredArgumentationAlgorithm::getEqualInSets(ColoringVector *cv, CertificateSet *certs, const ArgumentSet *args)
 {
-	ArgumentSet cvIn = this->getInArgs(&args, &cv);
+	ArgumentSet cvIn = this->getInArgs(args, cv);
 	CertificateSet resultCerts;
 
-	for(CertificateSet::iterator cit = certs.begin(); cit != certs.end(); ++cit)
+	for(CertificateSet::iterator cit = certs->begin(); cit != certs->end(); ++cit)
 	{
-		ColoringVector tmpVector = *cit;
-		ArgumentSet certIn = this->getInArgs(&args, &tmpVector);
+		ColoringVector tmpVector = (ColoringVector) *cit;
+		ArgumentSet certIn = this->getInArgs(args, &tmpVector);
 
 		//check if IN-sets are equal => generate new tuple
 		if ((cvIn.size() == certIn.size()) && (equal(cvIn.begin(), cvIn.end(), certIn.begin())))
 		{
-			resultCerts.insert(this->getBranchColorings(cv, tmpVector, args));
+			resultCerts.insert(this->getBranchColorings(cv, &tmpVector, args));
 		}
 	}
 

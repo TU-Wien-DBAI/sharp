@@ -36,10 +36,10 @@ protected:
 	void addToTupleSet(Tuple *t, Solution *s, TupleSet *ts, Operation op);
 
 	//calculates colorings for branch node
-	ColoringVector getBranchColorings(ColoringVector leftColoring, ColoringVector rightColoring, ArgumentSet arguments);
+	ColoringVector getBranchColorings(ColoringVector *leftColoring, ColoringVector *rightColoring, const ArgumentSet *arguments);
 
 	//calculates colorings for introduction node
-	ColoringVector getIntroColorings(ArgumentSet *in, ColoringVector *childColoring, int difference, bool *addTuple, ArgumentSet arguments);
+	ColoringVector getIntroColorings(ArgumentSet *in, ColoringVector *childColoring, Argument difference, bool *addTuple, const ArgumentSet *arguments);
 
 };
 

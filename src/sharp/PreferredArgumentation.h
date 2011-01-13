@@ -52,10 +52,10 @@ protected:
 	
 private:
 	//Returns true, if the first argument is a subset of the second one (just args with IN)
-	bool isSubset (ColoringVector v1, ColoringVector v2);
+	bool isSubset (ColoringVector *v1, ColoringVector *v2);
 
 	//Compares the given ColoringVector with every element in the given CertificateSet and returns a correspondig subset where the IN-args are equal to the ColoringVector.
-	CertificateSet getEqualInSets(ColoringVector cv, CertificateSet certs, ArgumentSet args);
+	CertificateSet getEqualInSets(ColoringVector *cv, CertificateSet *certs, const ArgumentSet *args);
 };
 
 #endif

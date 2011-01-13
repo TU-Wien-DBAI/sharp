@@ -119,17 +119,17 @@ Solution *AdmissibleArgumentationAlgorithm::selectSolution(TupleSet *tuples, con
 	
 	Solution *s = this->instantiator->createEmptySolution();
 	bool credAcc = false;
-	ColoringVector colorings;
+	ColoringVector *colorings;
 	bool containsAtt = false;	
 
 	for(TupleSet::iterator it = tuples->begin(); it != tuples->end(); ++it)
 	{	
-		colorings = ((AdmissibleArgumentationTuple *)it->first)->colorings;
+		colorings = &((AdmissibleArgumentationTuple *)it->first)->colorings;
 		containsAtt = false;		
 		
-		for(unsigned int i=0; i < colorings.size(); i++)
+		for(unsigned int i=0; i < colorings->size(); i++)
 		{
-			if (colorings[i] == ATT) 
+			if ((*colorings)[i] == ATT)
 			{
 				containsAtt = true;
 				break;
@@ -167,8 +167,8 @@ TupleSet *AdmissibleArgumentationAlgorithm::evaluateLeafNode(const ExtendedHyper
 	TupleSet *ts = new TupleSet();
 	const ArgumentSet arguments = (ArgumentSet) node->getVertices();
 
-	//get integer value for credulous acceptance argument 
-	if (intCredulousAcc == -1 && this->credulousAcc != NULL)
+	//get integer value for credulous acceptance argument
+	if (this->credulousAcc != NULL)
 	{
 		intCredulousAcc = problem->getVertexId(this->credulousAcc);
 	}
@@ -266,14 +266,14 @@ TupleSet *AdmissibleArgumentationAlgorithm::evaluateBranchNode(const ExtendedHyp
 	//iterate through left tuples
 	for(TupleSet::iterator lit = left->begin(); lit != left->end(); ++lit)
 	{	
-		ColoringVector leftColoring = ((AdmissibleArgumentationTuple *)lit->first)->colorings;
-		ArgumentSet leftIn = this->getInArgs(&leftArguments, &leftColoring);
+		ColoringVector *leftColoring = &((AdmissibleArgumentationTuple *)lit->first)->colorings;
+		ArgumentSet leftIn = this->getInArgs(&leftArguments, leftColoring);
 		
 		//iterate through right tuples and generate new tuplesets
 		for(TupleSet::iterator rit = right->begin(); rit != right->end(); ++rit)
 		{	
-			ColoringVector rightColoring = ((AdmissibleArgumentationTuple *)rit->first)->colorings;
-			ArgumentSet rightIn = this->getInArgs(&rightArguments, &rightColoring);
+			ColoringVector *rightColoring = &((AdmissibleArgumentationTuple *)rit->first)->colorings;
+			ArgumentSet rightIn = this->getInArgs(&rightArguments, rightColoring);
 			
 			//check if IN-sets are equal => generate new tuple
 			if ((leftIn.size() == rightIn.size()) && (equal(leftIn.begin(), leftIn.end(), rightIn.begin())))
@@ -285,7 +285,7 @@ TupleSet *AdmissibleArgumentationAlgorithm::evaluateBranchNode(const ExtendedHyp
 										 ((AdmissibleArgumentationTuple *)rit->first)->bCredulousAcc;
 				
 				//calculate colorings
-				argTuple.colorings = getBranchColorings(leftColoring, rightColoring, arguments);
+				argTuple.colorings = getBranchColorings(leftColoring, rightColoring, &arguments);
 				
 				//generate cross join solution
 				Solution *s = this->instantiator->combine(CrossJoin, lit->second, rit->second);
@@ -323,16 +323,16 @@ TupleSet *AdmissibleArgumentationAlgorithm::evaluateIntroductionNode(const Exten
 	for(TupleSet::iterator it = base->begin(); it != base->end(); ++it)
 	{	
 		AdmissibleArgumentationTuple &argTuple = *new AdmissibleArgumentationTuple();	
-		ColoringVector childColoring = ((AdmissibleArgumentationTuple *)it->first)->colorings;
+		ColoringVector *childColoring = &((AdmissibleArgumentationTuple *)it->first)->colorings;
 		bool addTuple = false;
 		
 		//take over bCredulousAcc
 		argTuple.bCredulousAcc = ((AdmissibleArgumentationTuple *)it->first)->bCredulousAcc;
 
-		ArgumentSet in = this->getInArgs(&childArguments, &childColoring);
+		ArgumentSet in = this->getInArgs(&childArguments, childColoring);
 				
 		//calculate colorings
-		argTuple.colorings = getIntroColorings(&in, &childColoring, node->getDifference(), &addTuple, arguments);
+		argTuple.colorings = getIntroColorings(&in, childColoring, node->getDifference(), &addTuple, &arguments);
 		
 		if (addTuple)
 		{	
@@ -356,7 +356,7 @@ TupleSet *AdmissibleArgumentationAlgorithm::evaluateIntroductionNode(const Exten
 				else
 				{
 					//IN if arg is the new one (see above) or if the corresponding child arg is IN
-					if (childColoring[index] == IN)
+					if ((*childColoring)[index] == IN)
 					{
 						(additionalArgTuple.colorings).push_back(IN);	
 					
@@ -367,7 +367,7 @@ TupleSet *AdmissibleArgumentationAlgorithm::evaluateIntroductionNode(const Exten
 					//DEF if the new arg attacks the current arg or if the corresponding child arg is DEF 
 					else if ((problem->getAttacksFromArg(node->getDifference()) != NULL &&
 					          (problem->getAttacksFromArg(node->getDifference()))->count(*it2) > 0) ||
-							  childColoring[index] == DEF)
+							  (*childColoring)[index] == DEF)
 					{
 						(additionalArgTuple.colorings).push_back(DEF);	
 					}
@@ -383,7 +383,7 @@ TupleSet *AdmissibleArgumentationAlgorithm::evaluateIntroductionNode(const Exten
 							 (problem->getAttacksFromArg(node->getDifference()))->count(*it2) == 0) &&
 							  (problem->getAttacksFromArg(*it2) == NULL ||
 							 (problem->getAttacksFromArg(*it2))->count(node->getDifference()) == 0) &&
-							  childColoring[index] == OUT)
+							  (*childColoring)[index] == OUT)
 					{
 						(additionalArgTuple.colorings).push_back(OUT);
 					}
@@ -437,7 +437,7 @@ TupleSet *AdmissibleArgumentationAlgorithm::evaluateRemovalNode(const ExtendedHy
 		AdmissibleArgumentationTuple &argTuple = *new AdmissibleArgumentationTuple();	
 		bool insertFlag = true;
 		int index = 0;
-		ColoringVector childColoring = ((AdmissibleArgumentationTuple *)it->first)->colorings;
+		ColoringVector *childColoring = &((AdmissibleArgumentationTuple *)it->first)->colorings;
 		
 		//take over bCredulousAcc
 		argTuple.bCredulousAcc = ((AdmissibleArgumentationTuple *)it->first)->bCredulousAcc;
@@ -447,12 +447,12 @@ TupleSet *AdmissibleArgumentationAlgorithm::evaluateRemovalNode(const ExtendedHy
 			//insert coloring if current argument is not the removed one
 			if (*it2 != node->getDifference())
 			{	
-				(argTuple.colorings).push_back(childColoring[index]);	
+				(argTuple.colorings).push_back((*childColoring)[index]);
 			}
 			
 			//if current argument is the removed one and the previous coloring
 			//was ATT => do not insert into new tupleset
-			else if ((*it2 == node->getDifference()) && childColoring[index] == ATT)
+			else if ((*it2 == node->getDifference()) && (*childColoring)[index] == ATT)
 			{
 				insertFlag = false;
 				break;
