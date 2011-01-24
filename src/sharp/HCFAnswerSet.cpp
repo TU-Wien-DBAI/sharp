@@ -101,18 +101,22 @@ void HCFAnswerSetTuple::transitiveClosureThrough(Vertex v)
 	for(VertexSet::const_iterator a = this->reversegraph[v].begin();
 			a != this->reversegraph[v].end(); ++a)
 	{
+		if(*a == DERIVED) continue;
 		ancestors.insert(this->reversegraph[*a].begin(), this->reversegraph[*a].end());
 		ancestors.insert(*a);
 	}
+	ancestors.erase(DERIVED);
 
 	// accumulate all successors of v
 	successors.insert(v);
 	for(VertexSet::const_iterator s = this->graph[v].begin();
 			s != this->graph[v].end(); ++s)
 	{
+		if(*s == DERIVED) continue;
 		successors.insert(this->graph[*s].begin(), this->graph[*s].end());
 		successors.insert(*s);
 	}
+	successors.erase(DERIVED);
 	
 	// connect every ancestor to all successors
 	for(VertexSet::const_iterator a = ancestors.begin();
@@ -474,8 +478,11 @@ HCFAnswerSetTuple *HCFAnswerSetAlgorithm::combineTuples(HCFAnswerSetTuple &l, HC
 			t->addEdge(rit->first, *rdit);
 		}
 
-		t->transitiveClosureThrough(rit->first); // calculate the transitive closure over the graph
-		if(t->hasCycleThrough(rit->first)) { delete t; return NULL; } // check for inconsistency
+		if(rit->first != DERIVED)
+		{
+			t->transitiveClosureThrough(rit->first); // calculate the transitive closure over the graph
+			if(t->hasCycleThrough(rit->first)) { delete t; return NULL; } // check for inconsistency
+		}
 	}
 
 	// combine the satisfied rules
