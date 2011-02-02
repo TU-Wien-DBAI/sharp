@@ -160,29 +160,7 @@ ArgumentSet AbstractArgumentationAlgorithm::getInArgs(const ArgumentSet *args, C
 	return in;
 }
 
-/*
-***Description***
-Tries to insert a new element in the tupleset
 
-INPUT: t: the tuple
-	   s: the solution
-	   ts: the tupleset where t and s should be inserted
-	   op: the operation (CrossJoin, Union)
-*/
-void AbstractArgumentationAlgorithm::addToTupleSet(Tuple *t, Solution *s, TupleSet *ts, Operation op)
-{
-	// try to insert the tuple into the tuple set
-	pair<TupleSet::iterator, bool> result = ts->insert(TupleSet::value_type(t, s));
-
-	// if the tuple was already in the set
-	if(!result.second)
-	{
-		// delete it and insert it again with combined solution
-		Solution *orig = result.first->second;
-		ts->erase(result.first);
-		ts->insert(TupleSet::value_type(t, this->instantiator->combine(op, orig, s)));
-	}
-}
 
 /*
 ***Description***

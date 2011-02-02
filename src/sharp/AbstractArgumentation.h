@@ -32,9 +32,6 @@ protected:
 	//Returns the set of arguments which are colored 'IN' in the ColoringVector
 	ArgumentSet getInArgs(const ArgumentSet *args, ColoringVector *colorings);
 
-	//Tries to insert a new element in the tupleset
-	void addToTupleSet(Tuple *t, Solution *s, TupleSet *ts, Operation op);
-
 	//calculates colorings for branch node
 	ColoringVector getBranchColorings(ColoringVector *leftColoring, ColoringVector *rightColoring, const ArgumentSet *arguments);
 

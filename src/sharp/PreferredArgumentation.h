@@ -56,6 +56,9 @@ private:
 
 	//Compares the given ColoringVector with every element in the given CertificateSet and returns a correspondig subset where the IN-args are equal to the ColoringVector.
 	CertificateSet getEqualInSets(ColoringVector *cv, CertificateSet *certs, const ArgumentSet *args);
+
+	//Tries to insert a new element in the tupleset
+	void addToTupleSet(PreferredArgumentationTuple *t, Solution *s, TupleSet *ts, Operation op);
 };
 
 #endif

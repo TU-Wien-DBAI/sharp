@@ -43,6 +43,10 @@ protected:
 protected:
 	Argument intCredulousAcc;
 	char *credulousAcc;
+
+private:
+	//Tries to insert a new element in the tupleset
+	void addToTupleSet(AdmissibleArgumentationTuple *t, Solution *s, TupleSet *ts, Operation op);
 };
 
 #endif

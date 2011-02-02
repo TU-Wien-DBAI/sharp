@@ -162,7 +162,6 @@ Solution *PreferredArgumentationAlgorithm::selectSolution(TupleSet *tuples, cons
 				containsAtt = true;
 				break;
 			}
-			
 		}
 
 		if (!containsAtt)
@@ -226,6 +225,11 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateLeafNode(const ExtendedHypert
 	if (this->skepticalAcc != NULL)
 	{
 		intSkepticalAcc = problem->getVertexId(this->skepticalAcc);
+
+#if defined(VERBOSE) && defined(DEBUG)
+		cout << endl << "Stored intSkepticalAcc: " << intSkepticalAcc << endl;
+#endif
+
 	}
 
 	//calculate conflict free sets
@@ -436,6 +440,9 @@ TupleSet *PreferredArgumentationAlgorithm::evaluateIntroductionNode(const Extend
 		//take over bSkepticalAcc and certificates
 		argTuple.bSkepticalAcc = ((PreferredArgumentationTuple *)it->first)->bSkepticalAcc;
 		argTuple.certificates = ((PreferredArgumentationTuple *)it->first)->certificates;
+
+		//set Skeptical acceptance flag if new arg equals intSkepticalAcc (here, the new arg cannot be IN)
+		if(node->getDifference() == intSkepticalAcc) argTuple.bSkepticalAcc = true;
 
 		ArgumentSet in = this->getInArgs(&childArguments, childColoring);
 				
@@ -762,4 +769,31 @@ CertificateSet PreferredArgumentationAlgorithm::getEqualInSets(ColoringVector *c
 	}
 
 	return resultCerts;
+}
+
+/*
+***Description***
+Tries to insert a new element in the tupleset
+
+INPUT: t: the tuple
+	   s: the solution
+	   ts: the tupleset where t and s should be inserted
+	   op: the operation (CrossJoin, Union)
+*/
+void PreferredArgumentationAlgorithm::addToTupleSet(PreferredArgumentationTuple *t, Solution *s, TupleSet *ts, Operation op)
+{
+	// try to insert the tuple into the tuple set
+	pair<TupleSet::iterator, bool> result = ts->insert(TupleSet::value_type(t, s));
+
+	// if the tuple was already in the set
+	if(!result.second)
+	{
+		//calculate skeptical acceptance flag
+		t->bSkepticalAcc = t->bSkepticalAcc || ((PreferredArgumentationTuple *)result.first->first)->bSkepticalAcc;
+
+		// delete it and insert it again with combined solution
+		Solution *orig = result.first->second;
+		ts->erase(result.first);
+		ts->insert(TupleSet::value_type(t, this->instantiator->combine(op, orig, s)));
+	}
 }
