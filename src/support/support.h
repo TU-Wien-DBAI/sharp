@@ -12,10 +12,25 @@
 #ifndef SUPPORT_H_
 #define SUPPORT_H_
 
+#include <sys/resource.h>
+
 #ifndef EOF
 // Define EOF (End Of File) as -1
 #define EOF (-1)
 #endif
+
+struct nullstream : std::ostream
+{
+        struct nullbuf : std::streambuf
+        {
+                int overflow(int c)
+                {
+                        return traits_type::not_eof(c);
+                }
+        } m_sbuf;
+
+        nullstream() : std::ios(&m_sbuf), std::ostream(&m_sbuf) { }
+};
 
 /*
  ============================================================================
@@ -67,5 +82,27 @@ void InitializeErrorHandling(const char *programName);
 #define CNOT0(CMD)    		CHECK(CMD, != 0)
 #define CNOTNULL(CMD) 		CHECK(CMD, != NULL)
 #define CEOF(CMD)  		CHECK(CMD, == EOF)
+
+/*
+ TIMER class
+ */
+
+class Timer
+{
+public:
+        Timer();
+        ~Timer();
+
+public:
+        void start();
+        std::pair<double, double> stop();
+	void printStop();
+
+private:
+        struct rusage beginning;
+        struct rusage end;
+};
+
+extern Timer stimer;
     
 #endif /*SUPPORT_H_*/

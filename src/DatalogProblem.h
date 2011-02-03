@@ -29,7 +29,7 @@ class DatalogParser;
 class DatalogProblem : public Problem
 {
 public:
-	DatalogProblem(std::istream *stream, int type = DatalogProblem::ASP);
+	DatalogProblem(std::istream *stream, int type = DatalogProblem::ASP, bool printBenchmarkInformation = false);
 	virtual ~DatalogProblem();
 
 	SignMap &getSignMap();

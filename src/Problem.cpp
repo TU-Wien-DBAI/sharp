@@ -11,10 +11,11 @@ using namespace std;
 
 static Timer t;
 
-Problem::Problem(AbstractAlgorithm *algorithm)
+Problem::Problem(AbstractAlgorithm *algorithm, bool benchmark)
 {
 	this->algorithm = algorithm;
 	this->parsed = false;
+	this->benchmark = benchmark;
 
 	this->setDecompositionOptions();
 	
@@ -34,6 +35,10 @@ void Problem::setDecompositionOptions(DecompositionOptions options, void *parame
 
 Solution *Problem::calculateSolution(Instantiator *instantiator)
 {
+	Timer t1, t2;
+
+	if(benchmark) { cout << "Parsing... " << flush; t1.start(); }
+
 	if(!this->parsed)
 	{
 		this->parse();
@@ -41,10 +46,15 @@ Solution *Problem::calculateSolution(Instantiator *instantiator)
 		this->parsed = true;
 	}
 
+	if(benchmark) { cout << "done. (took "; t1.printStop(); cout << " seconds)" << endl; }
+	if(benchmark) { cout << "Starting decomposition..." << endl; t1.start(); }
+
 	Hypergraph *hg = this->buildHypergraphRepresentation();
 
 	H_BucketElim be;
 	Hypertree *ht = NULL;
+
+	if(benchmark) { cout << "\tbuilding hypergraph took "; t1.printStop(); t2.start(); cout << " seconds)" << endl; }
 
 	// when decomposing a bipartite graph
 	if(this->decompositionOptions & BipartiteGraph)
@@ -53,15 +63,49 @@ Solution *Problem::calculateSolution(Instantiator *instantiator)
 	else 
 		ht = be.buildHypertree(hg, BE_MIW_ORDER);
 
+	if(benchmark) { cout << "\tbuilding hypertree decomposition took "; t2.printStop(); t2.start(); cout << " seconds)" << endl; }
+
 	ht = new ExtendedHypertree(ht);
 	((ExtendedHypertree *)ht)->normalize();
 
 #ifdef DEBUG
 	((ExtendedHypertree *)ht)->print();
 #endif
+	
+	if(benchmark) { cout << "\tnormalization took "; t2.printStop(); cout << " seconds)" << endl; }
+	if(benchmark) { cout << "done. (took "; t1.printStop(); cout << " seconds)" << endl; }
+	if(benchmark) { cout << "Calculating solution... " << flush; t1.start(); }
 	this->algorithm->setInstantiator(instantiator);
-	return this->algorithm->evaluate((ExtendedHypertree *)ht);
+	Solution *s = this->algorithm->evaluate((ExtendedHypertree *)ht);
+	if(benchmark) { cout << "done. (took "; t1.printStop(); cout << " seconds)" << endl; }
+
+	return s;
 }
+
+int Problem::calculateTreeWidth()
+{
+        if(!this->parsed)
+        {
+                this->parse();
+                this->preprocess();
+                this->parsed = true;
+        }
+
+        Hypergraph *hg = this->buildHypergraphRepresentation();
+
+        H_BucketElim be;
+        Hypertree *ht = NULL;
+
+        // when decomposing a bipartite graph
+        if(this->decompositionOptions & BipartiteGraph)
+                ht = be.buildHypertree(hg, BE_MIW_ORDER, (int)this->decompositionParameter);
+        // when decomposing a default graph
+        else
+                ht = be.buildHypertree(hg, BE_MIW_ORDER);
+
+	return ht->getTreeWidth();
+}
+
 
 Vertex Problem::getVertexId(string vertexName)
 {

@@ -15,7 +15,18 @@
 
 using namespace std;
 
+#include "support.h"
+
 #define MAX_LENGTH 4096
+
+/*
+ ============================================================================
+ Variable    : stimer
+ Description : A (global) timer instance
+ Date        : 2011-01-24
+ ============================================================================
+ */
+Timer stimer;
 
 /*
  ============================================================================
@@ -46,6 +57,8 @@ void InitializeErrorHandling(const char *programName)
         strncpy(sProgramName, programName, MAX_LENGTH);
         sProgramName[MAX_LENGTH - 1] = '\0';
     }
+
+    stimer.start();
 }
 
 /*
@@ -75,3 +88,40 @@ void _printError(const char *message)
 #endif
     exit(EXIT_FAILURE);
 }
+
+/*
+ TIMER class
+ */
+
+Timer::Timer()
+{
+        this->start();
+}
+
+Timer::~Timer() { }
+
+void Timer::start()
+{
+        getrusage(RUSAGE_SELF, &this->beginning);
+}
+
+pair<double, double> Timer::stop()
+{
+        double cpu, sys;
+
+        getrusage(RUSAGE_SELF, &this->end);
+
+        cpu = double(this->end.ru_utime.tv_sec - this->beginning.ru_utime.tv_sec)
+                + double(this->end.ru_utime.tv_usec - this->beginning.ru_utime.tv_usec) / 1000000.0;
+        sys = double(this->end.ru_stime.tv_sec - this->beginning.ru_stime.tv_sec)
+                + double(this->end.ru_stime.tv_usec - this->beginning.ru_stime.tv_usec) / 1000000.0;
+
+        return pair<double, double>(cpu, sys);
+}
+
+void Timer::printStop()
+{
+	pair<double, double> time = this->stop();
+        cout << time.first;
+}
+

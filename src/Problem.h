@@ -16,18 +16,26 @@ enum DecompositionOptions
 class Problem
 {
 public:
-	Problem(AbstractAlgorithm *algorithm);
+	Problem(AbstractAlgorithm *algorithm, bool printBenchmarkInformation = false);
 	virtual ~Problem();
 	
 public:
 	// gets the solution for the problem, that is:
 	// - the input is parsed (parse method is called))
 	// - preprocessing is done (preprocess method is called)
-	// - the hypergraph representation is generated (byildHypergraphRepresentation)
+	// - the hypergraph representation is generated (buildHypergraphRepresentation)
 	// - a tree decomposition is generated
 	// - the actual algorithm is run (evaluate method of the Algorithm class)
 	// - the solution for the problem is returned
 	Solution *calculateSolution(Instantiator *instantiator);
+
+	// gets the treewidth for the problem, that is:
+	// - the input is parsed (parse method is called)
+	// - preprocessing is done (preprocess method is called)
+	// - the hypergraph representation is generated (buildHypergraphRepresentation)
+	// - a tree decomposition is generated
+	// - the tree width is returned
+	int calculateTreeWidth();
 
 	// set the decomposition options for the decomposition routine
 	void setDecompositionOptions(DecompositionOptions options = None, void *parameter = NULL);
@@ -76,6 +84,9 @@ private:
 
 	// private: stores if the input has already been parsed
 	bool parsed;
+
+	// private: print benchmark timing information for each step
+	bool benchmark;
 
 	// private: the decomposition options
 	DecompositionOptions decompositionOptions;

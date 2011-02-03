@@ -24,7 +24,6 @@
 using namespace std;
 
 static bool bOpt = false;
-static Timer t;
 
 enum Algorithm
 {
@@ -45,7 +44,6 @@ enum OutputType
 };
 
 static void usage();
-static void printTime(pair<double, double>);
 static void printSolution(SolutionContent *, OutputType, Problem *);
 
 int main(int argc, char **argv)
@@ -173,10 +171,10 @@ int main(int argc, char **argv)
 		PrintError("The MinSAT algorithm has not yet been ported and is not available ATM!");
 		break;
 	case ASP:
-		problem = new DatalogProblem(stream, DatalogProblem::ASP);
+		problem = new DatalogProblem(stream, DatalogProblem::ASP, bOpt);
 		break;
 	case HCFASP:
-		problem = new DatalogProblem(stream, DatalogProblem::OLDHCF);
+		problem = new DatalogProblem(stream, DatalogProblem::OLDHCF, bOpt);
 		break;
 	case AF_ADM:
 		problem = new ArgumentationProblem(stream, acceptanceArgument, ArgumentationProblem::AF_ADM);
@@ -185,25 +183,33 @@ int main(int argc, char **argv)
 		problem = new ArgumentationProblem(stream, acceptanceArgument, ArgumentationProblem::AF_PREF);
 		break;
 	case HCF:
-		problem = new DatalogProblem(stream, DatalogProblem::NEWHCF);
+		problem = new DatalogProblem(stream, DatalogProblem::NEWHCF, bOpt);
 		break;
 	default:
 		C0(0 /*ERROR: Invalid algorithm selection*/);
 		break;
 	}
 
-	if(bOpt) { cout << "Calculating... " << endl; t.start(); }
-
-	Solution *solution = problem->calculateSolution(inst);
-
-	if(bOpt) { cout << "\tevaluation took " << flush; printTime(t.stop()); cout << " seconds..." << endl; }
+	if(tOpt)
+	{
+		int width = problem->calculateTreeWidth();
+		cout << "Tree width: " << width << endl;
+	}
+	else
+	{
+		Solution *solution = problem->calculateSolution(inst);
 	
-	SolutionContent *sc = solution->getContent();
-
-	if(bOpt) { cout << "done! (took "; printTime(t.stop()); cout << " seconds)" << endl; }
-
-	//TODO: Benchmarking as before and output
-	printSolution(sc, output, problem);
+		Timer t;
+		if(bOpt) { cout << "Calculating solution content... " << flush; t.start(); }
+		
+		SolutionContent *sc = solution->getContent();
+	
+		if(bOpt) { cout << "done! (took "; t.printStop(); cout << " seconds)" << endl; }
+		if(bOpt) { cout << "-----------------------------------------" << endl; }
+		if(bOpt) { cout << "Overall time: "; stimer.printStop(); cout << " seconds" << endl; } 
+	
+		printSolution(sc, output, problem);
+	}
 
 	exit(EXIT_SUCCESS);
 }
@@ -260,10 +266,5 @@ static void printSolution(SolutionContent *sc, OutputType output, Problem *p)
 		ConsistencySolutionContent *sol = (ConsistencySolutionContent *)sc;
 		cout << (sol->consistent ? "" : "NOT ") << "CONSISTENT" << endl;
 	}
-}
-
-static void printTime(pair<double, double> time)
-{
-	cout << time.first;
 }
 

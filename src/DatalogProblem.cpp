@@ -15,10 +15,10 @@
 
 using namespace std;
 
-DatalogProblem::DatalogProblem(istream *stream, int type)
+DatalogProblem::DatalogProblem(istream *stream, int type, bool benchmark)
 	: Problem(type == DatalogProblem::ASP ? (AbstractAlgorithm *)new AnswerSetAlgorithm(this)
 		: (type == DatalogProblem::OLDHCF ? (AbstractAlgorithm *)new HeadCycleFreeAnswerSetAlgorithm(this)
-		: /* otherwise */ (AbstractAlgorithm *)new HCFAnswerSetAlgorithm(this)))
+		: /* otherwise */ (AbstractAlgorithm *)new HCFAnswerSetAlgorithm(this)), benchmark)
 {
 	this->parser = new DatalogParser(new DatalogFlexLexer(), stream, this);
 	this->types.push_back(RuleVertex); // numbering starts at 1, so create a temporary entry at 0
