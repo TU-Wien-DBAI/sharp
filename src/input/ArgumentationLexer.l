@@ -20,7 +20,7 @@ delimiter 		[ \r\t]
 whitespace 		{delimiter}+
 newline 		\n
 comment 		(%[^\n]*{newline})
-identifier		[a-z][a-z0-9]*
+identifier		[a-z0-9]+
 arg 			arg\({identifier}\)\.
 att 			att\({identifier}\,[ ]*{identifier}\)\.
 
