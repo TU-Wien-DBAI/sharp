@@ -4,70 +4,75 @@
 #include <algorithm>
 #include <iostream>
 
-#include "Global.h"
+#include <Global.hpp>
 
 using namespace std;
 
-bool containsAll(const set<unsigned int> &a, const set<unsigned int> &b)
+namespace sharp
 {
-	if(a.size() < b.size()) return false;
 
-	vector<unsigned int> temp(b.size());
-	vector<unsigned int>::iterator it;
-
-	it = set_intersection(a.begin(), a.end(), b.begin(), b.end(), temp.begin());
-
-	if(it - temp.begin() == (int)b.size()) return true; else return false;
-}
-
-void printIntSet(const set<unsigned int> &toprint)
-{
-	const char *prefix = "";
-
-	for(set<unsigned int>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
+	bool containsAll(const set<unsigned int> &a, const set<unsigned int> &b)
 	{
-		cout << prefix << *it;
-		prefix = ", ";
-	}	
-}
-
-void printIntList(const list<unsigned int> &toprint)
-{
-	const char *prefix = "";
+		if(a.size() < b.size()) return false;
 	
-	for(list<unsigned int>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
-	{
-		cout << prefix << *it;
-		prefix = ", ";
-	}
-}
-
-void printBoolList(const list<bool> &toprint)
-{
-	const char *prefix = "";
+		vector<unsigned int> temp(b.size());
+		vector<unsigned int>::iterator it;
 	
-	for(list<bool>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
-	{
-		cout << prefix << (*it ? "1" : "0");
-		prefix = ", ";
+		it = set_intersection(a.begin(), a.end(), b.begin(), b.end(), temp.begin());
+	
+		if(it - temp.begin() == (int)b.size()) return true; else return false;
 	}
-}
+	
+	void printIntSet(const set<unsigned int> &toprint)
+	{
+		const char *prefix = "";
+	
+		for(set<unsigned int>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
+		{
+			cout << prefix << *it;
+			prefix = ", ";
+		}	
+	}
+	
+	void printIntList(const list<unsigned int> &toprint)
+	{
+		const char *prefix = "";
+		
+		for(list<unsigned int>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
+		{
+			cout << prefix << *it;
+			prefix = ", ";
+		}
+	}
+	
+	void printBoolList(const list<bool> &toprint)
+	{
+		const char *prefix = "";
+		
+		for(list<bool>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
+		{
+			cout << prefix << (*it ? "1" : "0");
+			prefix = ", ";
+		}
+	}
+	
+	void printIntVector(const vector<Vertex> &toprint)
+	{
+	        const char *prefix = "";
+	
+	        for(vector<unsigned int>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
+	        {
+	                cout << prefix << *it;
+	                prefix = ",";
+	        }
+	}
+	
+	void printBoolVector(const vector<bool> &toprint)
+	{
+	        for(vector<bool>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
+	        {
+	                cout << (*it ? "1" : "0");
+	        }
+	}
 
-void printIntVector(const vector<Vertex> &toprint)
-{
-        const char *prefix = "";
-
-        for(vector<unsigned int>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
-        {
-                cout << prefix << *it;
-                prefix = ",";
-        }
-}
-
-void printBoolVector(const vector<bool> &toprint)
-{
-        for(vector<bool>::const_iterator it = toprint.begin(); it != toprint.end(); ++it)
-        {
-                cout << (*it ? "1" : "0");
-        }
-}
+} // namespace sharp
