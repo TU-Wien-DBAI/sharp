@@ -338,10 +338,10 @@ namespace sharp
 	        }
 	}
 	
-	void AbstractAlgorithm::addToTupleSet(Tuple *t, Solution *s, TupleSet *ts, Operation op)
+	void AbstractAlgorithm::addToTupleSet(Tuple &t, Solution *s, TupleSet *ts, Operation op)
 	{
 		// try to insert the tuple into the tuple set
-		pair<TupleSet::iterator, bool> result = ts->insert(TupleSet::value_type(t, s));
+		pair<TupleSet::iterator, bool> result = ts->insert(TupleSet::value_type(&t, s));
 	
 		// if the tuple was already in the set
 		if(!result.second)
@@ -349,7 +349,7 @@ namespace sharp
 			// delete it and insert it again with combined solution
 			Solution *orig = result.first->second;
 			ts->erase(result.first);
-			ts->insert(TupleSet::value_type(t, this->instantiator->combine(op, orig, s)));
+			ts->insert(TupleSet::value_type(&t, this->instantiator->combine(op, orig, s)));
 		}
 	}
 
