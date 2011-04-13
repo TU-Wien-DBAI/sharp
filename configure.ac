@@ -1,10 +1,10 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.68])
+AC_PREREQ([2.65])
 AC_INIT([sharp], [0.1], [morak@dbai.tuwien.ac.at])
 AM_INIT_AUTOMAKE([sharp], [0.1])
-LT_PREREQ([2.4])
+LT_PREREQ([2.2])
 LT_INIT([dlopen])
 AC_CONFIG_SRCDIR([src/Problem.cpp])
 AC_CONFIG_HEADERS([config.h])

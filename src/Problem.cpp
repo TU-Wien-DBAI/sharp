@@ -61,7 +61,7 @@ namespace sharp
 	
 		// when decomposing a bipartite graph
 		if(this->decompositionOptions & BipartiteGraph)
-			ht = be.buildHypertree(hg, BE_MIW_ORDER, (int)this->decompositionParameter);
+			ht = be.buildHypertree(hg, BE_MIW_ORDER, (int)(long)this->decompositionParameter);
 		// when decomposing a default graph
 		else 
 			ht = be.buildHypertree(hg, BE_MIW_ORDER);
@@ -101,7 +101,7 @@ namespace sharp
 	
 	        // when decomposing a bipartite graph
 	        if(this->decompositionOptions & BipartiteGraph)
-	                ht = be.buildHypertree(hg, BE_MIW_ORDER, (int)this->decompositionParameter);
+	                ht = be.buildHypertree(hg, BE_MIW_ORDER, (int)(long)this->decompositionParameter);
 	        // when decomposing a default graph
 	        else
 	                ht = be.buildHypertree(hg, BE_MIW_ORDER);

@@ -1,4 +1,7 @@
 #!/bin/sh
 
-autoreconf -i
+if [ ! -d "m4" ]; then
+	mkdir m4
+fi
 
+autoreconf -i

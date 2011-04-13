@@ -175,6 +175,7 @@ namespace sharp
 		virtual TupleSet *evaluateRemovalNode(const ExtendedHypertree *node) = 0;
 	
 		TupleSet *evaluateNode(const ExtendedHypertree *node);	
+		void addToTupleSet(Tuple *t, Solution *s, TupleSet *ts, Operation op);
 	};
 	
 	/***********************************\
