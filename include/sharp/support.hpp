@@ -13,6 +13,7 @@
 #define SUPPORT_H_
 
 #include <sys/resource.h>
+#include <iostream>
 
 #ifndef EOF
 // Define EOF (End Of File) as -1
@@ -64,13 +65,14 @@ namespace sharp
 	 Date        : 2007-11-07
 	 ============================================================================
 	 */
-	#ifdef DEBUG
-	    void _printError(int line, const char *file, const char *message);
+	#if defined(SHARP_ENABLE_DEBUG)
 	    #define PrintError(MESSAGE) _printError(__LINE__, __FILE__, (MESSAGE))
 	#else
-	    void _printError(const char *message);
 	    #define PrintError(MESSAGE) _printError(MESSAGE)
 	#endif
+
+	void _printError(int line, const char *file, const char *message);
+	void _printError(const char *message);
 	    
 	/*
 	 ============================================================================
@@ -99,7 +101,7 @@ namespace sharp
 	public:
 	        void start();
 	        std::pair<double, double> stop();
-		void printStop();
+		void printStop(std::ostream &out = std::cout);
 	
 	private:
 	        struct rusage beginning;

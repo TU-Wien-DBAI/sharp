@@ -7,6 +7,8 @@
  Date        : 2007-11-07
  ============================================================================
  */
+#include <config.h>
+
 #include <errno.h>
 
 #include <iostream>
@@ -21,16 +23,6 @@ using namespace std;
 
 namespace sharp
 {
-	
-	/*
-	 ============================================================================
-	 Variable    : stimer
-	 Description : A (global) timer instance
-	 Date        : 2011-01-24
-	 ============================================================================
-	 */
-	Timer stimer;
-	
 	/*
 	 ============================================================================
 	 Variable    : sProgramName
@@ -60,8 +52,6 @@ namespace sharp
 	        strncpy(sProgramName, programName, MAX_LENGTH);
 	        sProgramName[MAX_LENGTH - 1] = '\0';
 	    }
-	
-	    stimer.start();
 	}
 	
 	/*
@@ -74,21 +64,23 @@ namespace sharp
 	 Globals     : sProgramName
 	 ============================================================================
 	 */
-	#ifdef DEBUG
+#ifdef SHARP_ENABLE_DEBUG
 	void _printError(int line, const char *file, const char *message)
 	{
 	    if(errno == 0)
 	    	cerr << sProgramName << ": " << file << ":" << line << ": ERROR - " << message << endl;
 	    else
 	    	cerr << sProgramName << ": " << file << ":" << line << ": ERROR - " << message << " - " << strerror(errno) << endl;
-	#else
+	    exit(EXIT_FAILURE);
+	}
+#endif // SHARP_ENABLE_DEBUG
+
 	void _printError(const char *message)
 	{
 	    if(errno == 0)
 	    	cerr << sProgramName << ": ERROR - " << message << endl;
 	    else
 	    	cerr << sProgramName << ": ERROR - " << message << " - " << strerror(errno) << endl; 
-	#endif
 	    exit(EXIT_FAILURE);
 	}
 	
@@ -122,10 +114,10 @@ namespace sharp
 	        return pair<double, double>(cpu, sys);
 	}
 	
-	void Timer::printStop()
+	void Timer::printStop(ostream &out)
 	{
 		pair<double, double> time = this->stop();
-	        cout << time.first;
+	        out << time.first;
 	}
 
 } // namespace sharp

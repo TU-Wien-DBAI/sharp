@@ -1,8 +1,17 @@
-#include <iostream>
+#include <config.h>
 
 #include <AbstractAlgorithm.hpp>
 
+#ifdef HAVE_LIBGMP
+	#include <CountingSolutionContent.hpp>
+#else
+	#include <NonGMPCountingSolutionContent.hpp>
+#endif
+
+#include <iostream>
 using namespace std;
+
+#include <ExtendedHypertree.hpp>
 
 namespace sharp
 {
@@ -19,15 +28,13 @@ namespace sharp
 	\***********************************/
 	SolutionContent::SolutionContent() { }
 	
-	SolutionContent::SolutionContent(const VertexSet &partition) { }
-	
 	SolutionContent::~SolutionContent() { }
 	
 	/***********************************\
 	|* CLASS: EnumerationSolutionContent
 	\***********************************/
 	EnumerationSolutionContent::EnumerationSolutionContent() { }
-	
+
 	EnumerationSolutionContent::EnumerationSolutionContent(const VertexSet &partition) 
 	{ 
 		this->enumerations.insert(partition);
@@ -73,25 +80,25 @@ namespace sharp
 		return calc;
 	}
 	
-	SolutionContent *EnumerationSolutionContent::calculateAddDifference(Vertex difference)
+	SolutionContent *EnumerationSolutionContent::calculateAdd(const VertexSet &toAdd)
 	{
 		EnumerationSolutionContent 
 			*child = this,
 			*calc = new EnumerationSolutionContent();
-		
+	
 		//FIXME: re-use the old instances
 		for(set<VertexSet >::iterator i = child->enumerations.begin(); 
 			i != child->enumerations.end(); ++i)
 		{ 
 			//FIXME: use swap instead of copying...
 			VertexSet sol = *i;
-			sol.insert(difference); 
+			sol.insert(toAdd.begin(), toAdd.end()); 
 			calc->enumerations.insert(sol);
 		}
 	
 		return calc;
 	}
-	
+
 	/***********************************\
 	|* CLASS: CountingSolutionContent
 	\***********************************/
@@ -133,7 +140,7 @@ namespace sharp
 		return calc;
 	}
 	
-	SolutionContent *CountingSolutionContent::calculateAddDifference(Vertex difference)
+	SolutionContent *CountingSolutionContent::calculateAdd(const VertexSet &toAdd)
 	{
 		CountingSolutionContent 
 			*child = this,
@@ -181,12 +188,12 @@ namespace sharp
 			*calc = new ConsistencySolutionContent();
 	
 		//FIXME: re-use the old instances	
-		calc->consistent = left->consistent || right->consistent;
+		calc->consistent = left->consistent && right->consistent;
 	
 		return calc;
 	}
 	
-	SolutionContent *ConsistencySolutionContent::calculateAddDifference(Vertex difference)
+	SolutionContent *ConsistencySolutionContent::calculateAdd(const VertexSet &toAdd)
 	{
 		ConsistencySolutionContent 
 			*child = this,
@@ -210,17 +217,28 @@ namespace sharp
 		this->rightArgument = right;
 	}
 	
-	Solution::Solution(Solution *child, int difference)
+	Solution::Solution(Solution *child, const VertexSet &toAdd)
 	{
-		this->operation = AddDifference;
-		this->difference = difference;
+		this->operation = Add;
+		this->parameter = toAdd;
 		this->leftArgument = child;
+	}
+
+	Solution::Solution(const VertexSet &partition)
+	{
+		this->operation = NewLeaf;
+		this->parameter = partition;
 	}
 	
 	Solution::Solution(SolutionContent *content) 
 	{
 		this->operation = Value;
 		this->content = content;
+	}
+
+	Solution::Solution()
+	{
+		this->operation = NewEmpty;
 	}
 	
 	Solution::~Solution() 
@@ -229,119 +247,111 @@ namespace sharp
 		if(this->leftArgument) delete this->leftArgument;
 		if(this->rightArgument)	delete this->rightArgument;
 	}
-	
-	SolutionContent *Solution::getContent()
-	{
-		if(this->operation != Value) this->forceCalculation();
-		return this->content;
-	}
-	
-	void Solution::forceCalculation()
+
+	SolutionContent *Solution::getContent(Instantiator *inst)
 	{
 		switch(this->operation)
 		{
 		case CrossJoin:
-			this->calculateCrossJoin();
+			this->content = this->leftArgument->getContent(inst)->
+				calculateCrossJoin(this->rightArgument->getContent(inst));
 			break;
 		case Union:
-			this->calculateUnion();
+			this->content = this->leftArgument->getContent(inst)->
+				calculateUnion(this->rightArgument->getContent(inst));
 			break;
-		case AddDifference:
-			this->calculateAddDifference();
+		case Add:
+			this->content = this->leftArgument->getContent(inst)->
+				calculateAdd(this->parameter);
 			break;
 		case Value:
+			break;
+		case NewLeaf:
+			CNULL(inst /*instantiator needed, but is NULL*/);
+			this->content = inst->createLeafSolution(this->parameter);
+			break;
+		case NewEmpty:
+			CNULL(inst /*instantiator needed, but is NULL*/);
+			this->content = inst->createEmptySolution();
 			break;
 		default:
 			C0(0 /*invalid operation*/);
 			break;
 		}
-	
+
 		this->operation = Value;
-	}
-	
-	void Solution::calculateCrossJoin()
-	{
-		this->content = this->leftArgument->getContent()->calculateCrossJoin(this->rightArgument->getContent());
-	}
-	
-	void Solution::calculateUnion()
-	{
-		this->content = this->leftArgument->getContent()->calculateUnion(this->rightArgument->getContent());
-	}
-	
-	void Solution::calculateAddDifference()
-	{
-		this->content = this->leftArgument->getContent()->calculateAddDifference(this->difference);
+		return this->content;
 	}
 	
 	/***********************************\
 	|* CLASS: Instantiator
 	\***********************************/
-	Instantiator::Instantiator(bool lazy) { this->lazy = lazy; }
+	Instantiator::Instantiator() { }
 	
 	Instantiator::~Instantiator() { }
 	
-	Solution *Instantiator::combine(Operation operation, 
-			Solution *left, Solution *right) const
-	{
-		Solution *s = new Solution(operation, left, right);
-		if(!lazy) s->forceCalculation();
-		return s;
-	}
-	
-	Solution *Instantiator::addDifference(Solution *child, 
-			int difference) const
-	{
-		Solution *s = new Solution(child, difference);
-		if(!lazy) s->forceCalculation();
-		return s;
-	}
-	
 	/***********************************\
-	|* CLASS: AbstractAlgorithm
+	|* CLASS: AbstractHTDAlgorithm
 	\***********************************/
-	AbstractAlgorithm::AbstractAlgorithm(Problem *problem)
+	AbstractHTDAlgorithm::AbstractHTDAlgorithm(Problem *problem)
 	{
-		this->instantiator = NULL;
-		this->problem = problem;
+		this->inst = NULL;
+		this->prob = problem;
 	}
 	
-	AbstractAlgorithm::~AbstractAlgorithm() 
+	AbstractHTDAlgorithm::~AbstractHTDAlgorithm() 
 	{ 
 	}
 	
-	void AbstractAlgorithm::setInstantiator(Instantiator *instantiator)
+	Solution *AbstractHTDAlgorithm::evaluate(ExtendedHypertree *origroot, Instantiator *inst)
 	{
-		this->instantiator = instantiator;
-	}
-	
-	Solution *AbstractAlgorithm::evaluate(const ExtendedHypertree *root)
-	{
-		CNULL(this->instantiator /*the instantiator has to be set*/);
+		this->inst = inst;
+		const ExtendedHypertree *root = prepareHypertreeDecomposition(origroot);
 		return selectSolution(evaluateNode(root), root);
 	}
-	
-	TupleSet *AbstractAlgorithm::evaluateNode(const ExtendedHypertree *node)
+
+	Problem *AbstractHTDAlgorithm::problem()
 	{
-		switch(node->getType())
-	        {
-	        case Leaf: 
-			return this->evaluateLeafNode(node);
-	        case Branch: 
-			return this->evaluateBranchNode(node);
-	        case Removal: 
-			return this->evaluateRemovalNode(node);
-	        case Introduction: 
-			return this->evaluateIntroductionNode(node);
-		default:
-			C0(0 /*invalid node type*/); return NULL;
-	        }
+		return this->prob;
 	}
-	
-	void AbstractAlgorithm::addToTupleSet(Tuple &t, Solution *s, TupleSet *ts, Operation op)
+
+	const ExtendedHypertree *AbstractHTDAlgorithm::prepareHypertreeDecomposition(ExtendedHypertree *root)
+	{
+		return root;
+	}
+
+	Solution *AbstractHTDAlgorithm::createEmptySolution()
+	{
+		if(inst) return new Solution(inst->createEmptySolution());
+		return new Solution();
+	}
+
+	Solution *AbstractHTDAlgorithm::createLeafSolution(const VertexSet &partition)
+	{
+		if(inst) return new Solution(inst->createLeafSolution(partition));
+		return new Solution(partition);
+	}
+
+	Solution *AbstractHTDAlgorithm::combineSolutions(Operation operation, Solution *left, Solution *right)
+	{
+		return new Solution(operation, left, right);
+	}
+
+	Solution *AbstractHTDAlgorithm::addToSolution(Solution *solution, const VertexSet &toAdd)
+	{
+		return new Solution(solution, toAdd);
+	}
+
+	Solution *AbstractHTDAlgorithm::addToSolution(Solution *solution, Vertex toAdd)
+	{
+		VertexSet v; v.insert(toAdd);
+		return this->addToSolution(solution, v);
+	}
+
+	void AbstractHTDAlgorithm::addToTupleSet(Tuple *t, Solution *s, TupleSet *ts, Operation op)
 	{
 		// try to insert the tuple into the tuple set
-		pair<TupleSet::iterator, bool> result = ts->insert(TupleSet::value_type(&t, s));
+		pair<TupleSet::iterator, bool> result = ts->insert(TupleSet::value_type(t, s));
 	
 		// if the tuple was already in the set
 		if(!result.second)
@@ -349,8 +359,68 @@ namespace sharp
 			// delete it and insert it again with combined solution
 			Solution *orig = result.first->second;
 			ts->erase(result.first);
-			ts->insert(TupleSet::value_type(&t, this->instantiator->combine(op, orig, s)));
+			ts->insert(TupleSet::value_type(t, combineSolutions(op, orig, s)));
 		}
 	}
 
+	/*********************************************\
+	|* CLASS: AbstractSemiNormalizedHTDAlgorithm
+	\*********************************************/
+	AbstractSemiNormalizedHTDAlgorithm::AbstractSemiNormalizedHTDAlgorithm(Problem *problem)
+		: AbstractHTDAlgorithm(problem)
+	{ }
+
+	AbstractSemiNormalizedHTDAlgorithm::~AbstractSemiNormalizedHTDAlgorithm() { }
+
+	const ExtendedHypertree *AbstractSemiNormalizedHTDAlgorithm::prepareHypertreeDecomposition(ExtendedHypertree *root)
+	{
+		return root->normalize(SemiNormalization);
+	}
+	
+	TupleSet *AbstractSemiNormalizedHTDAlgorithm::evaluateNode(const ExtendedHypertree *node)
+	{
+		switch(node->getType())
+	        {
+	        case Branch: 
+			return this->evaluateBranchNode(node);
+		case Permutation:
+		case Introduction:
+	        case Removal: 
+		case Leaf:
+			return this->evaluatePermutationNode(node);
+		default:
+			C0(0 /*invalid node type, check normalization*/);
+			return NULL;
+	        }
+	}
+
+	/*********************************************\
+	|* CLASS: AbstractNormalizedHTDAlgorithm
+	\*********************************************/
+	AbstractNormalizedHTDAlgorithm::AbstractNormalizedHTDAlgorithm(Problem *problem)
+		: AbstractSemiNormalizedHTDAlgorithm(problem)
+	{ }
+
+	AbstractNormalizedHTDAlgorithm::~AbstractNormalizedHTDAlgorithm() { }
+
+	const ExtendedHypertree *AbstractNormalizedHTDAlgorithm::prepareHypertreeDecomposition(ExtendedHypertree *root)
+	{
+		return root->normalize(DefaultNormalization);
+	}
+
+	TupleSet *AbstractNormalizedHTDAlgorithm::evaluatePermutationNode(const ExtendedHypertree *node)
+	{
+		switch(node->getType())
+		{
+		case Introduction:
+			return this->evaluateIntroductionNode(node);
+		case Removal:
+			return this->evaluateRemovalNode(node);
+		case Leaf:
+			return this->evaluateLeafNode(node);
+		default:
+			C0(0 /*invalid node type, check normalization*/);
+			return NULL;
+		}
+	}
 } // namespace sharp

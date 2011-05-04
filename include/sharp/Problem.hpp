@@ -1,26 +1,20 @@
 #ifndef PROBLEM_H_
 #define PROBLEM_H_
 
-#include <string>
-
 #include <sharp/Global.hpp>
-#include <sharp/Hypergraph.hpp>
-#include <sharp/ExtendedHypertree.hpp>
-#include <sharp/AbstractAlgorithm.hpp>
 
 namespace sharp
 {
+	class Hypergraph;
+	class ExtendedHypertree;
+	class AbstractHTDAlgorithm;
+	class Solution;
+	class Instantiator;
 
-	enum DecompositionOptions
-	{
-		None = 0,
-		BipartiteGraph = 1
-	};
-	
 	class Problem
 	{
 	public:
-		Problem(AbstractAlgorithm *algorithm, bool printBenchmarkInformation = false);
+		Problem(bool collectBenchmarkInformation = false);
 		virtual ~Problem();
 		
 	public:
@@ -31,7 +25,7 @@ namespace sharp
 		// - a tree decomposition is generated
 		// - the actual algorithm is run (evaluate method of the Algorithm class)
 		// - the solution for the problem is returned
-		Solution *calculateSolution(Instantiator *instantiator);
+		Solution *calculateSolution(AbstractHTDAlgorithm *algorithm);
 	
 		// gets the treewidth for the problem, that is:
 		// - the input is parsed (parse method is called)
@@ -40,9 +34,6 @@ namespace sharp
 		// - a tree decomposition is generated
 		// - the tree width is returned
 		int calculateTreeWidth();
-	
-		// set the decomposition options for the decomposition routine
-		void setDecompositionOptions(DecompositionOptions options = None, void *parameter = NULL);
 	
 		// gets the internal ID of a vertex by its name
 		Vertex getVertexId(std::string vertexName);
@@ -54,7 +45,7 @@ namespace sharp
 		std::string getVertexName(Vertex vertexId);
 	
 		// prints the name mappings (for debug or verbose output)
-		void printVertexNames(ostream &out);
+		void printVertexNames(std::ostream &out);
 	
 	protected: 
 		// called by calculateSolution if the problem has not yet been read
@@ -83,20 +74,14 @@ namespace sharp
 		// private: maps the names of vertices to internal IDs
 		ReverseNameMap reverseVertexNames;
 	
-		// private: the algorithm that is used to solve the problem
-		AbstractAlgorithm *algorithm;
-	
-		// private: stores if the input has already been parsed
+		// private: stores information about whether the input has already been parsed
 		bool parsed;
+
+		// private: not NULL, if a hypertree decomposition is already available, NULL otherwise
+		ExtendedHypertree *decomposition;
 	
-		// private: print benchmark timing information for each step
+		// private: capture benchmark timing information for each step
 		bool benchmark;
-	
-		// private: the decomposition options
-		DecompositionOptions decompositionOptions;
-	
-		// private: the decomposition parameter (if any)
-		void *decompositionParameter;
 	};
 
 } // namespace sharp

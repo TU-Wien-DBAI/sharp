@@ -1,27 +1,25 @@
-#include <cstring>
-#include <iostream>
+#include <config.h>
 
 #include <Problem.hpp>
 
 #include <Node.hpp>
 #include <Hyperedge.hpp>
+#include <Hypergraph.hpp>
 #include <H_BucketElim.hpp>
+#include <ExtendedHypertree.hpp>
+#include <AbstractAlgorithm.hpp>
 
+#include <cstring>
+#include <iostream>
 using namespace std;
-
-static sharp::Timer t;
 
 namespace sharp
 {
-
-	Problem::Problem(AbstractAlgorithm *algorithm, bool benchmark)
+	Problem::Problem(bool benchmark)
 	{
-		this->algorithm = algorithm;
 		this->parsed = false;
 		this->benchmark = benchmark;
 	
-		this->setDecompositionOptions();
-		
 		// start numbering of vertices at 1 instead of 0
 		this->createAuxiliaryVertex();
 	}
@@ -30,13 +28,7 @@ namespace sharp
 	{
 	}
 	
-	void Problem::setDecompositionOptions(DecompositionOptions options, void *parameter)
-	{
-		this->decompositionOptions = options;
-		this->decompositionParameter = parameter;
-	}
-	
-	Solution *Problem::calculateSolution(Instantiator *instantiator)
+	Solution *Problem::calculateSolution(AbstractHTDAlgorithm *algorithm)
 	{
 		Timer t1, t2;
 	
@@ -51,7 +43,7 @@ namespace sharp
 	
 		if(benchmark) { cout << "done. (took "; t1.printStop(); cout << " seconds)" << endl; }
 		if(benchmark) { cout << "Starting decomposition..." << endl; t1.start(); }
-	
+
 		Hypergraph *hg = this->buildHypergraphRepresentation();
 	
 		H_BucketElim be;
@@ -59,17 +51,11 @@ namespace sharp
 	
 		if(benchmark) { cout << "\tbuilding hypergraph took "; t1.printStop(); t2.start(); cout << " seconds)" << endl; }
 	
-		// when decomposing a bipartite graph
-		if(this->decompositionOptions & BipartiteGraph)
-			ht = be.buildHypertree(hg, BE_MIW_ORDER, (int)(long)this->decompositionParameter);
-		// when decomposing a default graph
-		else 
-			ht = be.buildHypertree(hg, BE_MIW_ORDER);
+		ht = be.buildHypertree(hg, BE_MIW_ORDER);
 	
 		if(benchmark) { cout << "\tbuilding hypertree decomposition took "; t2.printStop(); t2.start(); cout << " seconds)" << endl; }
 	
 		ht = new ExtendedHypertree(ht);
-		((ExtendedHypertree *)ht)->normalize();
 	
 	#ifdef DEBUG
 		((ExtendedHypertree *)ht)->print();
@@ -78,8 +64,7 @@ namespace sharp
 		if(benchmark) { cout << "\tnormalization took "; t2.printStop(); cout << " seconds)" << endl; }
 		if(benchmark) { cout << "done. (took "; t1.printStop(); cout << " seconds)" << endl; }
 		if(benchmark) { cout << "Calculating solution... " << flush; t1.start(); }
-		this->algorithm->setInstantiator(instantiator);
-		Solution *s = this->algorithm->evaluate((ExtendedHypertree *)ht);
+		Solution *s = algorithm->evaluate((ExtendedHypertree *)ht);
 		if(benchmark) { cout << "done. (took "; t1.printStop(); cout << " seconds)" << endl; }
 	
 		return s;
@@ -99,12 +84,7 @@ namespace sharp
 	        H_BucketElim be;
 	        Hypertree *ht = NULL;
 	
-	        // when decomposing a bipartite graph
-	        if(this->decompositionOptions & BipartiteGraph)
-	                ht = be.buildHypertree(hg, BE_MIW_ORDER, (int)(long)this->decompositionParameter);
-	        // when decomposing a default graph
-	        else
-	                ht = be.buildHypertree(hg, BE_MIW_ORDER);
+	        ht = be.buildHypertree(hg, BE_MIW_ORDER);
 	
 		return ht->getTreeWidth();
 	}
@@ -126,13 +106,13 @@ namespace sharp
 	{
 		return createGraphFromDisjointSets(vertices, VertexSet(), edges);
 	}
-	
+
 	Hypergraph *Problem::createGraphFromDisjointSets(VertexSet v1, VertexSet v2, EdgeSet edges)
 	{
 		vector<Node *> lookup; lookup.resize(v1.size() + v2.size(), NULL);
 		int edgeId = 0;
 		Hypergraph *hg = new Hypergraph();
-	
+
 		for(VertexSet::iterator it = v1.begin(); it != v1.end(); ++it)
 		{
 			if((unsigned int)*it >= lookup.capacity()) lookup.resize(*it + 1);
@@ -140,7 +120,7 @@ namespace sharp
 			lookup[*it] = n;
 			hg->MyNodes.push_back(n);
 		}
-	
+
 		for(VertexSet::iterator it = v2.begin(); it != v2.end(); ++it)
 		{
 			if((unsigned int)*it >= lookup.capacity()) lookup.resize(*it + 1);
@@ -148,18 +128,18 @@ namespace sharp
 			lookup[*it] = n;
 			hg->MyNodes.push_back(n);
 		}
-	
+
 		for(EdgeSet::iterator it = edges.begin(); it != edges.end(); ++it)
 		{
 			Hyperedge *e; CNULL(e = new Hyperedge(edgeId, edgeId)); ++edgeId;
 			hg->MyEdges.push_back(e);
-	
+
 			lookup[it->first]->insEdge(e);
 			lookup[it->second]->insEdge(e);
 			e->insNode(lookup[it->first]);
 			e->insNode(lookup[it->second]);
 		}
-	
+
 		for(int i = 0; i < (int)hg->MyNodes.size(); ++i)
 			hg->MyNodes[i]->updateNeighbourhood();
 		
@@ -168,7 +148,7 @@ namespace sharp
 		
 		hg->iMyMaxNbrOfNodes = hg->MyNodes.size();
 		hg->iMyMaxNbrOfEdges = hg->MyEdges.size();
-	
+
 		return hg;
 	}
 	

@@ -1,11 +1,12 @@
+#include <config.h>
+
+#include <Global.hpp>
+
 #include <set>
 #include <list>
 #include <vector>
 #include <algorithm>
 #include <iostream>
-
-#include <Global.hpp>
-
 using namespace std;
 
 namespace sharp

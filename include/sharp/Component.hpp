@@ -34,9 +34,11 @@ namespace sharp
 		// Array of pointers to contained components
 		vector<Component *> MyComponents;
 	
+	public:
 		// Array of pointers to components that contain common components
 		vector<Component *> MyNeighbours;
 	
+	protected:
 		// List of component IDs that are covered by the actual component
 		list<int> MyCoveredCompIDs;
 	

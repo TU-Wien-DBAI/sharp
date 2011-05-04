@@ -9,8 +9,8 @@ Class SpecialHEdge models a special hyperedge that can be both a hyperedge and a
 #define CLS_SPECIALHEDGE
 
 
-#include <Hyperedge.hpp>
-#include <CompSet.hpp>
+#include <sharp/Hyperedge.hpp>
+#include <sharp/CompSet.hpp>
 
 namespace sharp
 {

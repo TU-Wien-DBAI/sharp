@@ -4,34 +4,38 @@
 //FIXME: use unordered_set/unordered_map when c++0x is released
 #include <map>
 #include <set>
-
-#include <gmp.h>
-#include <gmpxx.h>
+#include <vector>
 
 #include <sharp/Global.hpp>
+
 #include <sharp/ExtendedHypertree.hpp>
+
+
 
 namespace sharp
 {
-
+	class Problem;
+	class Instantiator;
+	
 	enum Operation
 	{
 		Value,
 		CrossJoin,
 		Union,
-		AddDifference	
+		Add,
+		NewLeaf,
+		NewEmpty
 	};
 	
 	class SolutionContent
 	{
 	public:
 		SolutionContent();
-		SolutionContent(const VertexSet &partition);
 		virtual ~SolutionContent() = 0;
 	
 		virtual SolutionContent *calculateUnion(SolutionContent *other) = 0;
 		virtual SolutionContent *calculateCrossJoin(SolutionContent *other) = 0;
-		virtual SolutionContent *calculateAddDifference(Vertex difference) = 0;
+		virtual SolutionContent *calculateAdd(const VertexSet &toAdd) = 0;
 	};
 	
 	class EnumerationSolutionContent : public SolutionContent
@@ -43,25 +47,10 @@ namespace sharp
 	
 		virtual SolutionContent *calculateUnion(SolutionContent *other);
 		virtual SolutionContent *calculateCrossJoin(SolutionContent *other);
-		virtual SolutionContent *calculateAddDifference(Vertex difference);
+		virtual SolutionContent *calculateAdd(const VertexSet &toAdd);
 	
 	public:
 		std::set<VertexSet> enumerations;
-	};
-	
-	class CountingSolutionContent : public SolutionContent
-	{
-	public:
-		CountingSolutionContent();
-		CountingSolutionContent(const VertexSet &partition);
-		virtual ~CountingSolutionContent();
-	
-		virtual SolutionContent *calculateUnion(SolutionContent *other);
-		virtual SolutionContent *calculateCrossJoin(SolutionContent *other);
-		virtual SolutionContent *calculateAddDifference(Vertex difference);
-	
-	public:
-		mpz_class count;
 	};
 	
 	class ConsistencySolutionContent : public SolutionContent
@@ -73,7 +62,7 @@ namespace sharp
 	
 		virtual SolutionContent *calculateUnion(SolutionContent *other);
 		virtual SolutionContent *calculateCrossJoin(SolutionContent *other);
-		virtual SolutionContent *calculateAddDifference(Vertex difference);
+		virtual SolutionContent *calculateAdd(const VertexSet &toAdd);
 	
 	public:
 		bool consistent;
@@ -81,28 +70,25 @@ namespace sharp
 	
 	class Solution
 	{
-	public:
+		friend class AbstractHTDAlgorithm;
+
+	private:
 		Solution(Operation operation, Solution *left, Solution *right);
-		Solution(Solution *child, int difference);	
+		Solution(Solution *child, const VertexSet &toAdd);
+		Solution(const VertexSet &partition);
 		Solution(SolutionContent *content);
+		Solution();
+	
+	public:
 		~Solution();
 	
-	public:
-		SolutionContent *getContent();
-		void forceCalculation();
+		SolutionContent *getContent(Instantiator *instantiator = NULL);
 	
-	protected:
-		void calculateUnion();
-		void calculateCrossJoin();
-		void calculateAddDifference();
-	
-	protected:
+	private:
 		SolutionContent *content;
 		Solution *leftArgument;
 		Solution *rightArgument;
-		int difference;
-	
-	private:
+		VertexSet parameter;
 		Operation operation;
 	};
 	
@@ -120,88 +106,100 @@ namespace sharp
 	
 	//FIXME: use a hash_map, hash_function, etc...
 	//typedef __gnu_cxx::hash_map<Tuple, Solution *> TupleSet;
-	typedef std::map<Tuple *, Solution *, less<Tuple *> > TupleSet;
+	typedef std::map<Tuple *, Solution *, std::less<Tuple *> > TupleSet;
 	
 	class Instantiator
 	{
 	public:
-		Instantiator(bool lazy);
+		Instantiator();
 		virtual ~Instantiator();
 	
 	public:
-		virtual Solution *createEmptySolution() const = 0;
-		virtual Solution *createLeafSolution(const VertexSet &partition) const = 0;
-		virtual Solution *combine(Operation operation, Solution *left, Solution *right) const;
-		virtual Solution *addDifference(Solution *child, int difference) const;
-	
-	protected:
-		bool lazy;
+		virtual SolutionContent *createEmptySolution() const = 0;
+		virtual SolutionContent *createLeafSolution(const VertexSet &partition) const = 0;
 	};
 	
 	template<class TSolutionContent>
 	class GenericInstantiator : public Instantiator
 	{
 	public:
-		GenericInstantiator(bool lazy);
+		GenericInstantiator();
 		virtual ~GenericInstantiator();
 	
 	public:
-		virtual Solution *createEmptySolution() const;
-		virtual Solution *createLeafSolution(const VertexSet &partition) const;
+		virtual SolutionContent *createEmptySolution() const;
+		virtual SolutionContent *createLeafSolution(const VertexSet &partition) const;
 	};
-	
-	class Problem;
-	
-	class AbstractAlgorithm
+
+	class AbstractHTDAlgorithm
 	{
 	public:
-		AbstractAlgorithm(Problem *problem);
-		virtual ~AbstractAlgorithm();
+		AbstractHTDAlgorithm(Problem *problem);
+		virtual ~AbstractHTDAlgorithm();
 	
-	protected:
-		Instantiator *instantiator;
-		Problem *problem;
-	
+	private:
+		Problem *prob;
+		Instantiator *inst;
+
 	public:
-		void setInstantiator(Instantiator *instantiator);
-		Solution *evaluate(const ExtendedHypertree *root);
+		Solution *evaluate(ExtendedHypertree *root, Instantiator *instantiator = NULL);
 	
 	protected:
+		virtual Problem *problem();
+		virtual const ExtendedHypertree *prepareHypertreeDecomposition(ExtendedHypertree *root);
 		virtual Solution *selectSolution(TupleSet *tuples, const ExtendedHypertree *root) = 0;
+		virtual TupleSet *evaluateNode(const ExtendedHypertree *node) = 0;
+
+		Solution *createEmptySolution();
+		Solution *createLeafSolution(const VertexSet &partition);
+		Solution *combineSolutions(Operation operation, Solution *left, Solution *right);
+		Solution *addToSolution(Solution *solution, const VertexSet &toAdd);
+		Solution *addToSolution(Solution *solution, Vertex toAdd);
+		void addToTupleSet(Tuple *t, Solution *s, TupleSet *ts, Operation mergeOperation = Union);
+	};
 	
-		virtual TupleSet *evaluateLeafNode(const ExtendedHypertree *node) = 0;
+	class AbstractSemiNormalizedHTDAlgorithm : public AbstractHTDAlgorithm
+	{
+	public:
+		AbstractSemiNormalizedHTDAlgorithm(Problem *problem);
+		virtual ~AbstractSemiNormalizedHTDAlgorithm();
+	
+	protected:
+		virtual const ExtendedHypertree *prepareHypertreeDecomposition(ExtendedHypertree *root);
+		virtual TupleSet *evaluateNode(const ExtendedHypertree *node);	
+
 		virtual TupleSet *evaluateBranchNode(const ExtendedHypertree *node) = 0;
+		virtual TupleSet *evaluatePermutationNode(const ExtendedHypertree *node) = 0;
+	};
+
+	class AbstractNormalizedHTDAlgorithm : public AbstractSemiNormalizedHTDAlgorithm
+	{
+	public:
+		AbstractNormalizedHTDAlgorithm(Problem *problem);
+		virtual ~AbstractNormalizedHTDAlgorithm();
+	
+	protected:
+		virtual const ExtendedHypertree *prepareHypertreeDecomposition(ExtendedHypertree *root);
+
+		virtual TupleSet *evaluatePermutationNode(const ExtendedHypertree *node);
 		virtual TupleSet *evaluateIntroductionNode(const ExtendedHypertree *node) = 0;
 		virtual TupleSet *evaluateRemovalNode(const ExtendedHypertree *node) = 0;
-	
-		TupleSet *evaluateNode(const ExtendedHypertree *node);	
-		void addToTupleSet(Tuple &t, Solution *s, TupleSet *ts, Operation op);
+		virtual TupleSet *evaluateLeafNode(const ExtendedHypertree *node) = 0;
 	};
-	
-	/***********************************\
-	|* TEMPLATE: GenericInstantiator
-	\***********************************/
-	template<class TSolutionContent>
-	GenericInstantiator<TSolutionContent>::GenericInstantiator(bool lazy) 
-		: Instantiator(lazy)
-	{
-	}
-	
-	template<class TSolutionContent>
-	GenericInstantiator<TSolutionContent>::~GenericInstantiator() { }
-	
-	template<class TSolutionContent>
-	Solution *GenericInstantiator<TSolutionContent>::createEmptySolution() const
-	{
-		return new Solution(new TSolutionContent());
-	}
-	
-	template<class TSolutionContent>
-	Solution *GenericInstantiator<TSolutionContent>::createLeafSolution(const VertexSet &partition) const
-	{
-		return new Solution(new TSolutionContent(partition));
-	}
 
+	template<class TTuple>
+	class AbstractStronglyNormalizedHTDAlgorithm: public AbstractNormalizedHTDAlgorithm
+	{
+	public:
+		AbstractStronglyNormalizedHTDAlgorithm(Problem *problem);
+		virtual ~AbstractStronglyNormalizedHTDAlgorithm();
+
+	protected:
+		virtual const ExtendedHypertree *prepareHypertreeDecomposition(ExtendedHypertree *root);
+
+		virtual Solution *selectSolution(TupleSet *tuples, const ExtendedHypertree *root);
+		virtual TupleSet *evaluateLeafNode(const ExtendedHypertree *node);
+	};
 } // namespace sharp
 
 namespace std
@@ -214,5 +212,73 @@ namespace std
 	};
 
 } // namespace std
+
+namespace sharp
+{
+	/********************************************************\
+	|* TEMPLATE: AbstractStronglyNormalizedHTDAlgorithm
+	\********************************************************/
+	template<class TTuple>
+	AbstractStronglyNormalizedHTDAlgorithm<TTuple>::AbstractStronglyNormalizedHTDAlgorithm(Problem *problem)
+		: AbstractNormalizedHTDAlgorithm(problem)
+	{ }
+
+	template<class TTuple>
+	AbstractStronglyNormalizedHTDAlgorithm<TTuple>::~AbstractStronglyNormalizedHTDAlgorithm() { }
+
+	template<class TTuple>
+	const ExtendedHypertree *AbstractStronglyNormalizedHTDAlgorithm<TTuple>::prepareHypertreeDecomposition(ExtendedHypertree *root)
+	{
+		return root->normalize(StrongNormalization);
+	}
+
+	template<class TTuple>
+	Solution *AbstractStronglyNormalizedHTDAlgorithm<TTuple>::selectSolution(TupleSet *tuples, const ExtendedHypertree *root)
+	{
+		if(tuples->size() == (unsigned int)0) 
+		{
+			delete tuples;
+			return createEmptySolution();
+		}
+
+		Solution *solution = tuples->begin()->second;
+		delete tuples->begin()->first;
+		delete tuples;
+		return solution;
+	}
+
+	template<class TTuple>
+	TupleSet *AbstractStronglyNormalizedHTDAlgorithm<TTuple>::evaluateLeafNode(const ExtendedHypertree *node)
+	{
+		TupleSet ts = new TupleSet();
+		addToTupleSet(new TTuple(), createLeafSolution(VertexSet()), ts);
+		return ts;
+	}
+	
+	/***********************************\
+	|* TEMPLATE: GenericInstantiator
+	\***********************************/
+	template<class TSolutionContent>
+	GenericInstantiator<TSolutionContent>::GenericInstantiator() 
+		: Instantiator()
+	{
+	}
+	
+	template<class TSolutionContent>
+	GenericInstantiator<TSolutionContent>::~GenericInstantiator() { }
+
+	template<class TSolutionContent>
+	SolutionContent *GenericInstantiator<TSolutionContent>::createEmptySolution() const
+	{
+		return new TSolutionContent();
+	}
+	
+	template<class TSolutionContent>
+	SolutionContent *GenericInstantiator<TSolutionContent>::createLeafSolution(const VertexSet &partition) const
+	{
+		return new TSolutionContent(partition);
+	}
+
+} // namespace sharp
 
 #endif /*ABSTRACTALGORITHM_H_*/
