@@ -31,37 +31,27 @@ namespace sharp
 		ExtendedHypertree(const VertexSet &vertices);
 		virtual ~ExtendedHypertree();
 
-		ExtendedHypertree *normalize(NormalizationType type = DefaultNormalization);
+		ExtendedHypertree *normalize(NormalizationType type = DefaultNormalization) const;
 
 		const VertexSet &getVertices() const;
-		int getType() const;
-		Vertex getDifference() const;
+		TreeNodeType getType() const;
 		bool isRoot() const;
+		const VertexSet &getIntroducedVertices() const;
+		const VertexSet &getRemovedVertices() const;
+		Vertex getDifference() const;
 
 		ExtendedHypertree *parent() const;
 		ExtendedHypertree *firstChild() const;
 		ExtendedHypertree *secondChild() const;
 
-		// Returns the average number of elements in the chi-set over all
-		// nodes in the subtree
 		double getAverageWidth();
-
-		// Gets the sum of all elements in the chi-sets over all nodes in
-		// the subtree
 		unsigned int getWidthSum();
-
 		unsigned int getJoinNodeWidthSum();
-
 		double getAverageJoinNodeWidth();
-
 		unsigned int getNodeCountWithWidth(unsigned int width);
-
 		double getAverageJoinLeafDistance();
-
 		double getAverageJoinJoinDistance();
-
 		double getJoinNodePercentage();
-
 		unsigned int getDistanceToNearestLeaf();
 		unsigned int getDistanceToNearestJoinAncestor();
 		unsigned int getJoinLeafDistanceSum();
@@ -70,14 +60,15 @@ namespace sharp
 
 	private:
 		TreeNodeType type;
-		Vertex difference;
 
 		VertexSet vertices;
+		VertexSet introduced;
+		VertexSet removed;
 		
 		void adapt();
-		TreeNodeType calculateType();
 
-		static ExtendedHypertree *createChild(ExtendedHypertree *child, VertexSet vertices);
+		ExtendedHypertree *createNormalizedJoinNode(ExtendedHypertree *left, ExtendedHypertree *right, const VertexSet &top, NormalizationType normalization) const;
+		static ExtendedHypertree *createChild(ExtendedHypertree *child, const VertexSet &vertices, Vertex difference, TreeNodeType type);
 
 #ifdef DEBUG
 	public: //PRINTING FUNCTIONS

@@ -14,89 +14,66 @@ using namespace std;
 ExtendedHypertree::ExtendedHypertree(Hypertree *node) : Hypertree()
 {
 	this->type = General;
-	this->difference = VERTEXNOTFOUND;
-	
 	this->MyParent = node->getParent();
-	this->MyChi = *node->getChi();
 
 	for(list<Hypertree *>::iterator i = node->getChildren()->begin(); i != node->getChildren()->end(); ++i)
-		this->insChild(*i);
+		this->insChild(new ExtendedHypertree(*i));
 
-	node->getChildren()->clear();
-
-	if(dynamic_cast<ExtendedHypertree *>(node) == NULL)
+	for(set<Node *>::iterator i = node->getChi()->begin(); i != node->getChi()->end(); ++i)
 	{
-		for(set<Node *>::iterator i = node->getChi()->begin(); i != node->getChi()->end(); ++i)
-		{
-			this->vertices.insert((*i)->getName());
-		}
-	}
-	else
-	{
-		this->vertices = ((ExtendedHypertree *)node)->vertices;
+		this->vertices.insert((*i)->getName());
 	}
 
-	if(this->MyParent) { this->MyParent->remChild(node); this->MyParent->insChild(this); }
-
-	delete node;
+	if(!this->MyParent) delete node;
 }
 
 ExtendedHypertree::ExtendedHypertree(const VertexSet &vertices) : Hypertree()
 {
+	this->MyParent = NULL;
 	this->vertices = vertices;
 	this->type = General;
-	this->difference = VERTEXNOTFOUND;
 }
 
 ExtendedHypertree::~ExtendedHypertree() { }
 
-ExtendedHypertree *ExtendedHypertree::createChild(ExtendedHypertree *child, VertexSet vertices)
+ExtendedHypertree *ExtendedHypertree::createChild(ExtendedHypertree *child, const VertexSet &vertices, Vertex difference, TreeNodeType type)
 {
 	ExtendedHypertree *parent = child->parent();
 	ExtendedHypertree *newChild = new ExtendedHypertree(vertices);
+
+	VertexSet diff; diff.insert(difference);
 
 	parent->remChild(child);
 	newChild->insChild(child);
 	parent->insChild(newChild);
 
-	parent->type = parent->calculateType();
+	parent->type = type;
+	if(type == Introduction) parent->introduced = diff;
+	else parent->removed = diff;
 
 	return child;
 }
 
-TreeNodeType ExtendedHypertree::calculateType()
-{
-	if(this->MyChildren.size() == 0) return Leaf;
-	if(this->MyChildren.size() == 2) return Branch;
-
-	ExtendedHypertree *child = this->firstChild();
-	vector<Vertex> diff(1);
-
-	if(child->vertices.size() != this->vertices.size() && containsAll(child->vertices, this->vertices))
-	{
-		set_difference(child->vertices.begin(), child->vertices.end(), this->vertices.begin(), this->vertices.end(), diff.begin());
-		this->difference = diff[0];
-		return Removal;
-	}
-	
-	if(this->vertices.size() != child->vertices.size() && containsAll(this->vertices, child->vertices))
-	{
-		set_difference(this->vertices.begin(), this->vertices.end(), child->vertices.begin(), child->vertices.end(), diff.begin());
-		this->difference = diff[0];
-		return Introduction;
-	}
-
-	return General;
-}
-
-int ExtendedHypertree::getType() const
+TreeNodeType ExtendedHypertree::getType() const
 {
 	return this->type;
 }
 
 Vertex ExtendedHypertree::getDifference() const
 {
-	return this->difference;
+	if(this->introduced.size() != 0) return *this->introduced.begin();
+	else if(this->removed.size() != 0) return *this->removed.begin();
+	else return VERTEXNOTFOUND;
+}
+
+const VertexSet &ExtendedHypertree::getIntroducedVertices() const
+{
+	return this->introduced;
+}
+
+const VertexSet &ExtendedHypertree::getRemovedVertices() const
+{
+	return this->removed;
 }
 
 bool ExtendedHypertree::isRoot() const
@@ -104,37 +81,186 @@ bool ExtendedHypertree::isRoot() const
 	return this->MyParent == NULL;
 }
 
-ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization)
+ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization) const
 {
-	if(this->MyChildren.size() > 1)
+	ExtendedHypertree *current = new ExtendedHypertree(this->vertices);
+
+	if(this->MyChildren.size() == 0)
 	{
-		ExtendedHypertree *l = new ExtendedHypertree(this->vertices);
-		ExtendedHypertree *r = new ExtendedHypertree(this->vertices);
-		
-		l->insChild(*this->MyChildren.begin()); this->remChild(*this->MyChildren.begin());
-		for(list<Hypertree *>::iterator i = this->MyChildren.begin(); i != this->MyChildren.end(); ++i)
-			r->insChild(*i);
+		ExtendedHypertree *empty = new ExtendedHypertree(VertexSet());
+		empty->type = Leaf;
 
-		this->getChildren()->clear();
-		this->insChild(l);
-		this->insChild(r);
-
-		l->normalize();
-		r->normalize();
+		switch(normalization)
+		{
+		case NoNormalization:
+		case DefaultNormalization:
+			delete empty;
+			current->type = Leaf;
+			break;
+		case SemiNormalization:
+			current->insChild(empty);
+			current->type = Permutation;
+			current->introduced = current->vertices;
+			break;
+		case StrongNormalization:
+			current->insChild(empty);
+			empty->adapt();
+			break;
+		default:
+			C0(0 /*undefined normalization type*/); return NULL;
+		}
 	}
 	else if(this->MyChildren.size() == 1)
 	{
-		ExtendedHypertree *child = dynamic_cast<ExtendedHypertree *>(*this->MyChildren.begin());
-		if(child == NULL) child = new ExtendedHypertree(*this->MyChildren.begin());
-		
-		child->adapt();
-		child->parent()->type = child->parent()->calculateType();
-		child->normalize();
+		ExtendedHypertree *child = ((ExtendedHypertree *)*this->MyChildren.begin())->normalize(normalization);
+		current->insChild(child);
+
+		switch(normalization)
+		{
+		case NoNormalization:
+		case SemiNormalization:
+			current->type = Permutation;
+			set_difference(current->vertices.begin(), current->vertices.end(),
+					child->vertices.begin(), child->vertices.end(),
+					inserter(current->introduced, current->introduced.begin()));
+			set_difference(child->vertices.begin(), child->vertices.end(),
+					current->vertices.begin(), current->vertices.end(),
+					inserter(current->removed, current->removed.begin()));
+			break;
+		case DefaultNormalization:
+		case StrongNormalization:
+			child->adapt();
+			break;
+		default:
+			C0(0 /*undefined normalization type*/); return NULL;
+		}
+	}
+	else
+	{
+		if(normalization == NoNormalization)
+		{
+			for(list<Hypertree *>::const_iterator i = this->MyChildren.begin(); i != this->MyChildren.end(); ++i)
+				current->insChild(((ExtendedHypertree *)*i)->normalize(normalization));
+		}
+		else
+		{
+			vector<ExtendedHypertree *> childlist;
+			vector<ExtendedHypertree *> newchildren;
+
+			for(list<Hypertree *>::const_iterator i = this->MyChildren.begin(); i != this->MyChildren.end(); ++i)
+			{
+				newchildren.push_back(((ExtendedHypertree *)*i)->normalize(normalization));
+			}
+
+			while(newchildren.size() > 1)
+			{
+				childlist.swap(newchildren); newchildren.clear();
+
+				for(unsigned int i = 0; i < childlist.size(); ++i)
+					if(++i < childlist.size())
+						newchildren.push_back(createNormalizedJoinNode(childlist[i-1], childlist[i], current->vertices, normalization));
+					else
+						newchildren.push_back(childlist[i-1]);
+			}
+
+			ExtendedHypertree *child = newchildren[0];
+
+			if(child->vertices == current->vertices)
+			{
+				delete current;
+				current = child;
+			}
+			else
+			{
+				current->insChild(child);
+
+				switch(normalization)
+				{
+				case SemiNormalization:
+					current->type = Permutation;
+					set_difference(current->vertices.begin(), current->vertices.end(),
+							child->vertices.begin(), child->vertices.end(),
+							inserter(current->introduced, current->introduced.begin()));
+					set_difference(child->vertices.begin(), child->vertices.end(),
+							current->vertices.begin(), current->vertices.end(),
+							inserter(current->removed, current->removed.begin()));
+					break;
+				case DefaultNormalization:
+				case StrongNormalization:
+					child->adapt();
+					break;
+				default:
+					C0(0 /*undefined normalization type*/); return NULL;
+				}
+			}
+		}
 	}
 
-	this->type = this->calculateType();
+	return current;
+}
 
-	return this;
+ExtendedHypertree *ExtendedHypertree::createNormalizedJoinNode(ExtendedHypertree *left, ExtendedHypertree *right, const VertexSet &top, NormalizationType normalization) const
+{
+	VertexSet intersection;
+
+	set_intersection(left->vertices.begin(), left->vertices.end(),
+			right->vertices.begin(), right->vertices.end(),
+			inserter(intersection, intersection.begin()));
+	set_intersection(top.begin(), top.end(),
+			left->vertices.begin(), left->vertices.end(),
+			inserter(intersection, intersection.end()));
+	set_intersection(top.begin(), top.end(),
+			right->vertices.begin(), right->vertices.end(),
+			inserter(intersection, intersection.end()));
+
+	ExtendedHypertree *branch = new ExtendedHypertree(intersection);
+	branch->type = Branch;
+
+	if(intersection == left->vertices)
+	{
+		branch->insChild(left);
+	}
+	else
+	{
+		ExtendedHypertree *newleft = new ExtendedHypertree(intersection);
+		branch->insChild(newleft);
+		newleft->insChild(left);
+		switch(normalization)
+		{
+		case SemiNormalization:
+			break;
+		case DefaultNormalization:
+		case StrongNormalization:
+			left->adapt();
+			break;
+		default:
+			C0(0 /*undefined normalization type*/); return NULL;
+		}
+	}
+
+	if(intersection == right->vertices)
+	{
+		branch->insChild(right);
+	}
+	else
+	{
+		ExtendedHypertree *newright = new ExtendedHypertree(intersection);
+		branch->insChild(newright);
+		newright->insChild(right);
+		switch(normalization)
+		{
+		case SemiNormalization:
+			break;
+		case DefaultNormalization:
+		case StrongNormalization:
+			right->adapt();
+			break;
+		default:
+			C0(0 /*undefined normalization type*/); return NULL;
+		}
+	}
+
+	return branch;
 }
 
 void ExtendedHypertree::adapt()
@@ -162,15 +288,28 @@ void ExtendedHypertree::adapt()
 	for(it = redVertices.begin(); changes > 1 && it != redVertices.end(); ++it)
 	{
 		currentVertices.remove(*it);
-		createChild(this, VertexSet(currentVertices.begin(), currentVertices.end()));
+		createChild(this, VertexSet(currentVertices.begin(), currentVertices.end()), *it, Introduction);
 		--changes;
 	}
 
 	for(it = greenVertices.begin(); changes > 1 && it != greenVertices.end(); ++it)
 	{
 		currentVertices.push_back(*it);
-		createChild(this, VertexSet(currentVertices.begin(), currentVertices.end()));
+		createChild(this, VertexSet(currentVertices.begin(), currentVertices.end()), *it, Removal);
 		--changes;
+	}
+
+	if(greenVertices.size() != 0)
+	{
+		VertexSet rem; rem.insert(*greenVertices.rbegin());
+		this->parent()->type = Removal;
+		this->parent()->removed = rem;
+	}
+	else
+	{
+		VertexSet intro; intro.insert(*redVertices.rbegin());
+		this->parent()->type = Introduction;
+		this->parent()->introduced = intro;
 	}
 }
 

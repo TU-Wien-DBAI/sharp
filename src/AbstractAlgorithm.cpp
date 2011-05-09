@@ -1,12 +1,7 @@
 #include <config.h>
 
 #include <AbstractAlgorithm.hpp>
-
-#ifdef HAVE_LIBGMP
-	#include <CountingSolutionContent.hpp>
-#else
-	#include <NonGMPCountingSolutionContent.hpp>
-#endif
+#include <CountingSolutionContent.hpp>
 
 #include <iostream>
 using namespace std;
@@ -303,7 +298,7 @@ namespace sharp
 	{ 
 	}
 	
-	Solution *AbstractHTDAlgorithm::evaluate(ExtendedHypertree *origroot, Instantiator *inst)
+	Solution *AbstractHTDAlgorithm::evaluate(const ExtendedHypertree *origroot, Instantiator *inst)
 	{
 		this->inst = inst;
 		const ExtendedHypertree *root = prepareHypertreeDecomposition(origroot);
@@ -315,7 +310,7 @@ namespace sharp
 		return this->prob;
 	}
 
-	const ExtendedHypertree *AbstractHTDAlgorithm::prepareHypertreeDecomposition(ExtendedHypertree *root)
+	const ExtendedHypertree *AbstractHTDAlgorithm::prepareHypertreeDecomposition(const ExtendedHypertree *root)
 	{
 		return root;
 	}
@@ -372,7 +367,7 @@ namespace sharp
 
 	AbstractSemiNormalizedHTDAlgorithm::~AbstractSemiNormalizedHTDAlgorithm() { }
 
-	const ExtendedHypertree *AbstractSemiNormalizedHTDAlgorithm::prepareHypertreeDecomposition(ExtendedHypertree *root)
+	const ExtendedHypertree *AbstractSemiNormalizedHTDAlgorithm::prepareHypertreeDecomposition(const ExtendedHypertree *root)
 	{
 		return root->normalize(SemiNormalization);
 	}
@@ -403,7 +398,7 @@ namespace sharp
 
 	AbstractNormalizedHTDAlgorithm::~AbstractNormalizedHTDAlgorithm() { }
 
-	const ExtendedHypertree *AbstractNormalizedHTDAlgorithm::prepareHypertreeDecomposition(ExtendedHypertree *root)
+	const ExtendedHypertree *AbstractNormalizedHTDAlgorithm::prepareHypertreeDecomposition(const ExtendedHypertree *root)
 	{
 		return root->normalize(DefaultNormalization);
 	}

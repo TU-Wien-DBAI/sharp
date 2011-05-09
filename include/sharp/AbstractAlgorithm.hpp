@@ -142,11 +142,11 @@ namespace sharp
 		Instantiator *inst;
 
 	public:
-		Solution *evaluate(ExtendedHypertree *root, Instantiator *instantiator = NULL);
+		Solution *evaluate(const ExtendedHypertree *root, Instantiator *instantiator = NULL);
 	
 	protected:
 		virtual Problem *problem();
-		virtual const ExtendedHypertree *prepareHypertreeDecomposition(ExtendedHypertree *root);
+		virtual const ExtendedHypertree *prepareHypertreeDecomposition(const ExtendedHypertree *root);
 		virtual Solution *selectSolution(TupleSet *tuples, const ExtendedHypertree *root) = 0;
 		virtual TupleSet *evaluateNode(const ExtendedHypertree *node) = 0;
 
@@ -165,7 +165,7 @@ namespace sharp
 		virtual ~AbstractSemiNormalizedHTDAlgorithm();
 	
 	protected:
-		virtual const ExtendedHypertree *prepareHypertreeDecomposition(ExtendedHypertree *root);
+		virtual const ExtendedHypertree *prepareHypertreeDecomposition(const ExtendedHypertree *root);
 		virtual TupleSet *evaluateNode(const ExtendedHypertree *node);	
 
 		virtual TupleSet *evaluateBranchNode(const ExtendedHypertree *node) = 0;
@@ -179,7 +179,7 @@ namespace sharp
 		virtual ~AbstractNormalizedHTDAlgorithm();
 	
 	protected:
-		virtual const ExtendedHypertree *prepareHypertreeDecomposition(ExtendedHypertree *root);
+		virtual const ExtendedHypertree *prepareHypertreeDecomposition(const ExtendedHypertree *root);
 
 		virtual TupleSet *evaluatePermutationNode(const ExtendedHypertree *node);
 		virtual TupleSet *evaluateIntroductionNode(const ExtendedHypertree *node) = 0;
@@ -195,7 +195,7 @@ namespace sharp
 		virtual ~AbstractStronglyNormalizedHTDAlgorithm();
 
 	protected:
-		virtual const ExtendedHypertree *prepareHypertreeDecomposition(ExtendedHypertree *root);
+		virtual const ExtendedHypertree *prepareHypertreeDecomposition(const ExtendedHypertree *root);
 
 		virtual Solution *selectSolution(TupleSet *tuples, const ExtendedHypertree *root);
 		virtual TupleSet *evaluateLeafNode(const ExtendedHypertree *node);
@@ -227,7 +227,7 @@ namespace sharp
 	AbstractStronglyNormalizedHTDAlgorithm<TTuple>::~AbstractStronglyNormalizedHTDAlgorithm() { }
 
 	template<class TTuple>
-	const ExtendedHypertree *AbstractStronglyNormalizedHTDAlgorithm<TTuple>::prepareHypertreeDecomposition(ExtendedHypertree *root)
+	const ExtendedHypertree *AbstractStronglyNormalizedHTDAlgorithm<TTuple>::prepareHypertreeDecomposition(const ExtendedHypertree *root)
 	{
 		return root->normalize(StrongNormalization);
 	}

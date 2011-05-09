@@ -52,16 +52,10 @@ namespace sharp
 		if(benchmark) { cout << "\tbuilding hypergraph took "; t1.printStop(); t2.start(); cout << " seconds)" << endl; }
 	
 		ht = be.buildHypertree(hg, BE_MIW_ORDER);
-	
-		if(benchmark) { cout << "\tbuilding hypertree decomposition took "; t2.printStop(); t2.start(); cout << " seconds)" << endl; }
-	
 		ht = new ExtendedHypertree(ht);
 	
-	#ifdef DEBUG
-		((ExtendedHypertree *)ht)->print();
-	#endif
+		if(benchmark) { cout << "\tbuilding hypertree decomposition took "; t2.printStop(); cout << " seconds)" << endl; }
 		
-		if(benchmark) { cout << "\tnormalization took "; t2.printStop(); cout << " seconds)" << endl; }
 		if(benchmark) { cout << "done. (took "; t1.printStop(); cout << " seconds)" << endl; }
 		if(benchmark) { cout << "Calculating solution... " << flush; t1.start(); }
 		Solution *s = algorithm->evaluate((ExtendedHypertree *)ht);

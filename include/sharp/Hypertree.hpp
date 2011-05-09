@@ -89,6 +89,7 @@ namespace sharp
 		void outputToGML(Hypergraph *HGraph, char *cNameOfFile);
 
 		// Gets the parent of this node
+		const Hypertree *getParent() const;
 		Hypertree *getParent();
 
 		// Gets a list populated with all the children of this node
