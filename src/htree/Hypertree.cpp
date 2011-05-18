@@ -1064,7 +1064,7 @@ int Hypertree::getTreeWidth()
 			iTreeWidth = iTmp;
 	}
 
-	return iTreeWidth;
+	return iTreeWidth - 1;
 }
 
 
