@@ -87,22 +87,21 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization)
 
 	if(this->MyChildren.size() == 0)
 	{
-		ExtendedHypertree *empty = new ExtendedHypertree(VertexSet());
-		empty->type = Leaf;
+		ExtendedHypertree *empty = NULL;
 
 		switch(normalization)
 		{
 		case NoNormalization:
 		case DefaultNormalization:
-			delete empty;
 			current->type = Leaf;
 			break;
 		case SemiNormalization:
-			current->insChild(empty);
-			current->type = Permutation;
+			current->type = Leaf;
 			current->introduced = current->vertices;
 			break;
 		case StrongNormalization:
+			empty = new ExtendedHypertree(VertexSet());
+			empty->type = Leaf;
 			current->insChild(empty);
 			empty->adapt();
 			break;
@@ -203,9 +202,6 @@ ExtendedHypertree *ExtendedHypertree::createNormalizedJoinNode(ExtendedHypertree
 {
 	VertexSet intersection;
 
-	set_intersection(left->vertices.begin(), left->vertices.end(),
-			right->vertices.begin(), right->vertices.end(),
-			inserter(intersection, intersection.begin()));
 	set_intersection(top.begin(), top.end(),
 			left->vertices.begin(), left->vertices.end(),
 			inserter(intersection, intersection.end()));
@@ -228,6 +224,7 @@ ExtendedHypertree *ExtendedHypertree::createNormalizedJoinNode(ExtendedHypertree
 		switch(normalization)
 		{
 		case SemiNormalization:
+			newleft->type = Permutation;
 			break;
 		case DefaultNormalization:
 		case StrongNormalization:
@@ -250,6 +247,7 @@ ExtendedHypertree *ExtendedHypertree::createNormalizedJoinNode(ExtendedHypertree
 		switch(normalization)
 		{
 		case SemiNormalization:
+			newright->type = Permutation;
 			break;
 		case DefaultNormalization:
 		case StrongNormalization:
