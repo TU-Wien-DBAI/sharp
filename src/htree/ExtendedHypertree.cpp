@@ -225,6 +225,12 @@ ExtendedHypertree *ExtendedHypertree::createNormalizedJoinNode(ExtendedHypertree
 		{
 		case SemiNormalization:
 			newleft->type = Permutation;
+			set_difference(newleft->vertices.begin(), newleft->vertices.end(),
+					left->vertices.begin(), left->vertices.end(),
+					inserter(newleft->introduced, newleft->introduced.begin()));
+			set_difference(left->vertices.begin(), left->vertices.end(),
+					newleft->vertices.begin(), newleft->vertices.end(),
+					inserter(newleft->removed, newleft->removed.begin()));
 			break;
 		case DefaultNormalization:
 		case StrongNormalization:
@@ -248,6 +254,12 @@ ExtendedHypertree *ExtendedHypertree::createNormalizedJoinNode(ExtendedHypertree
 		{
 		case SemiNormalization:
 			newright->type = Permutation;
+			set_difference(newright->vertices.begin(), newright->vertices.end(),
+					right->vertices.begin(), right->vertices.end(),
+					inserter(newright->introduced, newright->introduced.begin()));
+			set_difference(right->vertices.begin(), right->vertices.end(),
+					newright->vertices.begin(), newright->vertices.end(),
+					inserter(newright->removed, newright->removed.begin()));
 			break;
 		case DefaultNormalization:
 		case StrongNormalization:
