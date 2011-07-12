@@ -799,7 +799,7 @@ const Hypertree *Hypertree::getParent() const
 	return this->MyParent;
 }
 
-list<Hypertree *> *Hypertree::getChildren()
+const list<Hypertree *> *Hypertree::getChildren() const
 {
 	return &this->MyChildren;
 }

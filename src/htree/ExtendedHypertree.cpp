@@ -16,7 +16,7 @@ ExtendedHypertree::ExtendedHypertree(Hypertree *node) : Hypertree()
 	this->type = General;
 	this->MyParent = node->getParent();
 
-	for(list<Hypertree *>::iterator i = node->getChildren()->begin(); i != node->getChildren()->end(); ++i)
+	for(list<Hypertree *>::const_iterator i = node->getChildren()->begin(); i != node->getChildren()->end(); ++i)
 		this->insChild(new ExtendedHypertree(*i));
 
 	for(set<Node *>::iterator i = node->getChi()->begin(); i != node->getChi()->end(); ++i)

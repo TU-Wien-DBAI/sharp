@@ -93,7 +93,7 @@ namespace sharp
 		Hypertree *getParent();
 
 		// Gets a list populated with all the children of this node
-		list<Hypertree *> *getChildren();
+		const list<Hypertree *> *getChildren() const;
 	    
 		// Writes hypertree to text format file
 		void outputToText(char *cNameOfFile);
