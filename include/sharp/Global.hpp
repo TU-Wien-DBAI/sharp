@@ -16,6 +16,7 @@ namespace sharp
 	
 	typedef std::set<Vertex> VertexSet;
 	typedef std::set<std::pair<Vertex, Vertex> > EdgeSet;
+	typedef std::set<VertexSet> HyperedgeSet;
 	
 	typedef std::vector<std::string> NameMap;
 	typedef std::map<std::string, Vertex> ReverseNameMap;

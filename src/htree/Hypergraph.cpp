@@ -26,11 +26,12 @@ using namespace sharp;
 //////////////////////////////////////////////////////////////////////
 
 
-Hypergraph::Hypergraph()
+Hypergraph::Hypergraph(bool isGraph)
 {
 	iMyMaxNbrOfEdges = 0;
 	iMyMaxNbrOfNodes = 0;
 	avgFill = minFill = maxFill = -1;
+	this->isgraph = isGraph;
 }
 
 
@@ -191,6 +192,10 @@ bool Hypergraph::isConnected()
 	return true;
 }
 
+bool Hypergraph::isGraph() const
+{
+	return this->isgraph;
+}
 
 /*
 ***Description***

@@ -105,7 +105,7 @@ namespace sharp
 	{
 		vector<Node *> lookup; lookup.resize(v1.size() + v2.size(), NULL);
 		int edgeId = 0;
-		Hypergraph *hg = new Hypergraph();
+		Hypergraph *hg = new Hypergraph(true /* we create a graph, not a hypergraph */);
 
 		for(VertexSet::iterator it = v1.begin(); it != v1.end(); ++it)
 		{
@@ -132,6 +132,44 @@ namespace sharp
 			lookup[it->second]->insEdge(e);
 			e->insNode(lookup[it->first]);
 			e->insNode(lookup[it->second]);
+		}
+
+		for(int i = 0; i < (int)hg->MyNodes.size(); ++i)
+			hg->MyNodes[i]->updateNeighbourhood();
+		
+		for(int i = 0; i < (int)hg->MyEdges.size(); ++i)
+			hg->MyEdges[i]->updateNeighbourhood();
+		
+		hg->iMyMaxNbrOfNodes = hg->MyNodes.size();
+		hg->iMyMaxNbrOfEdges = hg->MyEdges.size();
+
+		return hg;
+	}
+
+	Hypergraph *Problem::createHypergraphFromSets(VertexSet vertices, HyperedgeSet hyperedges)
+	{
+		vector<Node *> lookup; lookup.resize(vertices.size(), NULL);
+		int edgeId = 0;
+		Hypergraph *hg = new Hypergraph();
+
+		for(VertexSet::iterator it = vertices.begin(); it != vertices.end(); ++it)
+		{
+			if((unsigned int)*it >= lookup.capacity()) lookup.resize(*it + 1);
+			Node *n; CNULL(n = new Node(*it, *it));
+			lookup[*it] = n;
+			hg->MyNodes.push_back(n);
+		}
+
+		for(HyperedgeSet::iterator it = hyperedges.begin(); it != hyperedges.end(); ++it)
+		{
+			Hyperedge *e; CNULL(e = new Hyperedge(edgeId, edgeId)); ++edgeId;
+			hg->MyEdges.push_back(e);
+
+			for(VertexSet::iterator vit = it->begin(); vit != it->end(); ++vit)
+			{
+				lookup[*vit]->insEdge(e);
+				e->insNode(lookup[*vit]);
+			}
 		}
 
 		for(int i = 0; i < (int)hg->MyNodes.size(); ++i)

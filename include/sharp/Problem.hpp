@@ -60,6 +60,7 @@ namespace sharp
 		// helper methods, creates graph from vertex- and edge-sets
 		static Hypergraph *createGraphFromSets(VertexSet vertices, EdgeSet edges);
 		static Hypergraph *createGraphFromDisjointSets(VertexSet v1, VertexSet v2, EdgeSet edges);
+		static Hypergraph *createHypergraphFromSets(VertexSet vertices, HyperedgeSet hyperedges);
 	
 		// stores a vertex name, assigns a new internal ID if it doesn't exist
 		Vertex storeVertexName(std::string name);

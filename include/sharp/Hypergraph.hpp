@@ -44,10 +44,11 @@ namespace sharp
 		int minFill;
 		int maxFill;
 		double avgFill;
+		bool isgraph;
 
 	public:
 		// Constructor
-		Hypergraph();
+		Hypergraph(bool isGraph = false);
 
 		// Destructor
 		virtual~Hypergraph();
@@ -78,6 +79,9 @@ namespace sharp
 
 		// Checks whether the hypergraph is connected
 		bool isConnected();
+
+		// Returns if this graph is a true hypergraph or a normal graph
+		bool isGraph() const;
 
 		// Transforms the hypergraph into its dual hypergraph
 		void makeDual();
