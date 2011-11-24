@@ -205,7 +205,7 @@ namespace sharp
 	\***********************************/
 	Solution::Solution(Operation operation, Solution *left, Solution *right)
 	{
-		C0(operation == CrossJoin || operation == Union);
+		CHECK0(operation == CrossJoin || operation == Union, "invalid solution operation specified");
 	
 		this->operation = operation;
 		this->leftArgument = left;
@@ -262,15 +262,15 @@ namespace sharp
 		case Value:
 			break;
 		case NewLeaf:
-			CNULL(inst /*instantiator needed, but is NULL*/);
+			CHECKNULL(inst, "instantiator needed, but is NULL");
 			this->content = inst->createLeafSolution(this->parameter);
 			break;
 		case NewEmpty:
-			CNULL(inst /*instantiator needed, but is NULL*/);
+			CHECKNULL(inst, "instantiator needed, but is NULL");
 			this->content = inst->createEmptySolution();
 			break;
 		default:
-			C0(0 /*invalid operation*/);
+			CHECK0(0, "invalid Solution operation specified");
 			break;
 		}
 
@@ -298,10 +298,10 @@ namespace sharp
 	{ 
 	}
 	
-	Solution *AbstractHTDAlgorithm::evaluate(const ExtendedHypertree *origroot, Instantiator *inst)
+	Solution *AbstractHTDAlgorithm::evaluate(ExtendedHypertree *origroot, Instantiator *inst)
 	{
 		this->inst = inst;
-		const ExtendedHypertree *root = prepareHypertreeDecomposition(origroot);
+		ExtendedHypertree *root = this->prepareHypertreeDecomposition(origroot);
 		return selectSolution(evaluateNode(root), root);
 	}
 
@@ -310,7 +310,7 @@ namespace sharp
 		return this->prob;
 	}
 
-	const ExtendedHypertree *AbstractHTDAlgorithm::prepareHypertreeDecomposition(const ExtendedHypertree *root)
+	ExtendedHypertree *AbstractHTDAlgorithm::prepareHypertreeDecomposition(ExtendedHypertree *root)
 	{
 		return root;
 	}
@@ -367,7 +367,7 @@ namespace sharp
 
 	AbstractSemiNormalizedHTDAlgorithm::~AbstractSemiNormalizedHTDAlgorithm() { }
 
-	const ExtendedHypertree *AbstractSemiNormalizedHTDAlgorithm::prepareHypertreeDecomposition(const ExtendedHypertree *root)
+	ExtendedHypertree *AbstractSemiNormalizedHTDAlgorithm::prepareHypertreeDecomposition(ExtendedHypertree *root)
 	{
 		return root->normalize(SemiNormalization);
 	}
@@ -384,7 +384,7 @@ namespace sharp
 		case Leaf:
 			return this->evaluatePermutationNode(node);
 		default:
-			C0(0 /*invalid node type, check normalization*/);
+			PrintError("invalid node type, check normalization", "");
 			return NULL;
 	        }
 	}
@@ -398,7 +398,7 @@ namespace sharp
 
 	AbstractNormalizedHTDAlgorithm::~AbstractNormalizedHTDAlgorithm() { }
 
-	const ExtendedHypertree *AbstractNormalizedHTDAlgorithm::prepareHypertreeDecomposition(const ExtendedHypertree *root)
+	ExtendedHypertree *AbstractNormalizedHTDAlgorithm::prepareHypertreeDecomposition(ExtendedHypertree *root)
 	{
 		return root->normalize(DefaultNormalization);
 	}
@@ -414,7 +414,7 @@ namespace sharp
 		case Leaf:
 			return this->evaluateLeafNode(node);
 		default:
-			C0(0 /*invalid node type, check normalization*/);
+			PrintError("invalid node type, check normalization", "");
 			return NULL;
 		}
 	}

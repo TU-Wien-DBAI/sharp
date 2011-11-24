@@ -31,11 +31,13 @@ namespace sharp
 		ExtendedHypertree(const VertexSet &vertices);
 		virtual ~ExtendedHypertree();
 
-		ExtendedHypertree *normalize(NormalizationType type = DefaultNormalization) const;
+		ExtendedHypertree *normalize(NormalizationType type = DefaultNormalization);
 
 		const VertexSet &getVertices() const;
 		TreeNodeType getType() const;
 		bool isRoot() const;
+		virtual int getTreeWidth();
+		//virtual int getHTreeWidth();
 		const VertexSet &getIntroducedVertices() const;
 		const VertexSet &getRemovedVertices() const;
 		Vertex getDifference() const;
@@ -67,8 +69,16 @@ namespace sharp
 		
 		void adapt();
 
-		ExtendedHypertree *createNormalizedJoinNode(ExtendedHypertree *left, ExtendedHypertree *right, const VertexSet &top, NormalizationType normalization) const;
-		static ExtendedHypertree *createChild(ExtendedHypertree *child, const VertexSet &vertices, Vertex difference, TreeNodeType type);
+		ExtendedHypertree *createNormalizedJoinNode(
+				ExtendedHypertree *left, 
+				ExtendedHypertree *right, 
+				const VertexSet &top, 
+				NormalizationType normalization);
+
+		static ExtendedHypertree *createChild(ExtendedHypertree *child, 
+				const VertexSet &vertices, 
+				Vertex difference, 
+				TreeNodeType type);
 
 #ifdef DEBUG
 	public: //PRINTING FUNCTIONS

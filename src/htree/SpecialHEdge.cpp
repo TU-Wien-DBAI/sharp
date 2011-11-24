@@ -14,7 +14,7 @@ namespace sharp
 	//////////////////////////////////////////////////////////////////////
 	
 	
-	SpecialHEdge::SpecialHEdge(int iNbrOfEdges) : Hyperedge(-1, NULL, 1, 1), CompSet(iNbrOfEdges)
+	SpecialHEdge::SpecialHEdge(int iNbrOfEdges) : Hyperedge(-1, 0, 1, 1), CompSet(iNbrOfEdges)
 	{
 		Hyperedge::bMySpecial = true;
 		CompSet::bMySpecial = true;

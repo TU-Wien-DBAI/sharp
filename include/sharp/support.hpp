@@ -66,27 +66,27 @@ namespace sharp
 	 ============================================================================
 	 */
 	#if defined(SHARP_ENABLE_DEBUG)
-	    #define PrintError(MESSAGE) _printError(__LINE__, __FILE__, (MESSAGE))
+	    #define PrintError(MESSAGE, CODE) _printError(__LINE__, __FILE__, (MESSAGE), (CODE))
 	#else
-	    #define PrintError(MESSAGE) _printError(MESSAGE)
+	    #define PrintError(MESSAGE, CODE) _printError((MESSAGE), (CODE))
 	#endif
 
-	void _printError(int line, const char *file, const char *message);
-	void _printError(const char *message);
+	void _printError(int line, const char *file, const char *message, const char *code);
+	void _printError(const char *message, const char *code);
 	    
 	/*
 	 ============================================================================
 	 Error handling macros
 	 ============================================================================
 	 */
-	#define CHECK(CMD, COND) 	{ if((CMD) COND) PrintError(#CMD); }
-	#define C0(CMD)       		CHECK(CMD, == 0)
-	#define CNULL(CMD)    		CHECK(CMD, == NULL)
-	#define CNEG(CMD)     		CHECK(CMD, < 0)
-	#define CPOS(CMD)     		CHECK(CMD, > 0)
-	#define CNOT0(CMD)    		CHECK(CMD, != 0)
-	#define CNOTNULL(CMD) 		CHECK(CMD, != NULL)
-	#define CEOF(CMD)  		CHECK(CMD, == EOF)
+	#define CHECK(CMD, COND, MSG) 	{ if((CMD) COND) PrintError(MSG, #CMD); }
+	#define CHECK0(CMD, MSG)       		CHECK(CMD, == 0, MSG)
+	#define CHECKNULL(CMD, MSG)    		CHECK(CMD, == NULL, MSG)
+	#define CHECKNEG(CMD, MSG)     		CHECK(CMD, < 0, MSG)
+	#define CHECKPOS(CMD, MSG)     		CHECK(CMD, > 0, MSG)
+	#define CHECKNOT0(CMD, MSG)    		CHECK(CMD, != 0, MSG)
+	#define CHECKNOTNULL(CMD, MSG) 		CHECK(CMD, != NULL, MSG)
+	#define CHECKEOF(CMD, MSG)  		CHECK(CMD, == EOF, MSG)
 	
 	/*
 	 TIMER class

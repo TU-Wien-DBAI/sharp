@@ -59,6 +59,14 @@ TreeNodeType ExtendedHypertree::getType() const
 	return this->type;
 }
 
+int ExtendedHypertree::getTreeWidth()
+{
+	int tw = this->vertices.size();
+	for(list<Hypertree *>::iterator it = getChildren()->begin(); it != getChildren()->end(); ++it)
+		tw = max(tw, (*it)->getTreeWidth());
+	return tw - 1;
+}
+
 Vertex ExtendedHypertree::getDifference() const
 {
 	if(this->introduced.size() != 0) return *this->introduced.begin();
@@ -81,7 +89,7 @@ bool ExtendedHypertree::isRoot() const
 	return this->MyParent == NULL;
 }
 
-ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization) const
+ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization)
 {
 	ExtendedHypertree *current = new ExtendedHypertree(this->vertices);
 
@@ -106,7 +114,7 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization)
 			empty->adapt();
 			break;
 		default:
-			C0(0 /*undefined normalization type*/); return NULL;
+			CHECK0(0, "undefined normalization type"); return NULL;
 		}
 	}
 	else if(this->MyChildren.size() == 1)
@@ -131,7 +139,7 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization)
 			child->adapt();
 			break;
 		default:
-			C0(0 /*undefined normalization type*/); return NULL;
+			CHECK0(0, "undefined normalization type"); return NULL;
 		}
 	}
 	else
@@ -189,7 +197,7 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization)
 					child->adapt();
 					break;
 				default:
-					C0(0 /*undefined normalization type*/); return NULL;
+					CHECK0(0, "undefined normalization type"); return NULL;
 				}
 			}
 		}
@@ -198,7 +206,7 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization)
 	return current;
 }
 
-ExtendedHypertree *ExtendedHypertree::createNormalizedJoinNode(ExtendedHypertree *left, ExtendedHypertree *right, const VertexSet &top, NormalizationType normalization) const
+ExtendedHypertree *ExtendedHypertree::createNormalizedJoinNode(ExtendedHypertree *left, ExtendedHypertree *right, const VertexSet &top, NormalizationType normalization)
 {
 	VertexSet intersection;
 
@@ -237,7 +245,7 @@ ExtendedHypertree *ExtendedHypertree::createNormalizedJoinNode(ExtendedHypertree
 			left->adapt();
 			break;
 		default:
-			C0(0 /*undefined normalization type*/); return NULL;
+			CHECK0(0, "undefined normalization type"); return NULL;
 		}
 	}
 
@@ -266,7 +274,7 @@ ExtendedHypertree *ExtendedHypertree::createNormalizedJoinNode(ExtendedHypertree
 			right->adapt();
 			break;
 		default:
-			C0(0 /*undefined normalization type*/); return NULL;
+			CHECK0(0, "undefined normalization type"); return NULL;
 		}
 	}
 

@@ -476,7 +476,7 @@ void Hypergraph::divideNodes(int *iPartitioning, Hypergraph ***Subgraphs, Hypere
 				}
 		
 		if((TmpNodes.size() > 0) && (TmpEdges.size() > 0)) {
-			HEdge = new Hyperedge(G_EdgeID++, NULL, TmpNodes.size(), TmpEdges.size());
+			HEdge = new Hyperedge(G_EdgeID++, 0, TmpNodes.size(), TmpEdges.size());
 			for(j=k=0; j < (*Subgraphs)[i]->iMyMaxNbrOfNodes; j++)
 				if(TmpNodes.find((*Subgraphs)[i]->MyNodes[j]->getID()) != TmpNodes.end()) {
 					HEdge->insNode((*Subgraphs)[i]->MyNodes[j], k++);

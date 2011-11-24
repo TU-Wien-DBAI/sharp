@@ -94,7 +94,8 @@ namespace sharp
 
 		// Gets a list populated with all the children of this node
 		const list<Hypertree *> *getChildren() const;
-	    
+		list<Hypertree *> *getChildren();
+
 		// Writes hypertree to text format file
 		void outputToText(char *cNameOfFile);
 
@@ -140,11 +141,11 @@ namespace sharp
 
 		// Returns the hypertreewidth, i.e., the maximum number of elements 
 		// in the lambda-set over all nodes in the subtree
-		int getHTreeWidth();
+		virtual int getHTreeWidth();
 
 		// Returns the treewidth, i.e., the maximum number of elements 
 		// in the chi-set over all nodes in the subtree
-		int getTreeWidth();
+		virtual int getTreeWidth();
 
 
 		// Returns the chi-set labelling the hypertree-node

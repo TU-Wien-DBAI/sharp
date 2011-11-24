@@ -65,22 +65,26 @@ namespace sharp
 	 ============================================================================
 	 */
 #ifdef SHARP_ENABLE_DEBUG
-	void _printError(int line, const char *file, const char *message)
+	void _printError(int line, const char *file, const char *message, const char *code)
 	{
 	    if(errno == 0)
-	    	cerr << sProgramName << ": " << file << ":" << line << ": ERROR - " << message << endl;
+	    	cerr << sProgramName << ": " << file << ":" << line 
+			<< ": ERROR - " << message << " (code: " << code << ")" << endl;
 	    else
-	    	cerr << sProgramName << ": " << file << ":" << line << ": ERROR - " << message << " - " << strerror(errno) << endl;
+	    	cerr << sProgramName << ": " << file << ":" << line 
+			<< ": ERROR - " << message << " (code: " << code << ")" 
+			<< " - " << strerror(errno) << endl;
 	    exit(EXIT_FAILURE);
 	}
 #endif // SHARP_ENABLE_DEBUG
 
-	void _printError(const char *message)
+	void _printError(const char *message, const char *code)
 	{
 	    if(errno == 0)
-	    	cerr << sProgramName << ": ERROR - " << message << endl;
+	    	cerr << sProgramName << ": ERROR - " << message << " (code: " << code << ")" << endl;
 	    else
-	    	cerr << sProgramName << ": ERROR - " << message << " - " << strerror(errno) << endl; 
+	    	cerr << sProgramName << ": ERROR - " << message << " (code: " << code << ")" 
+			<< " - " << strerror(errno) << endl; 
 	    exit(EXIT_FAILURE);
 	}
 	

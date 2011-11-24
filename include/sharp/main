@@ -6,3 +6,8 @@
 #include <sharp/Hypertree.hpp>
 #include <sharp/ExtendedHypertree.hpp>
 #include <sharp/CountingSolutionContent.hpp>
+#include <sharp/AbstractHypertreeDecompositionAlgorithm.hpp>
+#include <sharp/BucketEliminationAlgorithm.hpp>
+#include <sharp/MaximumCardinalitySearchOrdering.hpp>
+#include <sharp/MinimumFillOrdering.hpp>
+#include <sharp/MinimumDegreeOrdering.hpp>
