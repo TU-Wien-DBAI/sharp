@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <MinimumDegreeOrdering.hpp>
 #include <probSol.hpp>
 #include <Hypergraph.hpp>

@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <MaximumCardinalitySearchOrdering.hpp>
 
 #include <probSol.hpp>

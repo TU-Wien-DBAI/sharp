@@ -76,6 +76,9 @@ namespace sharp
 		list<Hypertree *> Independent, **Children;
 		list<Hypertree *>::iterator ListIter;
 		set<Node *>::iterator ChiIter;
+
+		if(iNbrOfBuckets == 0)
+			return new Hypertree;
 	
 		// Create storage space for the children of each hypertree-node
 		Children = new list<Hypertree *>*[iNbrOfBuckets];
