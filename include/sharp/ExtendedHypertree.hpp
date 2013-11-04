@@ -18,10 +18,22 @@ namespace sharp
 
 	enum NormalizationType
 	{
-		DefaultNormalization,
-		SemiNormalization,
-		StrongNormalization,
-		NoNormalization
+		DefaultNormalization, // at most one element change between nodes,
+		                      // at most two children, join nodes have same
+				      // elements as their exactly two children
+				      
+		SemiNormalization,    // multiple element changes between nodes,
+		                      // at most two children, join nodes have same
+				      // elements as their exactly two children
+
+		StrongNormalization,  // same as DefaultNormalization, but root and
+		                      // leaf nodes are "empty", i.e., have no elements
+
+		NoNormalization,      // any node can have any number of elements and
+		                      // any number of children
+
+		WeakNormalization     // same as SemiNormalization, but join nodes can
+			              // have any number of children (but at least two)
 	};
 		
 	class ExtendedHypertree : public Hypertree

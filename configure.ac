@@ -3,9 +3,10 @@
 
 AC_PREREQ([2.65])
 AC_INIT([sharp], [1.0], [morak@dbai.tuwien.ac.at])
-AM_INIT_AUTOMAKE([sharp], [1.0])
+AM_INIT_AUTOMAKE
 LT_PREREQ([2.2])
-LT_INIT([dlopen])
+LT_INIT
+LT_LANG([C++])
 AC_CONFIG_SRCDIR([src/Problem.cpp])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -14,7 +15,6 @@ AC_CONFIG_FILES([Makefile
 		 src/Makefile])
 
 # Checks for programs.
-AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 

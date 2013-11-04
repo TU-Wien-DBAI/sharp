@@ -104,6 +104,7 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization)
 			current->type = Leaf;
 			break;
 		case SemiNormalization:
+		case WeakNormalization:
 			current->type = Leaf;
 			current->introduced = current->vertices;
 			break;
@@ -126,6 +127,7 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization)
 		{
 		case NoNormalization:
 		case SemiNormalization:
+		case WeakNormalization:
 			current->type = Permutation;
 			set_difference(current->vertices.begin(), current->vertices.end(),
 					child->vertices.begin(), child->vertices.end(),
@@ -149,7 +151,27 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization)
 			for(list<Hypertree *>::const_iterator i = this->MyChildren.begin(); i != this->MyChildren.end(); ++i)
 				current->insChild(((ExtendedHypertree *)*i)->normalize(normalization));
 		}
-		else
+		else if(normalization == WeakNormalization)
+		{
+			current->type = Branch;
+			
+			for(list<Hypertree *>::const_iterator i = this->MyChildren.begin(); i != this->MyChildren.end(); ++i)
+			{
+				ExtendedHypertree *joinchild = new ExtendedHypertree(current->vertices);
+				ExtendedHypertree *child = ((ExtendedHypertree *)*i)->normalize(normalization);
+
+				joinchild->type = Permutation;
+				set_difference(joinchild->vertices.begin(), joinchild->vertices.end(),
+						child->vertices.begin(), child->vertices.end(),
+						inserter(joinchild->introduced, joinchild->introduced.begin()));
+				set_difference(child->vertices.begin(), child->vertices.end(),
+						joinchild->vertices.begin(), joinchild->vertices.end(),
+						inserter(joinchild->removed, joinchild->removed.begin()));
+
+				joinchild->insChild(child);
+			}
+		}
+		else // semi-normalization or stronger
 		{
 			vector<ExtendedHypertree *> childlist;
 			vector<ExtendedHypertree *> newchildren;
