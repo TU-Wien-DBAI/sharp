@@ -159,7 +159,6 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization)
 			{
 				ExtendedHypertree *child = ((ExtendedHypertree *)*i)->normalize(normalization);
 
-				joinchild->type = Permutation;
 				set_difference(joinchild->vertices.begin(), joinchild->vertices.end(),
 						child->vertices.begin(), child->vertices.end(),
 						inserter(joinchild->introduced, joinchild->introduced.begin()));
