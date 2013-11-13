@@ -157,6 +157,7 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization)
 			
 			for(list<Hypertree *>::const_iterator i = this->MyChildren.begin(); i != this->MyChildren.end(); ++i)
 			{
+				ExtendedHypertree *joinchild = new ExtendedHypertree(current->vertices);
 				ExtendedHypertree *child = ((ExtendedHypertree *)*i)->normalize(normalization);
 
 				set_difference(joinchild->vertices.begin(), joinchild->vertices.end(),
@@ -166,7 +167,8 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization)
 						joinchild->vertices.begin(), joinchild->vertices.end(),
 						inserter(joinchild->removed, joinchild->removed.begin()));
 
-				current->insChild(child);
+				joinchild->insChild(child);
+				current->insChild(joinchild);
 			}
 		}
 		else // semi-normalization or stronger
