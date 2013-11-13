@@ -157,7 +157,6 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization)
 			
 			for(list<Hypertree *>::const_iterator i = this->MyChildren.begin(); i != this->MyChildren.end(); ++i)
 			{
-				ExtendedHypertree *joinchild = new ExtendedHypertree(current->vertices);
 				ExtendedHypertree *child = ((ExtendedHypertree *)*i)->normalize(normalization);
 
 				joinchild->type = Permutation;
@@ -168,7 +167,7 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization)
 						joinchild->vertices.begin(), joinchild->vertices.end(),
 						inserter(joinchild->removed, joinchild->removed.begin()));
 
-				joinchild->insChild(child);
+				current->insChild(child);
 			}
 		}
 		else // semi-normalization or stronger
