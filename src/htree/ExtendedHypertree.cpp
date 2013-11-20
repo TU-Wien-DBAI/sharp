@@ -91,18 +91,18 @@ bool ExtendedHypertree::isRoot() const
 
 ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization)
 {
-	if(normalization == StrongNormalization) return this->normalize(normalization, true);
-	else return this->normalize(normalization, false);
+	if(normalization == StrongNormalization) return this->normalize(normalization, true, false);
+	else return this->normalize(normalization, false, false);
 }
 
-ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization, bool emptyRootsLeafs)
+ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization, bool emptyLeafs, bool emptyRoot)
 {
 	ExtendedHypertree *current = new ExtendedHypertree(this->vertices);
 
 	if(this->MyChildren.size() == 0)
 	{
 		ExtendedHypertree *empty = NULL;
-		if(emptyRootsLeafs) empty = new ExtendedHypertree(VertexSet());
+		if(emptyLeafs) empty = new ExtendedHypertree(VertexSet());
 
 		switch(normalization)
 		{
@@ -118,7 +118,7 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization,
 			CHECK0(0, "undefined normalization type"); return NULL;
 		}
 
-		if(!emptyRootsLeafs) current->type = Leaf;
+		if(!emptyLeafs) current->type = Leaf;
 		else
 		{
 			empty->type = Leaf;
@@ -131,7 +131,7 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization,
 	}
 	else if(this->MyChildren.size() == 1)
 	{
-		ExtendedHypertree *child = ((ExtendedHypertree *)*this->MyChildren.begin())->normalize(normalization, emptyRootsLeafs);
+		ExtendedHypertree *child = ((ExtendedHypertree *)*this->MyChildren.begin())->normalize(normalization, emptyLeafs, emptyRoot);
 		current->insChild(child);
 
 		switch(normalization)
@@ -160,7 +160,7 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization,
 		if(normalization == NoNormalization)
 		{
 			for(list<Hypertree *>::const_iterator i = this->MyChildren.begin(); i != this->MyChildren.end(); ++i)
-				current->insChild(((ExtendedHypertree *)*i)->normalize(normalization, emptyRootsLeafs));
+				current->insChild(((ExtendedHypertree *)*i)->normalize(normalization, emptyLeafs, emptyRoot));
 		}
 		else if(normalization == WeakNormalization)
 		{
@@ -169,7 +169,7 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization,
 			for(list<Hypertree *>::const_iterator i = this->MyChildren.begin(); i != this->MyChildren.end(); ++i)
 			{
 				ExtendedHypertree *joinchild = new ExtendedHypertree(current->vertices);
-				ExtendedHypertree *child = ((ExtendedHypertree *)*i)->normalize(normalization, emptyRootsLeafs);
+				ExtendedHypertree *child = ((ExtendedHypertree *)*i)->normalize(normalization, emptyLeafs, emptyRoot);
 
 				set_difference(joinchild->vertices.begin(), joinchild->vertices.end(),
 						child->vertices.begin(), child->vertices.end(),
@@ -189,7 +189,7 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization,
 
 			for(list<Hypertree *>::const_iterator i = this->MyChildren.begin(); i != this->MyChildren.end(); ++i)
 			{
-				newchildren.push_back(((ExtendedHypertree *)*i)->normalize(normalization, emptyRootsLeafs));
+				newchildren.push_back(((ExtendedHypertree *)*i)->normalize(normalization, emptyLeafs, emptyRoot));
 			}
 
 			while(newchildren.size() > 1)
@@ -236,7 +236,7 @@ ExtendedHypertree *ExtendedHypertree::normalize(NormalizationType normalization,
 		}
 	}
 
-	if(emptyRootsLeafs)
+	if(emptyRoot && this->MyParent == NULL) // add empty root node
 	{
 		ExtendedHypertree *root = new ExtendedHypertree(VertexSet());
 		root->insChild(current);
