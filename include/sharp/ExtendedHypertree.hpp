@@ -44,6 +44,7 @@ namespace sharp
 		virtual ~ExtendedHypertree();
 
 		ExtendedHypertree *normalize(NormalizationType type = DefaultNormalization);
+		ExtendedHypertree *normalize(NormalizationType type, bool emptyRootsLeafs);
 
 		const VertexSet &getVertices() const;
 		TreeNodeType getType() const;
