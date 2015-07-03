@@ -1,31 +1,16 @@
-AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/include/sharp -ansi --pedantic-error -Wall
+AM_CPPFLAGS = -I$(top_srcdir)/include --std=c++11 --pedantic-errors -Wpedantic -Wall -Wextra -Wdouble-promotion -Wswitch-default -fvisibility=hidden -fvisibility-inlines-hidden
 AM_CTAGSFLAGS = --extra=+f
 
 lib_LTLIBRARIES = libsharp.la
-libsharp_la_SOURCES = ./AbstractAlgorithm.cpp \
-./Global.cpp \
-./Problem.cpp \
-./htree/AbstractEliminationOrdering.cpp \
-./htree/AbstractHypertreeDecompositionAlgorithm.cpp \
-./htree/BucketEliminationAlgorithm.cpp \
-./htree/Component.cpp \
-./htree/CompSet.cpp \
-./htree/ExtendedHypertree.cpp \
-./htree/Globals.cpp \
-./htree/H_BucketElim.cpp \
-./htree/Hyperedge.cpp \
-./htree/Hypergraph.cpp \
-./htree/Hypertree.cpp \
-./htree/MaximumCardinalitySearchOrdering.cpp \
-./htree/MinimumDegreeOrdering.cpp \
-./htree/MinimumFillOrdering.cpp \
-./htree/Node.cpp \
-./htree/Parser.cpp \
-./htree/probSol.cpp \
-./htree/SetCover.cpp \
-./htree/SetCoverLS.cpp \
-./htree/SpecialHEdge.cpp \
-./htree/TabuSearch.cpp \
-./support/support.cpp
+libsharp_la_SOURCES = ./EncodedSolution.cpp \
+./EncodedSolution.hpp \
+./HtdSolutionTreeBuilder.cpp \
+./HtdSolutionTreeBuilder.hpp \
+./HtdSolutionTree.cpp \
+./HtdSolutionTree.hpp \
+./HtdSolver.cpp \
+./HtdSolver.hpp \
+./util/errorhandling.cpp \
+./util/errorhandling.hpp
 
-libsharp_la_LDFLAGS = -version-info 0:0:0
+libsharp_la_LDFLAGS = -version-info 1:0:0
