@@ -9,7 +9,7 @@
 # all the test library header paths to the default include path
 #AM_CPPFLAGS = -I$(top_srcdir)/include
       	#-I./gtest \
-      	#-I./gtest/include \
+      	#-I./gtest/include
 
 # tell automake to pass certain flags to 'ctags'
 #AM_CTAGSFLAGS = --extra=+f
@@ -106,7 +106,7 @@
 # tell automake that for each program listed in PROGRAMS above, if no SOURCES
 # are given it should try and build it from the single source file <prog>.cpp,
 # where <prog> is the name of the program.
-AM_DEFAULT_SOURCE_EXT = .cpp
+#AM_DEFAULT_SOURCE_EXT = .cpp
 
 # list all source code files for test1 binary
 #test1_SOURCES = main.cpp \
