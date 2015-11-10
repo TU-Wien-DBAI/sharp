@@ -23,15 +23,6 @@ namespace sharp
 {
 	/*
 	 ============================================================================
-	 Variable    : sProgramName
-	 Description : A string that stores the program name (argv[0])
-	 Date        : 2007-11-07
-	 ============================================================================
-	 */
-	extern char sProgramName[];
-	
-	/*
-	 ============================================================================
 	 Function    : InitializeErrorHandling
 	 Description : Initializes the variables needed for the error handling
 	               routines defined here.

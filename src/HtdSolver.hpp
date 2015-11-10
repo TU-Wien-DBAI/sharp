@@ -1,15 +1,15 @@
 #ifndef SHARP_HTDSOLVER_H_
 #define SHARP_HTDSOLVER_H_
 
-#include <libsharp/HtdSolver.hpp>
+#include <sharp/HtdSolver.hpp>
 
 namespace sharp
 {
 	struct SHARP_LOCAL HtdSolver::Impl
 	{
-		Impl(const IHtdAlgorithm &algorithm);
+		Impl(const IHtdNodeEvaluator &evaluator);
 
-		const IHtdAlgorithm &algorithm;
+		const IHtdNodeEvaluator &evaluator;
 
 	}; // struct HtdSolver::Impl
 

@@ -23,8 +23,9 @@
 #endif
 
 // Now we use the generic helper definitions above to define SHARP_API.
-// SHARP_API is used for the public API symbols. It either DLL imports or DLL exports (or does nothing for static build)
-#ifdef SHARP_EXPORTS // defined if we are building the SHARP DLL (instead of using it)
+// SHARP_API is used for the public API symbols. It either imports or exports
+// (or does nothing for a static build)
+#ifdef SHARP_EXPORTS // defined when building (i.e. not using) the SHARP library
   #define SHARP_API SHARP_HELPER_EXPORT
 #else
   #define SHARP_API SHARP_HELPER_IMPORT
