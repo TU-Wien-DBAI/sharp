@@ -1,10 +1,6 @@
 #ifndef SHARP_LIBSHARP_GLOBAL_H_
 #define SHARP_LIBSHARP_GLOBAL_H_
 
-#ifdef HAVE_CONFIG_H
-  #include <config.h>
-#endif // HAVE_CONFIG_H
-
 // Generic helper definitions for shared library support
 #if defined _WIN32 || defined __CYGWIN__
   #define SHARP_HELPER_IMPORT __declspec(dllimport)

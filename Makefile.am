@@ -2,7 +2,7 @@
 # FLAGS:		   #
 ############################
 
-# tell autoconf to pass certain flags to automake
+# tell automake to pass certain flags to autoconf on re-run
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
 # tell automake to pass certain flags to 'ctags'
@@ -12,15 +12,14 @@ AM_CTAGSFLAGS = --extra=+f
 # tell automake to pass certain CPPFLAGS to the compiler
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
-	-std=c++11 \
 	-pedantic-errors \
 	-Wpedantic \
 	-Wall \
 	-Wextra \
 	-Wdouble-promotion \
-	-Wswitch-default
-#	-fvisibility=hidden \
-#	-fvisibility-inlines-hidden
+	-Wswitch-default \
+	-fvisibility=hidden \
+	-fvisibility-inlines-hidden
 
 ############################
 # LIBRARIES TO BUILD:	   #
@@ -32,23 +31,29 @@ lib_LTLIBRARIES = libsharp.la
 #--------------------------#
 # libsharp.la build options  #
 #--------------------------#
-
-# list all source code files for the libsharp.la library 
-libsharp_la_SOURCES = \
-	src/HtdSolver.cpp \
-	src/HtdSolver.hpp \
-	src/util/errorhandling.hpp \
-	src/util/errorhandling.cpp
 	
 # list the names of the public header files of the libsharp.la library
 libsharp_la_include_HEADERS = \
 	include/sharp/main \
-	include/sharp/global.hpp \
-	include/sharp/IHtdNodeEvaluator.hpp
-	include/sharp/IHtdSolver.hpp \
+	include/sharp/global \
 	include/sharp/IInstance.hpp \
+	include/sharp/ISolution.hpp \
+	include/sharp/ISolver.hpp \
 	include/sharp/ITable.hpp \
-	include/sharp/HtdSolver.hpp
+	include/sharp/ITableMap.hpp \
+	include/sharp/IterativeTreeSolver.hpp \
+	include/sharp/ITreeEvaluator.hpp
+
+# list all source code files for the libsharp.la library
+# note that we also compile all the headers, to check for missing includes
+libsharp_la_SOURCES = \
+	src/assembly.cpp \
+	src/IterativeTreeSolver.cpp \
+	src/IterativeTreeSolver.hpp \
+	src/TableMap.cpp \
+	src/TableMap.hpp \
+	src/util/errorhandling.cpp \
+	src/util/errorhandling.hpp
 
 # tell automake that the installation directory for public header files of the
 # libsharp.la library should be a subfolder in the default ${includedir}

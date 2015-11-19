@@ -1,7 +1,7 @@
 #ifndef SHARP_SHARP_ITABLE_H_
 #define SHARP_SHARP_ITABLE_H_
 
-#include <sharp/global.hpp>
+#include <sharp/global>
 
 namespace sharp
 {
