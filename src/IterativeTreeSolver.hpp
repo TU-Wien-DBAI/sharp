@@ -3,6 +3,8 @@
 
 #include <sharp/IterativeTreeSolver.hpp>
 
+#include <sharp/IMutableNodeTableMap.hpp>
+
 #include <utility>
 
 namespace sharp
@@ -11,7 +13,8 @@ namespace sharp
 	{
 	public:
 		Impl(	const htd::ITreeDecompositionAlgorithm &decomposer,
-				const ITreeEvaluator &evaluator);
+				const ITreeAlgorithm &algorithm,
+				const ITreeSolutionExtractor &extractor);
 
 		virtual ~Impl();
 
@@ -21,21 +24,23 @@ namespace sharp
 		std::unique_ptr<htd::ITreeDecomposition> decompose(
 				const IInstance &instance) const;
 
-		virtual std::unique_ptr<ITableMap> initializeTableMap(
+		virtual std::unique_ptr<IMutableNodeTableMap> initializeMap(
 				std::size_t size) const;
 
-		virtual void updateTableMap(
+		virtual void insertIntoMap(
 				htd::vertex_t node,
+				const htd::ITreeDecomposition &td,
 				ITable *table,
-				ITableMap &tableMap) const; 
+				IMutableNodeTableMap &tableMap) const; 
 
-		std::unique_ptr<ITableMap> evaluate(
+		std::unique_ptr<IMutableNodeTableMap> evaluate(
 				const htd::ITreeDecomposition &td,
 				const IInstance &instance) const;
 
 	private:
 		const htd::ITreeDecompositionAlgorithm &decomposer_;
-		const ITreeEvaluator &evaluator_;
+		const ITreeAlgorithm &algorithm_;
+		const ITreeSolutionExtractor &extractor_;
 
 	}; // class IterativeTreeSolver::Impl
 

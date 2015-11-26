@@ -1,5 +1,5 @@
 ############################
-# FLAGS:		   #
+# FLAGS:                   #
 ############################
 
 # tell automake to pass certain flags to autoconf on re-run
@@ -36,22 +36,40 @@ lib_LTLIBRARIES = libsharp.la
 libsharp_la_include_HEADERS = \
 	include/sharp/main \
 	include/sharp/global \
+	\
+	include/sharp/IEnumerator.hpp \
 	include/sharp/IInstance.hpp \
+	include/sharp/IMutableNodeTableMap.hpp \
+	include/sharp/IMutableNodeTupleSetMap.hpp \
+	include/sharp/INodeTableMap.hpp \
+	include/sharp/INodeTupleSetMap.hpp \
 	include/sharp/ISolution.hpp \
 	include/sharp/ISolver.hpp \
 	include/sharp/ITable.hpp \
-	include/sharp/ITableMap.hpp \
-	include/sharp/IterativeTreeSolver.hpp \
-	include/sharp/ITreeEvaluator.hpp
+	include/sharp/ITreeAlgorithm.hpp \
+	include/sharp/ITreeSolutionExtractor.hpp \
+	include/sharp/ITreeTupleAlgorithm.hpp \
+	include/sharp/ITreeTupleSolutionExtractor.hpp \
+	include/sharp/ITuple.hpp \
+	include/sharp/ITupleSet.hpp \
+	\
+	include/sharp/IterativeTreeSolver.hpp
 
 # list all source code files for the libsharp.la library
-# note that we also compile all the headers, to check for missing includes
 libsharp_la_SOURCES = \
 	src/assembly.cpp \
+	\
+	src/ITuple.hpp \
+	\
 	src/IterativeTreeSolver.cpp \
 	src/IterativeTreeSolver.hpp \
-	src/TableMap.cpp \
-	src/TableMap.hpp \
+	src/NodeTableMap.cpp \
+	src/NodeTableMap.hpp \
+	src/NodeTupleSetMap.cpp \
+	src/NodeTupleSetMap.hpp \
+	src/NullTreeSolutionExtractor.cpp\
+	src/NullTreeSolutionExtractor.hpp\
+	\
 	src/util/errorhandling.cpp \
 	src/util/errorhandling.hpp
 
@@ -90,7 +108,7 @@ dist_noinst_SCRIPTS = autogen.sh
 EXTRA_DIST = 
 
 ############################
-# UNIT TESTS:		   #
+# UNIT TESTS:              #
 ############################
 
 # tell automake to recursively go into the test directory

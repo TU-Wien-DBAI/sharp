@@ -4,11 +4,12 @@
 
 #include "IterativeTreeSolver.hpp"
 
-#include "TableMap.hpp"
+#include "NullTreeSolutionExtractor.hpp"
+#include "NodeTableMap.hpp"
 
 #include <stack>
-
-#include <cstdlib>
+#include <memory>
+#include <cstddef>
 
 namespace sharp
 {
@@ -29,8 +30,15 @@ namespace sharp
 	
 	IterativeTreeSolver::IterativeTreeSolver(
 			const ITreeDecompositionAlgorithm &decomposer,
-			const ITreeEvaluator &evaluator)
-		: impl(new Impl(decomposer, evaluator))
+			const ITreeAlgorithm &algorithm)
+		: impl(new Impl(decomposer, algorithm, NullTreeSolutionExtractor()))
+	{ }
+
+	IterativeTreeSolver::IterativeTreeSolver(
+			const ITreeDecompositionAlgorithm &decomposer,
+			const ITreeAlgorithm &algorithm,
+			const ITreeSolutionExtractor &extractor)
+		: impl(new Impl(decomposer, algorithm, extractor))
 	{ }
 
 	IterativeTreeSolver::~IterativeTreeSolver()
@@ -45,22 +53,24 @@ namespace sharp
 
 	IterativeTreeSolver::Impl::Impl(
 			const ITreeDecompositionAlgorithm &decomposer,
-			const ITreeEvaluator &evaluator)
-		: decomposer_(decomposer), evaluator_(evaluator)
+			const ITreeAlgorithm &algorithm,
+			const ITreeSolutionExtractor &extractor)
+		: decomposer_(decomposer), algorithm_(algorithm), extractor_(extractor)
 	{ }
 
 	IterativeTreeSolver::Impl::~Impl()
 	{ }
 
-	ISolution *IterativeTreeSolver::Impl::solve(
-			const IInstance &instance) const
+	ISolution *IterativeTreeSolver::Impl::solve(const IInstance &instance) const
 	{
 		unique_ptr<ITreeDecomposition> td(decompose(instance));
-		unique_ptr<ITableMap> tableMap(evaluate(*td, instance));
+		unique_ptr<IMutableNodeTableMap> tableMap = evaluate(*td, instance);
 		vertex_t root = td->root();
 
-		return evaluator_.calculateSolution(root,
-				*td, *tableMap, instance);
+		if(tableMap)
+			return extractor_.extractSolution(root, *td, *tableMap, instance);
+		else
+			return extractor_.emptySolution(instance);
 	}
 
 	unique_ptr<ITreeDecomposition> IterativeTreeSolver::Impl::decompose(
@@ -71,29 +81,35 @@ namespace sharp
 				decomposer_.computeDecomposition(*hg));
 	}
 
-	unique_ptr<ITableMap> IterativeTreeSolver::Impl::initializeTableMap(
+	unique_ptr<IMutableNodeTableMap> IterativeTreeSolver::Impl::initializeMap(
 			size_t size) const
 	{
-		return unique_ptr<ITableMap>(new TableMap(size));
+		return unique_ptr<IMutableNodeTableMap>(new NodeTableMap(size));
 	}
 
-	void IterativeTreeSolver::Impl::updateTableMap(
+	void IterativeTreeSolver::Impl::insertIntoMap(
 			vertex_t node,
+			const ITreeDecomposition &td,
 			ITable *table,
-			ITableMap &tableMap) const
+			IMutableNodeTableMap &tableMap) const
 	{
-			tableMap.addTable(node, table);
+		tableMap.insert(node, table);
+		
+		size_t childCount = td.childrenCount(node);
+		for(size_t childIndex = 0; childIndex < childCount; ++childIndex)
+			tableMap.erase(td.child(node, childIndex));
 	}
 
 
-	unique_ptr<ITableMap> IterativeTreeSolver::Impl::evaluate(
+	unique_ptr<IMutableNodeTableMap> IterativeTreeSolver::Impl::evaluate(
 			const ITreeDecomposition &td,
 			const IInstance &instance) const
 	{
 		vertex_t current = td.root();
-		stack<pair<vertex_t, size_t> > parents;
-		unique_ptr<ITableMap> tableMap(initializeTableMap(td.vertexCount()));
 		ITable *currentTable = nullptr;
+		stack<pair<vertex_t, size_t> > parents;
+		unique_ptr<IMutableNodeTableMap> tableMap(
+				initializeMap(td.vertexCount()));
 
 		while(!parents.empty() || current != UNKNOWN_VERTEX)
 		{
@@ -119,10 +135,18 @@ namespace sharp
 			}
 			else current = UNKNOWN_VERTEX;
 
-			currentTable = evaluator_.evaluateNode(current,
+			currentTable = algorithm_.evaluateNode(current,
 					td, *tableMap, instance);
 
-			updateTableMap(current, currentTable, *tableMap);
+			if(currentTable)
+			{
+				insertIntoMap(current, td, currentTable, *tableMap);
+			}
+			else
+			{
+				tableMap.reset();
+				break;
+			}
 		}
 
 		return tableMap;

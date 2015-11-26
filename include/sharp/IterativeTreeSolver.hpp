@@ -4,15 +4,16 @@
 #include <sharp/global>
 
 #include <sharp/ISolver.hpp>
-#include <sharp/ITreeEvaluator.hpp>
+#include <sharp/ITreeAlgorithm.hpp>
 #include <sharp/IInstance.hpp>
 #include <sharp/ISolution.hpp>
+#include <sharp/ITreeSolutionExtractor.hpp>
 
 #include <htd/main>
 
 namespace sharp
 {
-	class SHARP_API IterativeTreeSolver : public virtual ISolver
+	class SHARP_API IterativeTreeSolver : public ISolver
 	{
 	protected:
 		IterativeTreeSolver &operator=(IterativeTreeSolver &)
@@ -21,15 +22,19 @@ namespace sharp
 	public:
 		IterativeTreeSolver(
 				const htd::ITreeDecompositionAlgorithm &decomposer,
-				const ITreeEvaluator &evaluator);
+				const ITreeAlgorithm &calculator);
+
+		IterativeTreeSolver(
+				const htd::ITreeDecompositionAlgorithm &decomposer,
+				const ITreeAlgorithm &calculator,
+				const ITreeSolutionExtractor &extractor);
 
 		virtual ~IterativeTreeSolver();
 
 		virtual ISolution *solve(const IInstance &instance) const;
 
-
-		class Impl;
 	private:
+		class Impl;
 		Impl * const impl;
 
 	}; // class IterativeTreeSolver
