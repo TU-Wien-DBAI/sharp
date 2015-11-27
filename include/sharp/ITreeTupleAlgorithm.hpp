@@ -6,6 +6,7 @@
 #include <sharp/ISolution.hpp>
 #include <sharp/ITuple.hpp>
 #include <sharp/ITupleSet.hpp>
+#include <sharp/INodeTupleSetMap.hpp>
 
 #include <htd/main>
 
@@ -31,15 +32,6 @@ namespace sharp
 				const INodeTupleSetMap &tuples,
 				const IInstance &instance,
 				ITupleSet &outputTuples) const = 0;
-
-		virtual ISolution *calculateSolution(
-				htd::vertex_t node,
-				const htd::ITreeDecomposition &decomposition,
-				const INodeTupleSetMap &tuples,
-				const IInstance &instance) const = 0;
-
-		virtual ISolution *calculateSolution(
-				const IInstance &instance) const = 0;
 
 	}; // class ITreeTupleAlgorithm
 

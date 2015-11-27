@@ -21,7 +21,7 @@ namespace sharp
 		virtual ISolution *emptySolution(
 				const IInstance &instance) const override;
 
-	}; // class NodeTableMap
+	}; // class NullTreeSolutionExtractor
 
 } // namespace sharp
 

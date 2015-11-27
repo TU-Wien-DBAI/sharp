@@ -1,0 +1,32 @@
+###############################################################################
+# CODING STYLE GUIDE for libsharp                                             #
+###############################################################################
+
+#************************#
+include statements in include headers: less general to more general:
+	* global headers of project
+	* other project headers needed for current header file
+	* other library headers
+	* standard library headers (like <iostream> or <stack>)
+	* C headers
+Rationale: This way, errors in headers get detected early (missing <iostream>
+in a header file, for example, cannot be masked by inclusion of <iostream> in
+another header file.
+
+#************************#
+include statements in src headers (non-installed):
+	* if augmenting an include header of project: include this first
+	* include any other src headers
+	* other project headers needed for the current header file
+	* other library headers
+	* standard library headers
+	* C headers
+Rationale: Same as above.
+
+#************************#
+using namespace is forbidden! However, you may use:
+	* using <name>::<class>;
+but only inside the project namespace in *.cpp src files. Never use using
+statements in header files.
+
+#************************#

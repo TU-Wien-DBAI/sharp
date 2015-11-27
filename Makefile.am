@@ -37,7 +37,9 @@ libsharp_la_include_HEADERS = \
 	include/sharp/main \
 	include/sharp/global \
 	\
-	include/sharp/IEnumerator.hpp \
+	include/sharp/ConstEnumerator.hpp \
+	include/sharp/Enumerator.hpp \
+	include/sharp/EnumeratorSkeleton.hpp \
 	include/sharp/IInstance.hpp \
 	include/sharp/IMutableNodeTableMap.hpp \
 	include/sharp/IMutableNodeTupleSetMap.hpp \
@@ -54,6 +56,7 @@ libsharp_la_include_HEADERS = \
 	include/sharp/ITupleSet.hpp \
 	\
 	include/sharp/IterativeTreeSolver.hpp
+	include/sharp/IterativeTreeTupleSolver.hpp
 
 # list all source code files for the libsharp.la library
 libsharp_la_SOURCES = \
@@ -61,14 +64,22 @@ libsharp_la_SOURCES = \
 	\
 	src/ITuple.hpp \
 	\
+	src/IterativeTreeSolverBase.cpp \
+	src/IterativeTreeSolverBase.hpp \
 	src/IterativeTreeSolver.cpp \
 	src/IterativeTreeSolver.hpp \
+	src/IterativeTreeTupleSolver.cpp \
+	src/IterativeTreeTupleSolver.hpp \
 	src/NodeTableMap.cpp \
 	src/NodeTableMap.hpp \
 	src/NodeTupleSetMap.cpp \
 	src/NodeTupleSetMap.hpp \
 	src/NullTreeSolutionExtractor.cpp\
 	src/NullTreeSolutionExtractor.hpp\
+	src/NullTreeTupleSolutionExtractor.cpp\
+	src/NullTreeTupleSolutionExtractor.hpp\
+	src/TupleSet.cpp \
+	src/TupleSet.hpp \
 	\
 	src/util/errorhandling.cpp \
 	src/util/errorhandling.hpp
@@ -82,18 +93,20 @@ libsharp_la_includedir = ${includedir}/sharp
 # 1) Specify the Shared Object Version Information for the library, which
 # consists of three numbers: CURRENT:REVISION:AGE
 #
-# 	CURRENT: This is the version of the (external) API in the library.
-# 		Increase if the API changes (i.e. interface added or changed)!
+# 	CURRENT: This is the version of the (external) ABI in the library.
+# 		Increase if the ABI changes (i.e. interfaces added or changed)!
 #
-# 	REVISION: The revision represents how often the library was changed.
-# 		Increase this whenever the library code changes (always)!
+# 	REVISION: The revision represents how often the library was changed for a
+# 		given ABI version. Increase this whenever the library code changes, but
+# 		reset to 0 when incrementing CURRENT.
 #
-# 	AGE: This is the difference between the oldest and newest API version
-# 		that the library supports (e.g. if API version is 4, but we
-# 		are backwards compatible to API version 1, then AGE = 3).
+# 	AGE: This is the difference between the oldest and newest ABI version
+# 		that the library is backwards compatible with (e.g. if CURRENT is 4,
+# 		but we are backwards compatible to ABI version 1, then AGE = 3). Set to
+# 		0 if there is a backwards-compatibility breaking change, otherwise
+# 		increase by 1 if CURRENT was increased by one.
 #
-#FIXME: do feature detection
-libsharp_la_LDFLAGS = -version-info 1:1:0
+libsharp_la_LDFLAGS = -version-info 1:0:0
 
 ############################
 # DISTRIBUTION OPTIONS:	   #

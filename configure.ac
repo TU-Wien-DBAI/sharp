@@ -6,7 +6,7 @@
 AC_PREREQ([2.65])				# minimum autoconf version
 
 # supply the name of the project, version number, and contact email
-AC_INIT([sharp], [0.2], [morak@dbai.tuwien.ac.at])
+AC_INIT([sharp], [2.0], [morak@dbai.tuwien.ac.at])
 
 AC_CONFIG_SRCDIR([src/assembly.cpp]) 		# source directory
 AC_CONFIG_HEADERS([config.h])			# name of generated header

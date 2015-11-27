@@ -1,0 +1,7 @@
+- add operator= implementation and copy-constructor to:
+	* IterativeTreeSolver
+	* TreeTupleAlgorithmAdapter
+
+- add preprocessingOperations in IterativeTree(Tuple)Solver when libhtd supports it
+
+- rename Extractor to Calculator, and inside: rename extractSolution to calculateSolution

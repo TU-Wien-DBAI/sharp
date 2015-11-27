@@ -1,0 +1,8 @@
+#ifndef SHARP_SHARP_ICONSTENUMERATOR_H_
+#define SHARP_SHARP_ICONSTENUMERATOR_H_
+
+#define SHARP_ENUM_CONST
+#include <sharp/EnumeratorSkeleton.hpp>
+#undef SHARP_ENUM_CONST
+
+#endif // SHARP_SHARP_ICONSTENUMERATOR_H_

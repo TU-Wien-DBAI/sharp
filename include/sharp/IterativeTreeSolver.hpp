@@ -22,11 +22,11 @@ namespace sharp
 	public:
 		IterativeTreeSolver(
 				const htd::ITreeDecompositionAlgorithm &decomposer,
-				const ITreeAlgorithm &calculator);
+				const ITreeAlgorithm &algorithm);
 
 		IterativeTreeSolver(
 				const htd::ITreeDecompositionAlgorithm &decomposer,
-				const ITreeAlgorithm &calculator,
+				const ITreeAlgorithm &algorithm,
 				const ITreeSolutionExtractor &extractor);
 
 		virtual ~IterativeTreeSolver();

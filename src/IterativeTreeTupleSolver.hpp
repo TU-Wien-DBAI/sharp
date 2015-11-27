@@ -1,23 +1,24 @@
-#ifndef SHARP_ITERATIVETREESOLVER_H_
-#define SHARP_ITERATIVETREESOLVER_H_
+#ifndef SHARP_ITERATIVETREETUPLESOLVER_H_
+#define SHARP_ITERATIVETREETUPLESOLVER_H_
 
 #include "IterativeTreeSolverBase.hpp"
 
-#include <sharp/IterativeTreeSolver.hpp>
+#include <sharp/IterativeTreeTupleSolver.hpp>
 
 #include <memory>
 
 namespace sharp
 {
-	class SHARP_LOCAL IterativeTreeSolver::Impl : public IterativeTreeSolverBase
+	class SHARP_LOCAL IterativeTreeTupleSolver::Impl
+		: public IterativeTreeSolverBase
 	{
 	public:
 		Impl(	const htd::ITreeDecompositionAlgorithm &decomposer,
-				const ITreeAlgorithm &algorithm);
+				const ITreeTupleAlgorithm &algorithm);
 
 		Impl(	const htd::ITreeDecompositionAlgorithm &decomposer,
-				const ITreeAlgorithm &algorithm,
-				const ITreeSolutionExtractor &extractor);
+				const ITreeTupleAlgorithm &algorithm,
+				const ITreeTupleSolutionExtractor &extractor);
 
 		virtual ~Impl();
 
@@ -50,12 +51,12 @@ namespace sharp
 				const IInstance &instance) const override;
 
 		const htd::ITreeDecompositionAlgorithm &decomposer_;
-		const ITreeAlgorithm &algorithm_;
-		const ITreeSolutionExtractor *extractor_;
+		const ITreeTupleAlgorithm &algorithm_;
+		const ITreeTupleSolutionExtractor *extractor_;
 		bool deleteExtractor_;
 
-	}; // class IterativeTreeSolver::Impl
+	}; // class IterativeTreeTupleSolver::Impl
 
 } // namespace sharp
 
-#endif // SHARP_ITERATIVETREESOLVER_H_
+#endif // SHARP_ITERATIVETREETUPLESOLVER_H_

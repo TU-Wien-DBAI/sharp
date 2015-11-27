@@ -3,8 +3,10 @@
 
 #include <sharp/global>
 
-#include <cstddef>
+#include <sharp/Enumerator.hpp>
+#include <sharp/ConstEnumerator.hpp>
 
+#include <cstddef>
 
 namespace sharp
 {
@@ -23,6 +25,7 @@ namespace sharp
 	}; // class ITuple
 
 	inline ITuple::~ITuple() { }
+
 } // namespace sharp
 
 namespace std
@@ -30,7 +33,9 @@ namespace std
 	template<>
 	struct less<sharp::ITuple *>
 	{
-		bool operator()(const sharp::ITuple *&t1, const sharp::ITuple *&t2)
+		bool operator()(
+				sharp::ITuple * const &t1, 
+				sharp::ITuple * const &t2) const
 		{
 			return *t1 < *t2;
 		}
@@ -39,7 +44,31 @@ namespace std
 	template<>
 	struct equal_to<sharp::ITuple *>
 	{
-		bool operator()(const sharp::ITuple *&t1, const sharp::ITuple *&t2)
+		bool operator()(
+				sharp::ITuple * const &t1,
+				sharp::ITuple * const &t2) const 
+		{
+			return *t1 == *t2;
+		}
+	};
+
+	template<>
+	struct less<const sharp::ITuple *>
+	{
+		bool operator()(
+				const sharp::ITuple * const &t1, 
+				const sharp::ITuple * const &t2) const
+		{
+			return *t1 < *t2;
+		}
+	};
+
+	template<>
+	struct equal_to<const sharp::ITuple *>
+	{
+		bool operator()(
+				const sharp::ITuple * const &t1,
+				const sharp::ITuple * const &t2) const 
 		{
 			return *t1 == *t2;
 		}
