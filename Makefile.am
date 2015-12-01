@@ -55,7 +55,7 @@ libsharp_la_include_HEADERS = \
 	include/sharp/ITuple.hpp \
 	include/sharp/ITupleSet.hpp \
 	\
-	include/sharp/IterativeTreeSolver.hpp
+	include/sharp/IterativeTreeSolver.hpp \
 	include/sharp/IterativeTreeTupleSolver.hpp
 
 # list all source code files for the libsharp.la library
@@ -85,7 +85,7 @@ libsharp_la_SOURCES = \
 	src/util/errorhandling.hpp
 
 # tell automake that the installation directory for public header files of the
-# libsharp.la library should be a subfolder in the default ${includedir}
+# libdynasp.la library should be a subfolder in the default ${includedir}
 libsharp_la_includedir = ${includedir}/sharp
 
 # tell libtool to pass certain LDFLAGS to the compiler when building libsharp.la

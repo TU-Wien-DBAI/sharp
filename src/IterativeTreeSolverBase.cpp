@@ -10,10 +10,6 @@
 
 namespace sharp
 {
-	//FIXME: to uppercase (constant), remove when htd library is updated
-	using htd::unknown_vertex;
-	#define UNKNOWN_VERTEX unknown_vertex
-
 	using htd::ITreeDecomposition;
 	using htd::vertex_t;
 
@@ -30,6 +26,7 @@ namespace sharp
 	ISolution *IterativeTreeSolverBase::solve(const IInstance &instance) const
 	{
 		unique_ptr<ITreeDecomposition> td(this->decompose(instance));
+
 		unique_ptr<INodeTableMap> tables(this->evaluate(*td, instance));
 		vertex_t root = td->root();
 
@@ -43,42 +40,41 @@ namespace sharp
 			const ITreeDecomposition &td,
 			const IInstance &instance) const
 	{
+		bool finishedBranch = false;
 		vertex_t current = td.root();
 		ITable *currentTable = nullptr;
 		stack<pair<vertex_t, size_t> > parents;
 		unique_ptr<INodeTableMap> tables = 
 			this->initializeMap(td.vertexCount());
 
-		while(!parents.empty() || current != UNKNOWN_VERTEX)
+		while(!parents.empty() || !finishedBranch)
 		{
-			if(current != UNKNOWN_VERTEX)
+			if(!finishedBranch)
 			{
 				if(td.childrenCount(current) != 0)
 				{
 					parents.push(make_pair(current, 1));
 					current = td.child(current, 0);
+					continue;
 				}
-				else current = UNKNOWN_VERTEX;
-				continue;
+
+				parents.push(make_pair(current, 0));
+				finishedBranch = true;
 			}
 
 			pair<vertex_t, size_t> top = parents.top();
+			parents.pop();
 			if(td.childrenCount(top.first) > top.second)
 			{
 				current = td.child(top.first, top.second);
-				parents.pop();
 				parents.push(make_pair(top.first, top.second + 1));
+				finishedBranch = false;
 				continue;
-
 			}
-			else current = UNKNOWN_VERTEX;
-
+			current = top.first;
 			currentTable = this->evaluateNode(current, td, *tables, instance);
 
-			if(currentTable)
-			{
-				insertIntoMap(current, td, currentTable, *tables);
-			}
+			if(currentTable) insertIntoMap(current, td, currentTable, *tables);
 			else
 			{
 				tables.reset();

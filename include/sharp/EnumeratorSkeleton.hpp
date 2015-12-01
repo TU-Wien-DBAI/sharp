@@ -77,16 +77,16 @@ namespace sharp
 
 			bool operator==(const Iterator &other) const
 			{
-				return enumerator_ == nullptr 
-					&& other.enumerator_ == nullptr
-					|| enumerator_ != nullptr 
+				return (enumerator_ == nullptr 
+					&& other.enumerator_ == nullptr)
+					|| (enumerator_ != nullptr 
 					&& other.enumerator_ != nullptr
-					&& *enumerator_ == *other.enumerator_;
+					&& *enumerator_ == *other.enumerator_);
 			}
 
 			bool operator!=(const Iterator &other) const
 			{
-				return !(*this == *other);
+				return !(*this == other);
 			}
 
 			SHARP_ENUM_REFTYPE operator*()
@@ -120,14 +120,12 @@ namespace sharp
 	class SHARP_API SHARP_ENUM_NAME : public SHARP_ENUM_IFACE<T>
 	{
 	public:
-		SHARP_ENUM_NAME() { }
+		SHARP_ENUM_NAME() { ended_ = true; }
 
-		SHARP_ENUM_NAME(Iter end) : current_(end), end_(end) { }
+		SHARP_ENUM_NAME(Iter end) : current_(end), end_(end), ended_(true) { }
 
-		SHARP_ENUM_NAME(Iter begin, Iter end) : current_(begin), end_(end) { }
-
-		SHARP_ENUM_NAME(const SHARP_ENUM_NAME &other) 
-			: current_(other.current_), end_(other.end_)
+		SHARP_ENUM_NAME(Iter begin, Iter end)
+			: current_(begin), end_(end), ended_(begin == end)
 		{ }
 
 		virtual ~SHARP_ENUM_NAME() { }
@@ -136,11 +134,13 @@ namespace sharp
 		{
 			current_ = other.current_;
 			end_ = other.end_;
+			ended_ = other.ended_;
 		}
 		
 		virtual void next()
 		{
 			++current_;
+			ended_ |= current_ == end_;
 		}
 
 		virtual SHARP_ENUM_REFTYPE get() const
@@ -151,7 +151,7 @@ namespace sharp
 
 		virtual bool valid() const
 		{
-			return current_ != end_;
+			return !ended_;
 		}
 
 		virtual SHARP_ENUM_IFACE<T> *clone() const
@@ -178,6 +178,7 @@ namespace sharp
 
 		Iter current_;
 		Iter end_;
+		bool ended_;
 
 		template<typename U>
 		struct retref { U &operator()(Iter i) { return *i; } };

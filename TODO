@@ -5,3 +5,10 @@
 - add preprocessingOperations in IterativeTree(Tuple)Solver when libhtd supports it
 
 - rename Extractor to Calculator, and inside: rename extractSolution to calculateSolution
+
+- remove method "valid()" from Enumerator, replace by "ended" or something
+	* also keep track of whether the Enumerator is *past* the end
+
+- add more ways to instantiate an Enumerator
+	* multiple iterators, not just one, to concatenate sets,
+	  using e.g. http://www.drdobbs.com/common-knowledge-metaprogrammed-adapters/184401505

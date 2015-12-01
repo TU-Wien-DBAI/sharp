@@ -6,10 +6,8 @@
 
 extern "C"
 {
-	SHARP_API const char *sharp_version();
-}
-
-const char *sharp_version()
-{
-	return VERSION;
+	SHARP_API const char *sharp_version()
+	{
+		return VERSION;
+	}
 }

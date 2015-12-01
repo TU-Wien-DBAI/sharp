@@ -121,6 +121,12 @@ namespace sharp
 				instance,
 				*outputTuples);
 
+		if(outputTuples->size() == 0)
+		{
+			delete outputTuples;
+			return nullptr;
+		}
+
 		return outputTuples;
 	}
 

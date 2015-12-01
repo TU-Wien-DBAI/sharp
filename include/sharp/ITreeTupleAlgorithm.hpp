@@ -24,7 +24,7 @@ namespace sharp
 		virtual ~ITreeTupleAlgorithm() = 0;
 
 		virtual std::vector<const htd::ILabelingFunction *>
-			preprocessOperations() = 0;
+			preprocessOperations() const = 0;
 
 		virtual void evaluateNode(
 				htd::vertex_t node,
