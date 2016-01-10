@@ -51,7 +51,7 @@ namespace sharp
 		{
 			if(!finishedBranch)
 			{
-				if(td.childrenCount(current) != 0)
+				if(td.childCount(current) != 0)
 				{
 					parents.push(make_pair(current, 1));
 					current = td.child(current, 0);
@@ -64,7 +64,7 @@ namespace sharp
 
 			pair<vertex_t, size_t> top = parents.top();
 			parents.pop();
-			if(td.childrenCount(top.first) > top.second)
+			if(td.childCount(top.first) > top.second)
 			{
 				current = td.child(top.first, top.second);
 				parents.push(make_pair(top.first, top.second + 1));

@@ -7,7 +7,7 @@
 #include <sharp/ITable.hpp>
 #include <sharp/INodeTableMap.hpp>
 
-#include <htd/main>
+#include <htd/main.hpp>
 
 #include <vector>
 

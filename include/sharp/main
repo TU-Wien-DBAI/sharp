@@ -1,6 +1,7 @@
 #include <sharp/global>
 #include <sharp/ConstEnumerator.hpp>
 #include <sharp/Enumerator.hpp>
+#include <sharp/Hash.hpp>
 #include <sharp/IInstance.hpp>
 #include <sharp/IMutableNodeTableMap.hpp>
 #include <sharp/IMutableNodeTupleSetMap.hpp>

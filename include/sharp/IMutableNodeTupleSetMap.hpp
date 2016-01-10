@@ -6,7 +6,7 @@
 #include <sharp/INodeTupleSetMap.hpp>
 #include <sharp/ITupleSet.hpp>
 
-#include <htd/main>
+#include <htd/main.hpp>
 
 namespace sharp
 {

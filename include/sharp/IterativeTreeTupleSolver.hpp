@@ -7,7 +7,7 @@
 #include <sharp/ITreeTupleAlgorithm.hpp>
 #include <sharp/ITreeTupleSolutionExtractor.hpp>
 
-#include <htd/main>
+#include <htd/main.hpp>
 
 namespace sharp
 {

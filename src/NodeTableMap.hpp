@@ -3,8 +3,6 @@
 
 #include <sharp/IMutableNodeTableMap.hpp>
 
-#include <htd/main>
-
 #include <unordered_map>
 #include <cstddef>
 

@@ -12,3 +12,5 @@
 - add more ways to instantiate an Enumerator
 	* multiple iterators, not just one, to concatenate sets,
 	  using e.g. http://www.drdobbs.com/common-knowledge-metaprogrammed-adapters/184401505
+
+- move implementation of equal_to and less template specialization from headers into src (SHARP_API)

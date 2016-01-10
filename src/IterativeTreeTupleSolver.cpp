@@ -14,10 +14,6 @@
 
 namespace sharp
 {
-	//FIXME: to uppercase (constant), remove when htd library is updated
-	using htd::unknown_vertex;
-	#define UNKNOWN_VERTEX unknown_vertex
-
 	using htd::vertex_t;
 	using htd::IHypergraph;
 	using htd::ITreeDecomposition;
@@ -101,7 +97,7 @@ namespace sharp
 
 		map.insert(node, static_cast<ITupleSet *>(table));
 		
-		size_t childCount = td.childrenCount(node);
+		size_t childCount = td.childCount(node);
 		for(size_t childIndex = 0; childIndex < childCount; ++childIndex)
 			map.erase(td.child(node, childIndex));
 	}

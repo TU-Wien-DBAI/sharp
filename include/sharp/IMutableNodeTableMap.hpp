@@ -6,7 +6,7 @@
 #include <sharp/INodeTableMap.hpp>
 #include <sharp/ITable.hpp>
 
-#include <htd/main>
+#include <htd/main.hpp>
 
 namespace sharp
 {

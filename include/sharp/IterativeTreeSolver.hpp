@@ -9,7 +9,7 @@
 #include <sharp/ISolution.hpp>
 #include <sharp/ITreeSolutionExtractor.hpp>
 
-#include <htd/main>
+#include <htd/main.hpp>
 
 namespace sharp
 {

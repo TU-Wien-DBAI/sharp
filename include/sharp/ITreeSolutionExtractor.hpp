@@ -8,7 +8,7 @@
 #include <sharp/INodeTableMap.hpp>
 #include <sharp/IInstance.hpp>
 
-#include <htd/main>
+#include <htd/main.hpp>
 
 namespace sharp
 {

@@ -5,8 +5,6 @@
 
 #include <sharp/IMutableNodeTupleSetMap.hpp>
 
-#include <htd/main>
-
 #include <cstddef>
 
 namespace sharp

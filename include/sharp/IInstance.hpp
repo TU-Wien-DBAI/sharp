@@ -3,7 +3,7 @@
 
 #include <sharp/global>
 
-#include <htd/main>
+#include <htd/main.hpp>
 
 namespace sharp
 {

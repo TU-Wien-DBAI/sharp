@@ -9,4 +9,9 @@
 namespace
 {
 
+	TEST(foo, foo2)
+	{
+		ASSERT_EQ(0, 1);
+	}
+
 } // namespace

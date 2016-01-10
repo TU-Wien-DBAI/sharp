@@ -8,7 +8,7 @@
 #include <sharp/ITupleSet.hpp>
 #include <sharp/INodeTupleSetMap.hpp>
 
-#include <htd/main>
+#include <htd/main.hpp>
 
 #include <vector>
 
