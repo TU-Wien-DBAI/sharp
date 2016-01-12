@@ -19,6 +19,8 @@ namespace sharp
 
 		virtual ~IterativeTreeSolverBase();
 
+		std::size_t calculateTreewidth(const IInstance &instance) const;
+
 		ISolution *solve(const IInstance &instance) const;
 
 	private:

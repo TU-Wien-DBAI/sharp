@@ -12,7 +12,7 @@ namespace sharp
 	{
 	public:
 		static void registerTimestamp(const std::string &name);
-		static void printBenchmarks(std::ostream &out);
+		static void printBenchmarks(std::ostream &out, bool csv);
 
 	private:
 		Benchmark();

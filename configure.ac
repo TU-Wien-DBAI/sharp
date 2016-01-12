@@ -80,9 +80,8 @@ AS_IF([test "x$with_gmp" = xyes],
 
 # check for htd library
 #TODO: check for "none required" output of AC_SEARCH_LIBS
-#TODO: check for some reasonable method inside the library
-AC_SEARCH_LIBS([_ZTVN3htd11IHypergraphE], [htd],
-	        [GMP_LIBS=$ac_cv_search__ZTVN3htd11IHypergraphE],
+AC_SEARCH_LIBS([htd_version], [htd],
+	        [HTD_LIBS=$ac_cv_search_htd_version],
 	        [AC_MSG_FAILURE([libhtd not found])])
 
 # if enabled, check for GNU MP library
@@ -108,7 +107,7 @@ AS_IF([test "x$with_gmp" = xyes],
 AC_LANG_PUSH([C++])
 
 # check for htd library header
-AC_CHECK_HEADER([htd/main], [],
+AC_CHECK_HEADER([htd/main.hpp], [],
 		[AC_MSG_FAILURE([libhtd library header not found])])
 
 # if enabled, check for GNU MP C++ header

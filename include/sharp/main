@@ -20,3 +20,4 @@
 #include <sharp/ITreeTupleSolutionExtractor.hpp>
 #include <sharp/ITuple.hpp>
 #include <sharp/ITupleSet.hpp>
+#include <sharp/Logger.hpp>

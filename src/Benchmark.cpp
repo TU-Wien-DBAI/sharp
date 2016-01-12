@@ -38,12 +38,12 @@ namespace sharp
 		names_.push_front(name);
 	}
 
-	void Benchmark::printBenchmarks(std::ostream &out)
+	void Benchmark::printBenchmarks(std::ostream &out, bool csv)
 	{
 		if(names_.empty()) return;
 
-		long tickpersec = 0;
-		if((tickpersec = sysconf(_SC_CLK_TCK)) < 0) return;
+		long tcksec = 0;
+		if((tcksec = sysconf(_SC_CLK_TCK)) < 0) return;
 
 		out.setf(ios::fixed, ios::floatfield);
 		out.precision(2);
@@ -51,8 +51,14 @@ namespace sharp
 		clock_t lastWall = wallClock_.back();
 		struct tms lastCpu = cpuClock_.back();
 
-		out << "0.00s (usr),\t0.00s (sys),\t0.00s (wall) - "
-			<< names_.back() << endl;
+		if(!csv)
+			out << "0.00s (usr),\t0.00s (sys),\t0.00s (wall) - "
+				<< names_.back() << endl;
+		else
+			out << "usr,sys,cpu,wall,description" << endl
+				<< "0.00,0.00,0.00,0.00,"
+				<< names_.back() << endl;
+
 
 		names_.pop_back();
 		wallClock_.pop_back();
@@ -63,13 +69,25 @@ namespace sharp
 			clock_t wall = wallClock_.back();
 			struct tms cpu = cpuClock_.back();
 
-			out << ((cpu.tms_utime - lastCpu.tms_utime) / (double)tickpersec)
-				<< "s (usr),\t"
-				<< ((cpu.tms_stime - lastCpu.tms_stime) / (double)tickpersec)
-				<< "s (sys),\t"
-				<< ((wall - lastWall) / (double)tickpersec)
-				<< "s (wall) - "
-				<< names_.back() << endl;
+			if(!csv)
+				out << ((cpu.tms_utime - lastCpu.tms_utime) / (double)tcksec)
+					<< "s (usr),\t"
+					<< ((cpu.tms_stime - lastCpu.tms_stime) / (double)tcksec)
+					<< "s (sys),\t"
+					<< ((wall - lastWall) / (double)tcksec)
+					<< "s (wall) - "
+					<< names_.back() << endl;
+			else
+				out << ((cpu.tms_utime - lastCpu.tms_utime) / (double)tcksec)
+					<< ","
+					<< ((cpu.tms_stime - lastCpu.tms_stime) / (double)tcksec)
+					<< ","
+					<< ((cpu.tms_utime - lastCpu.tms_utime) / (double)tcksec) +
+					   ((cpu.tms_stime - lastCpu.tms_stime) / (double)tcksec)
+					<< ","
+					<< ((wall - lastWall) / (double)tcksec)
+					<< ","
+					<< names_.back() << endl;
 
 			lastWall = wall;
 			lastCpu = cpu;

@@ -42,6 +42,12 @@ namespace sharp
 		delete this->impl;
 	}
 
+	size_t IterativeTreeTupleSolver::calculateTreewidth(
+			const IInstance &instance) const
+	{
+		return this->impl->calculateTreewidth(instance);
+	}
+
 	ISolution *IterativeTreeTupleSolver::solve(const IInstance &instance) const
 	{
 		return this->impl->solve(instance);

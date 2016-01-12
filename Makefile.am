@@ -57,6 +57,7 @@ libsharp_la_include_HEADERS = \
 	include/sharp/ITreeTupleSolutionExtractor.hpp \
 	include/sharp/ITuple.hpp \
 	include/sharp/ITupleSet.hpp \
+	include/sharp/Logger.hpp \
 	\
 	include/sharp/IterativeTreeSolver.hpp \
 	include/sharp/IterativeTreeTupleSolver.hpp
@@ -75,6 +76,7 @@ libsharp_la_SOURCES = \
 	src/IterativeTreeSolver.hpp \
 	src/IterativeTreeTupleSolver.cpp \
 	src/IterativeTreeTupleSolver.hpp \
+	src/Logger.cpp \
 	src/NodeTableMap.cpp \
 	src/NodeTableMap.hpp \
 	src/NodeTupleSetMap.cpp \

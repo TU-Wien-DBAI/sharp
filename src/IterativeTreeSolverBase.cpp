@@ -5,9 +5,11 @@
 #include "IterativeTreeSolverBase.hpp"
 
 #include <sharp/Benchmark.hpp>
+#include <sharp/Logger.hpp>
 
 #include <stack>
 #include <memory>
+#include <string>
 #include <cstddef>
 
 namespace sharp
@@ -20,15 +22,27 @@ namespace sharp
 	using std::pair;
 	using std::make_pair;
 	using std::size_t;
+	using std::string;
+	using std::to_string;
 	
 	IterativeTreeSolverBase::IterativeTreeSolverBase() { }
 
 	IterativeTreeSolverBase::~IterativeTreeSolverBase() { }
 
+	size_t IterativeTreeSolverBase::calculateTreewidth(
+			const IInstance &instance) const
+	{
+		unique_ptr<ITreeDecomposition> td(this->decompose(instance));
+		Benchmark::registerTimestamp("tree decomposition time");
+		return td->maximumBagSize();
+	}
+
 	ISolution *IterativeTreeSolverBase::solve(const IInstance &instance) const
 	{
 		unique_ptr<ITreeDecomposition> td(this->decompose(instance));
 		Benchmark::registerTimestamp("tree decomposition time");
+
+		Logger::info("treewidth = " + to_string(td->maximumBagSize()));
 
 		unique_ptr<INodeTableMap> tables(this->evaluate(*td, instance));
 		Benchmark::registerTimestamp("solving time");
