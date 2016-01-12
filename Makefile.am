@@ -37,6 +37,7 @@ libsharp_la_include_HEADERS = \
 	include/sharp/main \
 	include/sharp/global \
 	\
+	include/sharp/Benchmark.hpp \
 	include/sharp/ConstEnumerator.hpp \
 	include/sharp/Enumerator.hpp \
 	include/sharp/EnumeratorSkeleton.hpp \
@@ -66,6 +67,7 @@ libsharp_la_SOURCES = \
 	\
 	src/ITuple.hpp \
 	\
+	src/Benchmark.cpp \
 	src/Hash.cpp \
 	src/IterativeTreeSolverBase.cpp \
 	src/IterativeTreeSolverBase.hpp \

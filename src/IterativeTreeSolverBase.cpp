@@ -4,6 +4,8 @@
 
 #include "IterativeTreeSolverBase.hpp"
 
+#include <sharp/Benchmark.hpp>
+
 #include <stack>
 #include <memory>
 #include <cstddef>
@@ -26,14 +28,18 @@ namespace sharp
 	ISolution *IterativeTreeSolverBase::solve(const IInstance &instance) const
 	{
 		unique_ptr<ITreeDecomposition> td(this->decompose(instance));
+		Benchmark::registerTimestamp("tree decomposition time");
 
 		unique_ptr<INodeTableMap> tables(this->evaluate(*td, instance));
-		vertex_t root = td->root();
+		Benchmark::registerTimestamp("solving time");
 
-		if(tables)
-			return this->extractSolution(root, *td, *tables, instance);
-		else
-			return this->emptySolution(instance);
+		vertex_t root = td->root();
+		ISolution *sol = nullptr;
+		if(tables) sol = this->extractSolution(root, *td, *tables, instance);
+		else sol = this->emptySolution(instance);
+		Benchmark::registerTimestamp("solution extraction time");
+
+		return sol;
 	}
 
 	unique_ptr<INodeTableMap> IterativeTreeSolverBase::evaluate(

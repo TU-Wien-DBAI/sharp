@@ -8,6 +8,8 @@
 #include "NodeTupleSetMap.hpp"
 #include "TupleSet.hpp"
 
+#include <sharp/Benchmark.hpp>
+
 #include <stack>
 #include <memory>
 #include <cstddef>
@@ -73,6 +75,8 @@ namespace sharp
 			const IInstance &instance) const
 	{
 		unique_ptr<IHypergraph> hg(instance.toHypergraph());
+		Benchmark::registerTimestamp("hypergraph conversion time");
+
 		//TODO: include preprocessingOperations in decomposition call
 		//		once libhtd supports this
 		return unique_ptr<ITreeDecomposition>(
