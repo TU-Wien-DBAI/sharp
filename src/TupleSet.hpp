@@ -5,7 +5,7 @@
 
 #include <sharp/ITupleSet.hpp>
 
-#include <unordered_set>
+#include <vector>
 
 namespace sharp
 {
@@ -30,10 +30,10 @@ namespace sharp
 		virtual const_iterator find(const ITuple &tuple) const;
 		
 	private:
-		std::unordered_set<ITuple *> set_;
+		std::vector<ITuple *> set_;
 
-		typedef std::unordered_set<ITuple *>::iterator internal_iterator;
-		typedef std::unordered_set<ITuple *>::const_iterator
+		typedef std::vector<ITuple *>::iterator internal_iterator;
+		typedef std::vector<ITuple *>::const_iterator
 			internal_const_iterator;
 		typedef Enumerator<ITuple, internal_iterator> Enum;
 		typedef ConstEnumerator<ITuple, internal_const_iterator> ConstEnum;

@@ -6,7 +6,7 @@
 
 namespace sharp
 {
-	using std::unordered_set;
+	using std::vector;
 	using std::size_t;
 	using std::pair;
 	using std::make_pair;
@@ -21,13 +21,22 @@ namespace sharp
 
 	pair<TupleSet::iterator, bool> TupleSet::insert(ITuple *tuple)
 	{
-		auto ret = set_.insert(tuple);
-		return make_pair(iterator(new Enum(ret.first, set_.end())), ret.second);
+		set_.push_back(tuple);
+		return make_pair(iterator(new Enum(
+						set_.begin() + set_.size() - 2, set_.end())), true);
 	}
 
 	TupleSet::size_type TupleSet::erase(const ITuple &tuple)
 	{
-		return set_.erase((ITuple *)&tuple);
+		size_type ret = 0;
+		for(size_t i = 0; i < set_.size(); ++i)
+			if(set_[i] == (ITuple *)&tuple)
+			{
+				set_.erase(set_.begin() + i);
+				++ret;
+			}
+
+		return ret;
 	}
 
 	IEnumerator<ITuple> *TupleSet::enumerate()
@@ -47,7 +56,12 @@ namespace sharp
 
 	TupleSet::iterator TupleSet::find(const ITuple &tuple)
 	{
-		return iterator(new Enum(set_.find((ITuple *)&tuple), set_.end()));
+		size_t i;
+		for(i = 0; i < set_.size(); ++i)
+			if(set_[i] == (ITuple *)&tuple)
+				break;
+
+		return iterator(new Enum(set_.begin() + i, set_.end()));
 	}
 
 	TupleSet::size_type TupleSet::size() const
@@ -57,7 +71,10 @@ namespace sharp
 
 	bool TupleSet::contains(const ITuple &tuple) const
 	{
-		return set_.find((ITuple *)&tuple) != set_.end();
+		for(size_t i = 0; i < set_.size(); ++i)
+			if(set_[i] == (ITuple *)&tuple)
+				return true;
+		return false;
 	}
 
 	IConstEnumerator<ITuple> *TupleSet::enumerate() const
@@ -77,8 +94,13 @@ namespace sharp
 
 	TupleSet::const_iterator TupleSet::find(const ITuple &tuple) const
 	{
+		size_t i;
+		for(i = 0; i < set_.size(); ++i)
+			if(set_[i] == (ITuple *)&tuple)
+				break;
+
 		return const_iterator(
-				new ConstEnum(set_.find((ITuple *)&tuple), set_.end()));
+				new ConstEnum(set_.begin() + i, set_.end()));
 	}
 
 } // namespace sharp

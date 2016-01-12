@@ -40,6 +40,7 @@ libsharp_la_include_HEADERS = \
 	include/sharp/ConstEnumerator.hpp \
 	include/sharp/Enumerator.hpp \
 	include/sharp/EnumeratorSkeleton.hpp \
+	include/sharp/Hasher.hpp \
 	include/sharp/Hash.hpp \
 	include/sharp/IInstance.hpp \
 	include/sharp/IMutableNodeTableMap.hpp \
