@@ -12,8 +12,8 @@ AM_CTAGSFLAGS = --extra=+f
 # tell automake to pass certain CPPFLAGS to the compiler
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
-	-Ilib/gtest/include \
-	-Ilib/gtest \
+	-I$(top_srcdir)/tests/lib/gtest/include \
+	-I$(top_srcdir)/tests/lib/gtest \
 	-pedantic-errors \
 	-Wpedantic \
 	-Wall \
@@ -41,34 +41,34 @@ check_LTLIBRARIES = \
 # be added to the EXTRA_DIST files, to be included distributions.
 GTEST_FILES = \
 	lib/gtest/LICENSE \
-	lib/gtest/include/lib/gtest/lib/gtest-death-test.h \
-	lib/gtest/include/lib/gtest/lib/gtest-message.h \
-	lib/gtest/include/lib/gtest/lib/gtest-param-test.h \
-	lib/gtest/include/lib/gtest/lib/gtest-printers.h \
-	lib/gtest/include/lib/gtest/lib/gtest-spi.h \
-	lib/gtest/include/lib/gtest/lib/gtest-test-part.h \
-	lib/gtest/include/lib/gtest/lib/gtest-typed-test.h \
-	lib/gtest/include/lib/gtest/lib/gtest.h \
-	lib/gtest/include/lib/gtest/lib/gtest_pred_impl.h \
-	lib/gtest/include/lib/gtest/lib/gtest_prod.h \
-	lib/gtest/include/lib/gtest/internal/lib/gtest-death-test-internal.h \
-	lib/gtest/include/lib/gtest/internal/lib/gtest-filepath.h \
-	lib/gtest/include/lib/gtest/internal/lib/gtest-internal.h \
-	lib/gtest/include/lib/gtest/internal/lib/gtest-linked_ptr.h \
-	lib/gtest/include/lib/gtest/internal/lib/gtest-param-util-generated.h \
-	lib/gtest/include/lib/gtest/internal/lib/gtest-param-util.h \
-	lib/gtest/include/lib/gtest/internal/lib/gtest-port.h \
-	lib/gtest/include/lib/gtest/internal/lib/gtest-string.h \
-	lib/gtest/include/lib/gtest/internal/lib/gtest-tuple.h \
-	lib/gtest/include/lib/gtest/internal/lib/gtest-type-util.h \
-	lib/gtest/src/lib/gtest-death-test.cc \
-	lib/gtest/src/lib/gtest-filepath.cc \
-	lib/gtest/src/lib/gtest-internal-inl.h \
-	lib/gtest/src/lib/gtest-port.cc \
-	lib/gtest/src/lib/gtest-printers.cc \
-	lib/gtest/src/lib/gtest-test-part.cc \
-	lib/gtest/src/lib/gtest-typed-test.cc \
-	lib/gtest/src/lib/gtest.cc
+	lib/gtest/include/gtest/gtest-death-test.h \
+	lib/gtest/include/gtest/gtest-message.h \
+	lib/gtest/include/gtest/gtest-param-test.h \
+	lib/gtest/include/gtest/gtest-printers.h \
+	lib/gtest/include/gtest/gtest-spi.h \
+	lib/gtest/include/gtest/gtest-test-part.h \
+	lib/gtest/include/gtest/gtest-typed-test.h \
+	lib/gtest/include/gtest/gtest.h \
+	lib/gtest/include/gtest/gtest_pred_impl.h \
+	lib/gtest/include/gtest/gtest_prod.h \
+	lib/gtest/include/gtest/internal/gtest-death-test-internal.h \
+	lib/gtest/include/gtest/internal/gtest-filepath.h \
+	lib/gtest/include/gtest/internal/gtest-internal.h \
+	lib/gtest/include/gtest/internal/gtest-linked_ptr.h \
+	lib/gtest/include/gtest/internal/gtest-param-util-generated.h \
+	lib/gtest/include/gtest/internal/gtest-param-util.h \
+	lib/gtest/include/gtest/internal/gtest-port.h \
+	lib/gtest/include/gtest/internal/gtest-string.h \
+	lib/gtest/include/gtest/internal/gtest-tuple.h \
+	lib/gtest/include/gtest/internal/gtest-type-util.h \
+	lib/gtest/src/gtest-death-test.cc \
+	lib/gtest/src/gtest-filepath.cc \
+	lib/gtest/src/gtest-internal-inl.h \
+	lib/gtest/src/gtest-port.cc \
+	lib/gtest/src/gtest-printers.cc \
+	lib/gtest/src/gtest-test-part.cc \
+	lib/gtest/src/gtest-typed-test.cc \
+	lib/gtest/src/gtest.cc
 
 #--------------------------#
 # libgtest.a build options #
@@ -98,7 +98,7 @@ MOCK_FILES = \
 
 # To all tests, link the library that we want to test (libhtd.la), and all the
 # test libraries we want to use for writing unit tests (see above section).
-LDADD += $(top_srcdir)/libsharp.la libgtest.la libgtest_main.la
+LDADD += ../libsharp.la libgtest.la libgtest_main.la
 
 # tell automake which test binaries to build
 check_PROGRAMS = \
