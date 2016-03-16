@@ -1,61 +1,89 @@
 #ifndef SHARP_ITERATIVETREETUPLESOLVER_H_
 #define SHARP_ITERATIVETREETUPLESOLVER_H_
 
-#include "IterativeTreeSolverBase.hpp"
+#include "IterativeTreeSolver.hpp"
 
-#include <sharp/IterativeTreeTupleSolver.hpp>
+#include <sharp/global>
 
-#include <memory>
+#include <sharp/ITreeSolver.hpp>
+#include <sharp/IInstance.hpp>
+#include <sharp/ITreeTupleAlgorithm.hpp>
+#include <sharp/ITreeTupleSolutionExtractor.hpp>
+
+#include <htd/main.hpp>
 
 namespace sharp
 {
-	class SHARP_LOCAL IterativeTreeTupleSolver::Impl
-		: public IterativeTreeSolverBase
+	class SHARP_LOCAL IterativeTreeTupleSolver : public IterativeTreeSolver
 	{
+		class SHARP_LOCAL TupleToTreeAlgorithmAdapter : public ITreeAlgorithm
+		{
+		public:
+			TupleToTreeAlgorithmAdapter(const ITreeTupleAlgorithm &algorithm);
+
+			virtual ~TupleToTreeAlgorithmAdapter() override;
+
+			virtual std::vector<const htd::ILabelingFunction *>
+				preprocessOperations() const override;
+
+			virtual ITable *evaluateNode(
+					htd::vertex_t node,
+					const htd::ITreeDecomposition &decomposition,
+					const INodeTableMap &tables,
+					const IInstance &instance) const override;
+
+			virtual bool needAllTables() const override;
+
+		private:
+			const ITreeTupleAlgorithm &algorithm_;
+
+		}; // class TupleToTreeAlgorithmAdapter
+
+		class SHARP_LOCAL TupleToTreeSolutionExtractorAdapter
+			: public ITreeSolutionExtractor
+		{
+		public:
+			TupleToTreeSolutionExtractorAdapter(
+					const ITreeTupleSolutionExtractor &extractor);
+
+			virtual ~TupleToTreeSolutionExtractorAdapter() override;
+
+			virtual ISolution *extractSolution(
+					htd::vertex_t node,
+					const htd::ITreeDecomposition &decomposition,
+					const INodeTableMap &tables,
+					const IInstance &instance) const override;
+
+			virtual ISolution *emptySolution(
+					const IInstance &instance) const override;
+
+		private:
+			const ITreeTupleSolutionExtractor &extractor_;
+
+		}; // class TupleToTreeSolutionExtractorAdapter
+
+
+	protected:
+		IterativeTreeTupleSolver &operator=(IterativeTreeTupleSolver &)
+		{ return *this; };
+
 	public:
-		Impl(	const htd::ITreeDecompositionAlgorithm &decomposer,
+		IterativeTreeTupleSolver(
+				const htd::ITreeDecompositionAlgorithm &decomposer,
 				const ITreeTupleAlgorithm &algorithm);
 
-		Impl(	const htd::ITreeDecompositionAlgorithm &decomposer,
+		IterativeTreeTupleSolver(
+				const htd::ITreeDecompositionAlgorithm &decomposer,
 				const ITreeTupleAlgorithm &algorithm,
 				const ITreeTupleSolutionExtractor &extractor);
 
-		virtual ~Impl();
+		virtual ~IterativeTreeTupleSolver() override;
 
 	private:
-		virtual std::unique_ptr<htd::ITreeDecomposition> decompose(
-				const IInstance &instance) const override;
-
 		virtual std::unique_ptr<INodeTableMap> initializeMap(
 				std::size_t decompositionNodeCount) const override;
 
-		virtual void insertIntoMap(
-				htd::vertex_t node,
-				const htd::ITreeDecomposition &td,
-				ITable *table,
-				INodeTableMap &tables) const override;
-
-		virtual ITable *evaluateNode(
-				htd::vertex_t node,
-				const htd::ITreeDecomposition &td,
-				const INodeTableMap &tables,
-				const IInstance &instance) const override;
-
-		virtual ISolution *extractSolution(
-				htd::vertex_t node,
-				const htd::ITreeDecomposition &td,
-				const INodeTableMap &tables,
-				const IInstance &instance) const override;
-
-		virtual ISolution *emptySolution(
-				const IInstance &instance) const override;
-
-		const htd::ITreeDecompositionAlgorithm &decomposer_;
-		const ITreeTupleAlgorithm &algorithm_;
-		const ITreeTupleSolutionExtractor *extractor_;
-		bool deleteExtractor_;
-
-	}; // class IterativeTreeTupleSolver::Impl
+	}; // class IterativeTreeTupleSolver
 
 } // namespace sharp
 

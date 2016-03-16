@@ -23,6 +23,8 @@ namespace sharp
 		virtual const ITable &operator[](htd::vertex_t node) const = 0;
 		virtual const ITable &at(htd::vertex_t node) const = 0;
 
+		virtual bool contains(htd::vertex_t node) const = 0;
+
 	}; // class INodeTableMap
 
 	inline INodeTableMap::~INodeTableMap() { }

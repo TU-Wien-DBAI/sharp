@@ -1,5 +1,5 @@
-#ifndef SHARP_MUTUPLESETNODETUPLESETMAP_H_
-#define SHARP_MUTUPLESETNODETUPLESETMAP_H_
+#ifndef SHARP_NODETUPLESETMAP_H_
+#define SHARP_NODETUPLESETMAP_H_
 
 #include "NodeTableMap.hpp"
 
@@ -9,7 +9,7 @@
 
 namespace sharp
 {
-	class SHARP_LOCAL NodeTupleSetMap : public IMutableNodeTupleSetMap
+	class SHARP_LOCAL NodeTupleSetMap : NodeTableMap, public INodeTupleSetMap
 	{
 	public:
 		NodeTupleSetMap();
@@ -19,17 +19,14 @@ namespace sharp
 
 		virtual ITupleSet &operator[](htd::vertex_t node) override;
 		virtual ITupleSet &at(htd::vertex_t node) override;
-		virtual void insert(htd::vertex_t node, ITupleSet *tupleSet) override;
-		virtual void erase(htd::vertex_t node) override;
 
 		virtual const ITupleSet &operator[](htd::vertex_t node) const override;
 		virtual const ITupleSet &at(htd::vertex_t node) const override;
 
-	private:
-		NodeTableMap map_;
+		virtual bool contains(htd::vertex_t node) const override;
 
 	}; // class NodeTupleSetMap
 
 } // namespace sharp
 
-#endif // SHARP_MUTUPLESETNODETUPLESETMAP_H_
+#endif // SHARP_NODETUPLESETMAP_H_

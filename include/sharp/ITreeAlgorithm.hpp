@@ -22,13 +22,15 @@ namespace sharp
 		virtual ~ITreeAlgorithm() = 0;
 
 		virtual std::vector<const htd::ILabelingFunction *>
-			preprocessOperations() = 0;
+			preprocessOperations() const = 0;
 
 		virtual ITable *evaluateNode(
 				htd::vertex_t node,
 				const htd::ITreeDecomposition &decomposition,
 				const INodeTableMap &tables,
 				const IInstance &instance) const = 0;
+
+		virtual bool needAllTables() const = 0;
 
 	}; // class ITreeAlgorithm
 

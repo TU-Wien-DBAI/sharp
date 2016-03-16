@@ -12,42 +12,37 @@ namespace sharp
 	
 	using std::size_t;
 
-	NodeTupleSetMap::NodeTupleSetMap() { }
+	NodeTupleSetMap::NodeTupleSetMap() : NodeTableMap() { }
 
-	NodeTupleSetMap::NodeTupleSetMap(size_t size) : map_(size) { }
+	NodeTupleSetMap::NodeTupleSetMap(size_t size) : NodeTableMap(size) { }
 
 	NodeTupleSetMap::~NodeTupleSetMap() { }
 
 	ITupleSet &NodeTupleSetMap::operator[](vertex_t node)
 	{
-		return static_cast<ITupleSet &>(map_[node]);
+		return static_cast<ITupleSet &>(this->NodeTableMap::operator[](node));
 	}
 	
 	ITupleSet &NodeTupleSetMap::at(vertex_t node)
 	{
-		return static_cast<ITupleSet &>(map_.at(node));
-	}
-
-	void NodeTupleSetMap::insert(vertex_t node, ITupleSet *tupleSet)
-	{
-		map_.insert(node, tupleSet);
-	}
-
-	void NodeTupleSetMap::erase(vertex_t node)
-	{
-		map_.erase(node);
+		return static_cast<ITupleSet &>(this->NodeTableMap::at(node));
 	}
 
 	const ITupleSet &NodeTupleSetMap::operator[](vertex_t node) const
 	{
-		ITable &ret = const_cast<NodeTupleSetMap *>(this)->map_[node];
-		return static_cast<ITupleSet &>(ret);
+		return static_cast<const ITupleSet &>(
+				this->NodeTableMap::operator[](node));
 	}
 
 	const ITupleSet &NodeTupleSetMap::at(vertex_t node) const
 	{
-		ITable &ret = const_cast<NodeTupleSetMap *>(this)->map_.at(node);
-		return static_cast<ITupleSet &>(ret);
+		return static_cast<const ITupleSet &>(
+				this->NodeTableMap::at(node));
+	}
+
+	bool NodeTupleSetMap::contains(vertex_t node) const
+	{
+		return this->NodeTableMap::contains(node);
 	}
 
 } // namespace sharp

@@ -1,5 +1,5 @@
-#ifndef SHARP_MUTABLENODETABLEMAP_H_
-#define SHARP_MUTABLENODETABLEMAP_H_
+#ifndef SHARP_NODETABLEMAP_H_
+#define SHARP_NODETABLEMAP_H_
 
 #include <sharp/IMutableNodeTableMap.hpp>
 
@@ -24,6 +24,8 @@ namespace sharp
 		virtual const ITable &operator[](htd::vertex_t node) const override;
 		virtual const ITable &at(htd::vertex_t node) const override;
 
+		virtual bool contains(htd::vertex_t node) const override;
+
 	private:
 		std::unordered_map<htd::vertex_t, ITable *> map_;
 
@@ -31,4 +33,4 @@ namespace sharp
 
 } // namespace sharp
 
-#endif // SHARP_MUTABLENODETABLEMAP_H_
+#endif // SHARP_NODETABLEMAP_H_

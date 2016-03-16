@@ -16,6 +16,7 @@
 #include <sharp/IterativeTreeTupleSolver.hpp>
 #include <sharp/ITreeAlgorithm.hpp>
 #include <sharp/ITreeSolutionExtractor.hpp>
+#include <sharp/ITreeSolver.hpp>
 #include <sharp/ITreeTupleAlgorithm.hpp>
 #include <sharp/ITreeTupleSolutionExtractor.hpp>
 #include <sharp/ITuple.hpp>

@@ -10,7 +10,7 @@
 
 namespace sharp
 {
-	class SHARP_API IMutableNodeTableMap : public INodeTableMap
+	class SHARP_API IMutableNodeTableMap : public virtual INodeTableMap
 	{
 	protected:
 		IMutableNodeTableMap &operator=(IMutableNodeTableMap &)

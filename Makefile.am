@@ -37,15 +37,8 @@ libsharp_la_include_HEADERS = \
 	include/sharp/main \
 	include/sharp/global \
 	\
-	include/sharp/Benchmark.hpp \
-	include/sharp/ConstEnumerator.hpp \
-	include/sharp/Enumerator.hpp \
-	include/sharp/EnumeratorSkeleton.hpp \
-	include/sharp/Hasher.hpp \
-	include/sharp/Hash.hpp \
 	include/sharp/IInstance.hpp \
 	include/sharp/IMutableNodeTableMap.hpp \
-	include/sharp/IMutableNodeTupleSetMap.hpp \
 	include/sharp/INodeTableMap.hpp \
 	include/sharp/INodeTupleSetMap.hpp \
 	include/sharp/ISolution.hpp \
@@ -53,38 +46,44 @@ libsharp_la_include_HEADERS = \
 	include/sharp/ITable.hpp \
 	include/sharp/ITreeAlgorithm.hpp \
 	include/sharp/ITreeSolutionExtractor.hpp \
+	include/sharp/ITreeSolver.hpp \
 	include/sharp/ITreeTupleAlgorithm.hpp \
 	include/sharp/ITreeTupleSolutionExtractor.hpp \
 	include/sharp/ITuple.hpp \
 	include/sharp/ITupleSet.hpp \
-	include/sharp/Logger.hpp \
 	\
-	include/sharp/IterativeTreeSolver.hpp \
-	include/sharp/IterativeTreeTupleSolver.hpp
+	include/sharp/Benchmark.hpp \
+	include/sharp/ConstEnumerator.hpp \
+	include/sharp/create.hpp \
+	include/sharp/Enumerator.hpp \
+	include/sharp/EnumeratorSkeleton.hpp \
+	include/sharp/Hasher.hpp \
+	include/sharp/Hash.hpp
+
 
 # list all source code files for the libsharp.la library
 libsharp_la_SOURCES = \
 	src/assembly.cpp \
 	\
+	src/ITuple.cpp \
 	src/ITuple.hpp \
 	\
 	src/Benchmark.cpp \
+	src/create.cpp \
 	src/Hash.cpp \
-	src/IterativeTreeSolverBase.cpp \
-	src/IterativeTreeSolverBase.hpp \
+	\
 	src/IterativeTreeSolver.cpp \
 	src/IterativeTreeSolver.hpp \
+	src/IterativeTreeTupleSolver_AlgorithmAdapter.cpp \
 	src/IterativeTreeTupleSolver.cpp \
 	src/IterativeTreeTupleSolver.hpp \
-	src/Logger.cpp \
+	src/IterativeTreeTupleSolver_SolutionExtractorAdapter.cpp \
 	src/NodeTableMap.cpp \
 	src/NodeTableMap.hpp \
 	src/NodeTupleSetMap.cpp \
 	src/NodeTupleSetMap.hpp \
 	src/NullTreeSolutionExtractor.cpp\
 	src/NullTreeSolutionExtractor.hpp\
-	src/NullTreeTupleSolutionExtractor.cpp\
-	src/NullTreeTupleSolutionExtractor.hpp\
 	src/TupleSet.cpp \
 	src/TupleSet.hpp \
 	\

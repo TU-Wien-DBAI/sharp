@@ -33,6 +33,8 @@ namespace sharp
 				const IInstance &instance,
 				ITupleSet &outputTuples) const = 0;
 
+		virtual bool needAllTupleSets() const = 0;
+
 	}; // class ITreeTupleAlgorithm
 
 	inline ITreeTupleAlgorithm::~ITreeTupleAlgorithm() { }

@@ -72,4 +72,10 @@ namespace sharp
 		return const_cast<NodeTableMap *>(this)->at(node);
 	}
 
+	bool NodeTableMap::contains(vertex_t node) const
+	{
+		auto existingEntry = map_.find(node);
+		return existingEntry == map_.end();
+	}
+
 } // namespace sharp

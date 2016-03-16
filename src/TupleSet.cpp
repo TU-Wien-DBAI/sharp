@@ -21,6 +21,7 @@ namespace sharp
 
 	pair<TupleSet::iterator, bool> TupleSet::insert(ITuple *tuple)
 	{
+		//FIXME: double inserts
 		set_.push_back(tuple);
 		return make_pair(iterator(new Enum(
 						set_.begin() + set_.size() - 2, set_.end())), true);
@@ -28,6 +29,7 @@ namespace sharp
 
 	TupleSet::size_type TupleSet::erase(const ITuple &tuple)
 	{
+		//FIXME: this is inefficient
 		size_type ret = 0;
 		for(size_t i = 0; i < set_.size(); ++i)
 			if(set_[i] == (ITuple *)&tuple)

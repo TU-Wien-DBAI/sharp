@@ -10,7 +10,7 @@
 
 namespace sharp
 {
-	class SHARP_API INodeTupleSetMap : public INodeTableMap
+	class SHARP_API INodeTupleSetMap : public virtual INodeTableMap
 	{
 	protected:
 		INodeTupleSetMap &operator=(INodeTupleSetMap &) { return *this; };
