@@ -36,13 +36,11 @@ namespace sharp
 
 		static ITreeAlgorithm *treeAlgorithm(
 				const ITreeAlgorithm &algorithm1,
-				const ITreeAlgorithm &algorithm2,
-				bool interleave = true);
+				const ITreeAlgorithm &algorithm2);
 
 		static ITreeTupleAlgorithm *treeTupleAlgorithm(
 				const ITreeTupleAlgorithm &algorithm1,
-				const ITreeTupleAlgorithm &algorithm2,
-				bool interleave = true);
+				const ITreeTupleAlgorithm &algorithm2);
 
 	private:
 		create();

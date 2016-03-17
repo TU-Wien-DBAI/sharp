@@ -8,9 +8,9 @@ AC_PREREQ([2.65])				# minimum autoconf version
 # supply the name of the project, version number, and contact email
 AC_INIT([sharp], [2.0], [morak@dbai.tuwien.ac.at])
 
-AC_CONFIG_SRCDIR([src/assembly.cpp]) 		# source directory
+AC_CONFIG_SRCDIR([src/assembly.cpp])	# source directory
 AC_CONFIG_HEADERS([config.h])			# name of generated header
-AC_CONFIG_MACRO_DIR([m4])			# folder for macros
+AC_CONFIG_MACRO_DIR([m4])				# folder for macros
 AC_CONFIG_AUX_DIR([build-aux])			# folder for auxilliary files
 
 # initialize automake with the following options:
@@ -18,11 +18,13 @@ AC_CONFIG_AUX_DIR([build-aux])			# folder for auxilliary files
 #   subdir-objects:
 #	tell automake to create object files in same directory as the source
 AM_INIT_AUTOMAKE([1.11 dist-xz subdir-objects])
+#   tell automake not to be verbose when compiling
+AM_SILENT_RULES([yes])
 
 # enable libtool to build libraries
 ###################################
 LT_PREREQ([2.2])		# minimum libtool version
-LT_INIT				# initialize libtool
+LT_INIT					# initialize libtool
 LT_LANG([C++])		 	# set libtool language(s)
 
 # define needed variables
@@ -31,7 +33,7 @@ LT_LANG([C++])		 	# set libtool language(s)
 # check that relevant programs are present on the system and enable them
 ########################################################################
 AC_LANG([C++])			# check for C++ support
-AC_PROG_CXX			# check for C++ compiler support
+AC_PROG_CXX				# check for C++ compiler support
 AC_PROG_INSTALL			# check for 'install'
 AC_PROG_LN_S			# check for 'ln -s'
 

@@ -1,19 +1,18 @@
 #include <sharp/global>
+
 #include <sharp/Benchmark.hpp>
 #include <sharp/ConstEnumerator.hpp>
+#include <sharp/create.hpp>
 #include <sharp/Enumerator.hpp>
 #include <sharp/Hasher.hpp>
 #include <sharp/Hash.hpp>
 #include <sharp/IInstance.hpp>
 #include <sharp/IMutableNodeTableMap.hpp>
-#include <sharp/IMutableNodeTupleSetMap.hpp>
 #include <sharp/INodeTableMap.hpp>
 #include <sharp/INodeTupleSetMap.hpp>
 #include <sharp/ISolution.hpp>
 #include <sharp/ISolver.hpp>
 #include <sharp/ITable.hpp>
-#include <sharp/IterativeTreeSolver.hpp>
-#include <sharp/IterativeTreeTupleSolver.hpp>
 #include <sharp/ITreeAlgorithm.hpp>
 #include <sharp/ITreeSolutionExtractor.hpp>
 #include <sharp/ITreeSolver.hpp>
@@ -21,4 +20,3 @@
 #include <sharp/ITreeTupleSolutionExtractor.hpp>
 #include <sharp/ITuple.hpp>
 #include <sharp/ITupleSet.hpp>
-#include <sharp/Logger.hpp>

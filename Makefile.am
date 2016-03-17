@@ -72,6 +72,10 @@ libsharp_la_SOURCES = \
 	src/create.cpp \
 	src/Hash.cpp \
 	\
+	src/InterleavedTreeAlgorithm.cpp \
+	src/InterleavedTreeAlgorithm.hpp \
+	src/InterleavedTreeTupleAlgorithm.cpp \
+	src/InterleavedTreeTupleAlgorithm.hpp \
 	src/IterativeTreeSolver.cpp \
 	src/IterativeTreeSolver.hpp \
 	src/IterativeTreeTupleSolver_AlgorithmAdapter.cpp \
@@ -80,8 +84,12 @@ libsharp_la_SOURCES = \
 	src/IterativeTreeTupleSolver_SolutionExtractorAdapter.cpp \
 	src/NodeTableMap.cpp \
 	src/NodeTableMap.hpp \
+	src/NodeTableMapOverlay.cpp \
+	src/NodeTableMapOverlay.hpp \
 	src/NodeTupleSetMap.cpp \
 	src/NodeTupleSetMap.hpp \
+	src/NodeTupleSetMapOverlay.cpp \
+	src/NodeTupleSetMapOverlay.hpp \
 	src/NullTreeSolutionExtractor.cpp\
 	src/NullTreeSolutionExtractor.hpp\
 	src/TupleSet.cpp \

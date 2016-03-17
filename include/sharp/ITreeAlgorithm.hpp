@@ -6,6 +6,7 @@
 #include <sharp/ISolution.hpp>
 #include <sharp/ITable.hpp>
 #include <sharp/INodeTableMap.hpp>
+#include <sharp/IInstance.hpp>
 
 #include <htd/main.hpp>
 

@@ -10,4 +10,15 @@ extern "C"
 	{
 		return VERSION;
 	}
+
+	SHARP_API const char *sharp_version_2()
+	{
+		return VERSION;
+	}
+
+	SHARP_API const char *sharp_version_2_0()
+	{
+		return VERSION;
+	}
 }
+

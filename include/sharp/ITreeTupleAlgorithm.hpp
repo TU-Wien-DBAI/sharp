@@ -4,9 +4,9 @@
 #include <sharp/global>
 
 #include <sharp/ISolution.hpp>
-#include <sharp/ITuple.hpp>
 #include <sharp/ITupleSet.hpp>
 #include <sharp/INodeTupleSetMap.hpp>
+#include <sharp/IInstance.hpp>
 
 #include <htd/main.hpp>
 

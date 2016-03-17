@@ -4,8 +4,8 @@
 
 #include "IterativeTreeSolver.hpp"
 #include "IterativeTreeTupleSolver.hpp"
-//#include "TwoStepTreeAlgorithmAdapter.hpp"
-//#include "TwoStepTreeTupleAlgorithmAdapter.hpp"
+#include "InterleavedTreeAlgorithm.hpp"
+#include "InterleavedTreeTupleAlgorithm.hpp"
 
 #include <sharp/create.hpp>
 
@@ -13,14 +13,14 @@ namespace sharp
 {
 	using htd::ITreeDecompositionAlgorithm;
 
-	ITreeSolver *treeSolver(
+	ITreeSolver *create::treeSolver(
 			const ITreeDecompositionAlgorithm &decomposer,
 			const ITreeAlgorithm &algorithm)
 	{
 		return new IterativeTreeSolver(decomposer, algorithm);
 	}
 
-	ITreeSolver *treeSolver(
+	ITreeSolver *create::treeSolver(
 			const ITreeDecompositionAlgorithm &decomposer,
 			const ITreeAlgorithm &algorithm,
 			const ITreeSolutionExtractor &extractor)
@@ -28,14 +28,14 @@ namespace sharp
 		return new IterativeTreeSolver(decomposer, algorithm, extractor);
 	}
 
-	ITreeSolver *treeSolver(
+	ITreeSolver *create::treeSolver(
 			const ITreeDecompositionAlgorithm &decomposer,
 			const ITreeTupleAlgorithm &algorithm)
 	{
 		return new IterativeTreeTupleSolver(decomposer, algorithm);
 	}
 
-	ITreeSolver *treeSolver(
+	ITreeSolver *create::treeSolver(
 			const ITreeDecompositionAlgorithm &decomposer,
 			const ITreeTupleAlgorithm &algorithm,
 			const ITreeTupleSolutionExtractor &extractor)
@@ -43,22 +43,18 @@ namespace sharp
 		return new IterativeTreeTupleSolver(decomposer, algorithm, extractor);
 	}
 
-	ITreeAlgorithm *treeAlgorithm(
+	ITreeAlgorithm *create::treeAlgorithm(
 			const ITreeAlgorithm &algorithm1,
 			const ITreeAlgorithm &algorithm2)
 	{
-		//TODO
-		//return new TwoStepTreeAlgorithmAdapter(algorithm1, algorithm2);
-		return nullptr;
+		return new InterleavedTreeAlgorithm(algorithm1, algorithm2);
 	}
 
-	ITreeTupleAlgorithm *treeTupleAlgorithm(
+	ITreeTupleAlgorithm *create::treeTupleAlgorithm(
 			const ITreeTupleAlgorithm &algorithm1,
 			const ITreeTupleAlgorithm &algorithm2)
 	{
-		//TODO
-		//return new TwoStepTreeTupleAlgorithmAdapter(algorithm1, algorithm2);
-		return nullptr;
+		return new InterleavedTreeTupleAlgorithm(algorithm1, algorithm2);
 	}
 
 } // namespace sharp

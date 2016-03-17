@@ -3,7 +3,7 @@
 
 #include "NodeTableMap.hpp"
 
-#include <sharp/IMutableNodeTupleSetMap.hpp>
+#include <sharp/INodeTupleSetMap.hpp>
 
 #include <cstddef>
 
