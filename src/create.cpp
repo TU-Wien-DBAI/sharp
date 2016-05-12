@@ -22,10 +22,42 @@ namespace sharp
 
 	ITreeSolver *create::treeSolver(
 			const ITreeDecompositionAlgorithm &decomposer,
+			const ITreeAlgorithm &algorithm1,
+			const ITreeAlgorithm &algorithm2)
+	{
+		return new IterativeTreeSolver(decomposer, algorithm1, algorithm2);
+	}
+
+	ITreeSolver *create::treeSolver(
+			const ITreeDecompositionAlgorithm &decomposer,
+			const TreeAlgorithmVector &algorithms)
+	{
+		return new IterativeTreeSolver(decomposer, algorithms);
+	}
+
+	ITreeSolver *create::treeSolver(
+			const ITreeDecompositionAlgorithm &decomposer,
 			const ITreeAlgorithm &algorithm,
 			const ITreeSolutionExtractor &extractor)
 	{
 		return new IterativeTreeSolver(decomposer, algorithm, extractor);
+	}
+
+	ITreeSolver *create::treeSolver(
+			const ITreeDecompositionAlgorithm &decomposer,
+			const ITreeAlgorithm &alg1,
+			const ITreeAlgorithm &alg2,
+			const ITreeSolutionExtractor &extractor)
+	{
+		return new IterativeTreeSolver(decomposer, alg1, alg2, extractor);
+	}
+
+	ITreeSolver *create::treeSolver(
+			const ITreeDecompositionAlgorithm &decomposer,
+			const TreeAlgorithmVector &algorithms,
+			const ITreeSolutionExtractor &extractor)
+	{
+		return new IterativeTreeSolver(decomposer, algorithms, extractor);
 	}
 
 	ITreeSolver *create::treeSolver(
@@ -37,10 +69,42 @@ namespace sharp
 
 	ITreeSolver *create::treeSolver(
 			const ITreeDecompositionAlgorithm &decomposer,
+			const ITreeTupleAlgorithm &algorithm1,
+			const ITreeTupleAlgorithm &algorithm2)
+	{
+		return new IterativeTreeTupleSolver(decomposer, algorithm1, algorithm2);
+	}
+
+	ITreeSolver *create::treeSolver(
+			const ITreeDecompositionAlgorithm &decomposer,
+			const TreeTupleAlgorithmVector &algorithms)
+	{
+		return new IterativeTreeTupleSolver(decomposer, algorithms);
+	}
+
+	ITreeSolver *create::treeSolver(
+			const ITreeDecompositionAlgorithm &decomposer,
 			const ITreeTupleAlgorithm &algorithm,
 			const ITreeTupleSolutionExtractor &extractor)
 	{
 		return new IterativeTreeTupleSolver(decomposer, algorithm, extractor);
+	}
+
+	ITreeSolver *create::treeSolver(
+			const ITreeDecompositionAlgorithm &decomposer,
+			const ITreeTupleAlgorithm &alg1,
+			const ITreeTupleAlgorithm &alg2,
+			const ITreeTupleSolutionExtractor &extractor)
+	{
+		return new IterativeTreeTupleSolver(decomposer, alg1, alg2, extractor);
+	}
+
+	ITreeSolver *create::treeSolver(
+			const ITreeDecompositionAlgorithm &decomposer,
+			const TreeTupleAlgorithmVector &algorithms,
+			const ITreeTupleSolutionExtractor &extractor)
+	{
+		return new IterativeTreeTupleSolver(decomposer, algorithms, extractor);
 	}
 
 	ITreeAlgorithm *create::treeAlgorithm(

@@ -74,7 +74,27 @@ namespace sharp
 
 		IterativeTreeTupleSolver(
 				const htd::ITreeDecompositionAlgorithm &decomposer,
+				const ITreeTupleAlgorithm &algorithm1,
+				const ITreeTupleAlgorithm &algorithm2);
+
+		IterativeTreeTupleSolver(
+				const htd::ITreeDecompositionAlgorithm &decomposer,
+				const TreeTupleAlgorithmVector &algorithms);
+
+		IterativeTreeTupleSolver(
+				const htd::ITreeDecompositionAlgorithm &decomposer,
 				const ITreeTupleAlgorithm &algorithm,
+				const ITreeTupleSolutionExtractor &extractor);
+
+		IterativeTreeTupleSolver(
+				const htd::ITreeDecompositionAlgorithm &decomposer,
+				const ITreeTupleAlgorithm &algorithm1,
+				const ITreeTupleAlgorithm &algorithm2,
+				const ITreeTupleSolutionExtractor &extractor);
+
+		IterativeTreeTupleSolver(
+				const htd::ITreeDecompositionAlgorithm &decomposer,
+				const TreeTupleAlgorithmVector &algorithms,
 				const ITreeTupleSolutionExtractor &extractor);
 
 		virtual ~IterativeTreeTupleSolver() override;
@@ -82,6 +102,9 @@ namespace sharp
 	private:
 		virtual std::unique_ptr<INodeTableMap> initializeMap(
 				std::size_t decompositionNodeCount) const override;
+
+		static std::vector<std::unique_ptr<const ITreeAlgorithm> >
+		convertAlgorithmList(const TreeTupleAlgorithmVector &algorithms);
 
 	}; // class IterativeTreeTupleSolver
 

@@ -24,24 +24,52 @@ namespace sharp
 	using std::unique_ptr;
 
 	IterativeTreeTupleSolver::IterativeTreeTupleSolver(
-			const ITreeDecompositionAlgorithm &decomposer,
+			const htd::ITreeDecompositionAlgorithm &decomposer,
 			const ITreeTupleAlgorithm &algorithm)
-		: IterativeTreeSolver(
-				decomposer,
-				std::move(unique_ptr<const ITreeAlgorithm>(
-						new TupleToTreeAlgorithmAdapter(algorithm))))
+		: IterativeTreeTupleSolver(decomposer, { &algorithm })
 	{ }
 
 	IterativeTreeTupleSolver::IterativeTreeTupleSolver(
-			const ITreeDecompositionAlgorithm &decomposer,
+			const htd::ITreeDecompositionAlgorithm &decomposer,
+			const ITreeTupleAlgorithm &algorithm1,
+			const ITreeTupleAlgorithm &algorithm2)
+		: IterativeTreeTupleSolver(decomposer, { &algorithm1, &algorithm2 })
+	{ }
+
+	IterativeTreeTupleSolver::IterativeTreeTupleSolver(
+			const htd::ITreeDecompositionAlgorithm &decomposer,
+			const TreeTupleAlgorithmVector &algorithms)
+		: IterativeTreeSolver(
+				decomposer,
+				convertAlgorithmList(algorithms),
+				true)
+	{ }
+
+	IterativeTreeTupleSolver::IterativeTreeTupleSolver(
+			const htd::ITreeDecompositionAlgorithm &decomposer,
 			const ITreeTupleAlgorithm &algorithm,
+			const ITreeTupleSolutionExtractor &extractor)
+		: IterativeTreeTupleSolver(decomposer, { &algorithm }, extractor)
+	{ }
+
+	IterativeTreeTupleSolver::IterativeTreeTupleSolver(
+			const htd::ITreeDecompositionAlgorithm &decomposer,
+			const ITreeTupleAlgorithm &alg1,
+			const ITreeTupleAlgorithm &alg2,
+			const ITreeTupleSolutionExtractor &extractor)
+		: IterativeTreeTupleSolver(decomposer, { &alg1, &alg2 }, extractor) { }
+
+	IterativeTreeTupleSolver::IterativeTreeTupleSolver(
+			const htd::ITreeDecompositionAlgorithm &decomposer,
+			const TreeTupleAlgorithmVector &algorithms,
 			const ITreeTupleSolutionExtractor &extractor)
 		: IterativeTreeSolver(
 				decomposer,
-				std::move(unique_ptr<const ITreeAlgorithm>(
-						new TupleToTreeAlgorithmAdapter(algorithm))),
-				std::move(unique_ptr<const ITreeSolutionExtractor>(
-						new TupleToTreeSolutionExtractorAdapter(extractor))))
+				convertAlgorithmList(algorithms),
+				std::unique_ptr<const ITreeSolutionExtractor>(
+					new TupleToTreeSolutionExtractorAdapter(extractor)),
+				true,
+				true)
 	{ }
 
 	IterativeTreeTupleSolver::~IterativeTreeTupleSolver() { }
@@ -52,5 +80,18 @@ namespace sharp
 		return unique_ptr<INodeTableMap>(
 				new NodeTupleSetMap(decompositionNodeCount));
 	}
+
+	std::vector<std::unique_ptr<const ITreeAlgorithm> >
+	IterativeTreeTupleSolver::convertAlgorithmList(
+			const TreeTupleAlgorithmVector &algorithms)
+	{
+		std::vector<std::unique_ptr<const ITreeAlgorithm> > newAlgorithms;
+		for(const ITreeTupleAlgorithm *alg : algorithms)
+			newAlgorithms.push_back(
+					std::unique_ptr<const ITreeAlgorithm>(
+						new TupleToTreeAlgorithmAdapter(*alg)));
+		return newAlgorithms;
+	}
+
 
 } // namespace sharp

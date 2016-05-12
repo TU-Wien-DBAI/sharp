@@ -29,51 +29,94 @@ namespace sharp
 	using std::to_string;
 
 	IterativeTreeSolver::IterativeTreeSolver(
-			const ITreeDecompositionAlgorithm &decomposer,
-			unique_ptr<const ITreeAlgorithm> algorithm)
-		: decomposer_(decomposer), algorithm_(std::move(algorithm)),
-		  extractor_(new NullTreeSolutionExtractor())
+			const htd::ITreeDecompositionAlgorithm &decomposer,
+			std::vector<std::unique_ptr<const ITreeAlgorithm> > &&algorithms,
+			bool deleteAlgorithms)
+		: IterativeTreeSolver(decomposer,
+				std::move(algorithms),
+				std::unique_ptr<const ITreeSolutionExtractor>(
+					new NullTreeSolutionExtractor()),
+				deleteAlgorithms,
+				true)
+	{ }
+
+	IterativeTreeSolver::IterativeTreeSolver(
+			const htd::ITreeDecompositionAlgorithm &decomposer,
+			std::vector<std::unique_ptr<const ITreeAlgorithm> > &&algorithms,
+			std::unique_ptr<const ITreeSolutionExtractor> extractor,
+			bool deleteAlgorithms,
+			bool deleteExtractor)
+		: decomposer_(decomposer),
+		  extractor_(extractor.get()),
+		  manageAlgorithmMemory_(deleteAlgorithms),
+		  manageExtractorMemory_(deleteExtractor)
 	{
-		manageAlgorithmMemory_ = true;
-		manageExtractorMemory_ = true;
+		for(std::unique_ptr<const ITreeAlgorithm> &alg : algorithms)
+			algorithms_.push_back(alg.get());
+
+		for(std::unique_ptr<const ITreeAlgorithm> &alg : algorithms)
+			alg.release();
+		extractor.release();
 	}
 
 	IterativeTreeSolver::IterativeTreeSolver(
-			const ITreeDecompositionAlgorithm &decomposer,
-			unique_ptr<const ITreeAlgorithm> algorithm,
-			unique_ptr<const ITreeSolutionExtractor> extractor)
-		: decomposer_(decomposer), algorithm_(std::move(algorithm)),
-		  extractor_(std::move(extractor))
-	{
-		manageAlgorithmMemory_ = true;
-		manageExtractorMemory_ = true;
-	}
-
-	IterativeTreeSolver::IterativeTreeSolver(
-			const ITreeDecompositionAlgorithm &decomposer,
+			const htd::ITreeDecompositionAlgorithm &decomposer,
 			const ITreeAlgorithm &algorithm)
-		: decomposer_(decomposer), algorithm_(&algorithm),
-		  extractor_(new NullTreeSolutionExtractor())
-	{
-		manageAlgorithmMemory_ = false;
-		manageExtractorMemory_ = true;
-	}
+		: IterativeTreeSolver(decomposer, { &algorithm })
+	{ }
 
 	IterativeTreeSolver::IterativeTreeSolver(
-			const ITreeDecompositionAlgorithm &decomposer,
+			const htd::ITreeDecompositionAlgorithm &decomposer,
+			const ITreeAlgorithm &algorithm1,
+			const ITreeAlgorithm &algorithm2)
+		: IterativeTreeSolver(decomposer, { &algorithm1, &algorithm2 })
+	{ }
+
+	IterativeTreeSolver::IterativeTreeSolver(
+			const htd::ITreeDecompositionAlgorithm &decomposer,
+			const TreeAlgorithmVector &algorithms)
+		: decomposer_(decomposer),
+		  algorithms_(algorithms),
+		  extractor_(new NullTreeSolutionExtractor()),
+		  manageAlgorithmMemory_(false),
+		  manageExtractorMemory_(true)
+	{ }
+
+	IterativeTreeSolver::IterativeTreeSolver(
+			const htd::ITreeDecompositionAlgorithm &decomposer,
 			const ITreeAlgorithm &algorithm,
 			const ITreeSolutionExtractor &extractor)
-		: decomposer_(decomposer), algorithm_(&algorithm),
-		  extractor_(&extractor)
-	{
-		manageAlgorithmMemory_ = false;
-		manageExtractorMemory_ = false;
-	}
+		: IterativeTreeSolver(decomposer, { &algorithm }, extractor)
+	{ }
+
+	IterativeTreeSolver::IterativeTreeSolver(
+			const htd::ITreeDecompositionAlgorithm &decomposer,
+			const ITreeAlgorithm &alg1,
+			const ITreeAlgorithm &alg2,
+			const ITreeSolutionExtractor &extractor)
+		: IterativeTreeSolver(decomposer, { &alg1, &alg2 }, extractor)
+	{ }
+
+	IterativeTreeSolver::IterativeTreeSolver(
+			const htd::ITreeDecompositionAlgorithm &decomposer,
+			const TreeAlgorithmVector &algorithms,
+			const ITreeSolutionExtractor &extractor)
+		: decomposer_(decomposer),
+		  algorithms_(algorithms),
+		  extractor_(&extractor),
+		  manageAlgorithmMemory_(false),
+		  manageExtractorMemory_(false)
+	{ }
+
 
 	IterativeTreeSolver::~IterativeTreeSolver()
 	{
-		if(!manageAlgorithmMemory_) algorithm_.release();
-		if(!manageExtractorMemory_) extractor_.release();
+		if(manageAlgorithmMemory_)
+			for(const ITreeAlgorithm *alg : algorithms_)
+				if(alg)
+					delete alg;
+
+		if(manageExtractorMemory_ && extractor_) delete extractor_;
 	}
 
 	ITreeDecomposition *IterativeTreeSolver::decompose(
@@ -91,13 +134,19 @@ namespace sharp
 			const IInstance &instance,
 			const ITreeDecomposition &td) const
 	{
-		unique_ptr<INodeTableMap> tables(this->evaluate(td, instance));
+		unique_ptr<INodeTableMap> tables = 
+			this->initializeMap(td.vertexCount());
+
+		bool success = true;
+		for(const ITreeAlgorithm *alg : algorithms_)
+			if(!(success = this->evaluate(td, *alg, instance, *tables)))
+				break;
 		Benchmark::registerTimestamp("solving time");
 
 		vertex_t root = td.root();
 		ISolution *sol = nullptr;
 
-		if(tables)
+		if(success)
 			sol = extractor_->extractSolution(root, td, *tables, instance);
 		else
 			sol = extractor_->emptySolution(instance);
@@ -113,16 +162,19 @@ namespace sharp
 		return this->solve(instance, *td);
 	}
 
-	unique_ptr<INodeTableMap> IterativeTreeSolver::evaluate(
+	bool IterativeTreeSolver::evaluate(
 			const ITreeDecomposition &td,
-			const IInstance &instance) const
+			const ITreeAlgorithm &algorithm,
+			const IInstance &instance,
+			INodeTableMap &tables) const
 	{
+		bool needAllTables = 
+			algorithms_.size() > 1 || algorithm.needAllTables();
+
 		bool finishedBranch = false;
 		vertex_t current = td.root();
 		ITable *currentTable = nullptr;
 		stack<pair<vertex_t, size_t> > parents;
-		unique_ptr<INodeTableMap> tables = 
-			this->initializeMap(td.vertexCount());
 
 		while(!parents.empty() || !finishedBranch)
 		{
@@ -149,21 +201,19 @@ namespace sharp
 				continue;
 			}
 			current = top.first;
-			currentTable = algorithm_->evaluateNode(
+			currentTable = algorithm.evaluateNode(
 											current,
 											td,
-											*tables,
+											tables,
 											instance);
 
-			if(currentTable) insertIntoMap(current, td, currentTable, *tables);
+			if(currentTable) 
+				insertIntoMap(current, td, currentTable, tables, needAllTables);
 			else
-			{
-				tables.reset();
-				break;
-			}
+				return false;
 		}
-
-		return tables;
+		
+		return true;
 	}
 
 	unique_ptr<INodeTableMap> IterativeTreeSolver::initializeMap(
@@ -177,14 +227,15 @@ namespace sharp
 			vertex_t node,
 			const ITreeDecomposition &td,
 			ITable *table,
-			INodeTableMap &tables) const
+			INodeTableMap &tables,
+			bool needAllTables) const
 	{
 		IMutableNodeTableMap &map =
 			dynamic_cast<IMutableNodeTableMap &>(tables);
 
 		map.insert(node, table);
 		
-		if(!algorithm_->needAllTables())
+		if(!needAllTables)
 		{
 			size_t childCount = td.childCount(node);
 			for(size_t childIndex = 0; childIndex < childCount; ++childIndex)

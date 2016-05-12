@@ -28,13 +28,16 @@ namespace sharp
 	private:
 		IterativeTreeSolver(
 				const htd::ITreeDecompositionAlgorithm &decomposer,
-				std::unique_ptr<const ITreeAlgorithm> algorithm);
+				std::vector<std::unique_ptr<const ITreeAlgorithm> > &&algorithms,
+				bool deleteAlgorithms);
 
 
 		IterativeTreeSolver(
 				const htd::ITreeDecompositionAlgorithm &decomposer,
-				std::unique_ptr<const ITreeAlgorithm> algorithm,
-				std::unique_ptr<const ITreeSolutionExtractor> extractor);
+				std::vector<std::unique_ptr<const ITreeAlgorithm> > &&algorithms,
+				std::unique_ptr<const ITreeSolutionExtractor> extractor,
+				bool deleteAlgorithms,
+				bool deleteExtractor);
 
 	public:
 		IterativeTreeSolver(
@@ -43,7 +46,27 @@ namespace sharp
 
 		IterativeTreeSolver(
 				const htd::ITreeDecompositionAlgorithm &decomposer,
+				const ITreeAlgorithm &algorithm1,
+				const ITreeAlgorithm &algorithm2);
+
+		IterativeTreeSolver(
+				const htd::ITreeDecompositionAlgorithm &decomposer,
+				const TreeAlgorithmVector &algorithms);
+
+		IterativeTreeSolver(
+				const htd::ITreeDecompositionAlgorithm &decomposer,
 				const ITreeAlgorithm &algorithm,
+				const ITreeSolutionExtractor &extractor);
+
+		IterativeTreeSolver(
+				const htd::ITreeDecompositionAlgorithm &decomposer,
+				const ITreeAlgorithm &algorithm1,
+				const ITreeAlgorithm &algorithm2,
+				const ITreeSolutionExtractor &extractor);
+
+		IterativeTreeSolver(
+				const htd::ITreeDecompositionAlgorithm &decomposer,
+				const TreeAlgorithmVector &algorithms,
 				const ITreeSolutionExtractor &extractor);
 
 		virtual ~IterativeTreeSolver() override;
@@ -65,17 +88,20 @@ namespace sharp
 				htd::vertex_t node,
 				const htd::ITreeDecomposition &decomposition,
 				ITable *table,
-				INodeTableMap &tables) const;
+				INodeTableMap &tables,
+				bool needAllTables) const;
 
-		std::unique_ptr<INodeTableMap> evaluate(
+		bool evaluate(
 				const htd::ITreeDecomposition &decomposition,
-				const IInstance &instance) const;
+				const ITreeAlgorithm &algorithm,
+				const IInstance &instance,
+				INodeTableMap &tables) const;
 		
 		const htd::ITreeDecompositionAlgorithm &decomposer_;
-		std::unique_ptr<const ITreeAlgorithm> algorithm_;
-		std::unique_ptr<const ITreeSolutionExtractor> extractor_;
-		bool manageExtractorMemory_;
+		TreeAlgorithmVector algorithms_;
+		const ITreeSolutionExtractor *extractor_;
 		bool manageAlgorithmMemory_;
+		bool manageExtractorMemory_;
 
 	}; // class IterativeTreeSolver
 

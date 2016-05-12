@@ -14,6 +14,10 @@
 
 namespace sharp
 {
+	class ITreeAlgorithm;
+
+	typedef std::vector<const ITreeAlgorithm *> TreeAlgorithmVector;
+
 	class SHARP_API ITreeAlgorithm
 	{
 	protected:
