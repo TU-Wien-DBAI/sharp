@@ -45,6 +45,11 @@ namespace sharp
 				instance,
 				*newTable);
 
+		if(newTable->size() == 0)
+		{
+			delete newTable;
+			return nullptr;
+		}
 		return newTable;
 	}
 
