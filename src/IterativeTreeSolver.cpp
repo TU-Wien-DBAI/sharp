@@ -183,7 +183,7 @@ namespace sharp
 				if(td.childCount(current) != 0)
 				{
 					parents.push(make_pair(current, 1));
-					current = td.child(current, 0);
+					current = td.childAtPosition(current, 0);
 					continue;
 				}
 
@@ -195,7 +195,7 @@ namespace sharp
 			parents.pop();
 			if(td.childCount(top.first) > top.second)
 			{
-				current = td.child(top.first, top.second);
+				current = td.childAtPosition(top.first, top.second);
 				parents.push(make_pair(top.first, top.second + 1));
 				finishedBranch = false;
 				continue;
@@ -239,7 +239,7 @@ namespace sharp
 		{
 			size_t childCount = td.childCount(node);
 			for(size_t childIndex = 0; childIndex < childCount; ++childIndex)
-				map.erase(td.child(node, childIndex));
+				map.erase(td.childAtPosition(node, childIndex));
 		}
 	}
 
