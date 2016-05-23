@@ -8,6 +8,7 @@
 namespace sharp
 {
 	using std::size_t;
+	using std::uint_least32_t;
 
 	namespace
 	{
@@ -38,6 +39,14 @@ namespace sharp
 			this->add((unsigned char) (data >> (shift * CHUNK_SIZE)));
 	}
 
+	void Hash::add(uint_least32_t data)
+	{
+		size_t size = sizeof(uint_least32_t);
+
+		for(size_t shift = 0; shift < size; ++shift)
+			this->add((unsigned char) (data >> (shift * CHUNK_SIZE)));
+	}
+
 	void Hash::add(unsigned char data)
 	{
 		hash_ ^= (size_t)data;
@@ -58,6 +67,13 @@ namespace sharp
 		unorderedSum_ += h.get();
 	}
 
+	void Hash::addUnordered(uint_least32_t data)
+	{
+		Hash h;
+		h.add(data);
+		unorderedXor_ ^= h.get();
+		unorderedSum_ += h.get();
+	}
 	void Hash::addUnordered(unsigned char data)
 	{
 		Hash h;

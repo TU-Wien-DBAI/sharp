@@ -4,6 +4,7 @@
 #include <sharp/global>
 
 #include <cstddef>
+#include <cstdint>
 
 namespace sharp
 {
@@ -14,10 +15,12 @@ namespace sharp
 		~Hash();
 
 		void add(size_t data);
+		void add(std::uint_least32_t data);
 		void add(unsigned char data);
 		void reset();
 
 		void addUnordered(size_t data);
+		void addUnordered(std::uint_least32_t data);
 		void addUnordered(unsigned char data);
 		void incorporateUnordered();
 		void resetUnordered();
