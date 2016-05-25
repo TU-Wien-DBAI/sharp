@@ -4,8 +4,6 @@
 
 #include <gtest/gtest.h>
 
-#include <sharp/IterativeTreeSolver.hpp>
-
 namespace
 {
 
