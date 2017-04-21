@@ -6,11 +6,13 @@
 	#define SHARP_ENUM_NAME ConstEnumerator
 	#define SHARP_ENUM_REFTYPE const T &
 	#define SHARP_ENUM_PTRTYPE const T *
+	#define SHARP_ENUM_CONSTMODIFIER const
 #elif defined(SHARP_ENUM_NOCONST)
 	#define SHARP_ENUM_IFACE IEnumerator
 	#define SHARP_ENUM_NAME Enumerator
 	#define SHARP_ENUM_REFTYPE T &
 	#define SHARP_ENUM_PTRTYPE T *
+	#define SHARP_ENUM_CONSTMODIFIER
 #else
 	#error "Must define either SHARP_ENUM_CONST or SHARP_ENUM_NOCONST"
 #endif // SHARP_ENUM_NOCONST
@@ -94,6 +96,13 @@ namespace sharp
 				if(!enumerator_)
 					throw std::logic_error("Not in dereferenceable state!");
 				return enumerator_->get();
+			}
+
+			SHARP_ENUM_PTRTYPE operator->()
+			{
+				if(!enumerator_)
+					throw std::logic_error("Not in dereferenceable state!");
+				return &enumerator_->get();
 			}
 
 			Iterator &operator++()
@@ -181,10 +190,16 @@ namespace sharp
 		bool ended_;
 
 		template<typename U>
-		struct retref { U &operator()(Iter i) { return *i; } };
+		struct retref
+		{
+			SHARP_ENUM_CONSTMODIFIER U &operator()(Iter i) { return *i; }
+		};
 
 		template<typename U>
-		struct retref<U *> { U &operator()(Iter i) { return **i; } };
+		struct retref<U *>
+		{
+			SHARP_ENUM_CONSTMODIFIER U &operator()(Iter i) { return **i; }
+		};
 
 	}; // class SHARP_ENUM_NAME
 	
@@ -197,6 +212,7 @@ namespace sharp
 #undef SHARP_ENUM_NAME
 #undef SHARP_ENUM_REFTYPE
 #undef SHARP_ENUM_PTRTYPE
+#undef SHARP_ENUM_CONSTMODIFIER
 
 #endif // !defined(SHARP_ENUM_CONST) || !defined(SHARP_ENUM_NOCONST)
 #endif // defined(SHARP_ENUM_CONST) || defined(SHARP_ENUM_NOCONST)
