@@ -1,6 +1,5 @@
 #include <sharp/global>
 
-#include <sharp/Benchmark.hpp>
 #include <sharp/ConstEnumerator.hpp>
 #include <sharp/create.hpp>
 #include <sharp/DecomposableInstance.hpp>

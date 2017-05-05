@@ -7,7 +7,7 @@
 #include "NullTreeSolutionExtractor.hpp"
 #include "NodeTableMap.hpp"
 
-#include <sharp/Benchmark.hpp>
+#include <logic/helpers>
 
 #include <stack>
 #include <memory>
@@ -15,6 +15,8 @@
 
 namespace sharp
 {
+	using logic::Benchmark;
+
 	using htd::vertex_t;
 	using htd::IHypergraph;
 	using htd::ITreeDecomposition;

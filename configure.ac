@@ -3,7 +3,7 @@
 
 # initialize autoconf
 #####################
-AC_PREREQ([2.65])				# minimum autoconf version
+AC_PREREQ([2.69])				# minimum autoconf version
 
 # supply the name of the project, version number, and contact email
 AC_INIT([sharp], [2.0], [morak@dbai.tuwien.ac.at])
@@ -17,7 +17,7 @@ AC_CONFIG_AUX_DIR([build-aux])			# folder for auxilliary files
 #################################################
 #   subdir-objects:
 #	tell automake to create object files in same directory as the source
-AM_INIT_AUTOMAKE([1.11 dist-xz subdir-objects])
+AM_INIT_AUTOMAKE([1.15 dist-xz subdir-objects])
 #   tell automake not to be verbose when compiling
 AM_SILENT_RULES([yes])
 
@@ -86,6 +86,12 @@ AC_SEARCH_LIBS([htd_version], [htd],
 	        [HTD_LIBS=$ac_cv_search_htd_version],
 	        [AC_MSG_FAILURE([libhtd not found])])
 
+# check for logichelpers library
+#TODO: check for "none required" output of AC_SEARCH_LIBS
+AC_SEARCH_LIBS([logichelpers_version], [logichelpers],
+	        [HTD_LIBS=$ac_cv_search_logichelpers_version],
+	        [AC_MSG_FAILURE([liblogichelpers not found])])
+
 # if enabled, check for GNU MP library
 #TODO: check for "none required" output of AC_SEARCH_LIBS
 AS_IF([test "x$with_gmp" = xyes],
@@ -111,6 +117,10 @@ AC_LANG_PUSH([C++])
 # check for htd library header
 AC_CHECK_HEADER([htd/main.hpp], [],
 		[AC_MSG_FAILURE([libhtd library header not found])])
+
+# check for logichelpers library header
+AC_CHECK_HEADER([logic/helpers], [],
+		[AC_MSG_FAILURE([liblogichelpers library header not found])])
 
 # if enabled, check for GNU MP C++ header
 AS_IF([test "x$with_gmp" = xyes], 

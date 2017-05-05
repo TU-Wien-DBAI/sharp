@@ -52,7 +52,6 @@ libsharp_la_include_HEADERS = \
 	include/sharp/ITuple.hpp \
 	include/sharp/ITupleSet.hpp \
 	\
-	include/sharp/Benchmark.hpp \
 	include/sharp/ConstEnumerator.hpp \
 	include/sharp/create.hpp \
 	include/sharp/DecomposableInstance.hpp \
@@ -69,7 +68,6 @@ libsharp_la_SOURCES = \
 	src/ITuple.cpp \
 	src/ITuple.hpp \
 	\
-	src/Benchmark.cpp \
 	src/create.cpp \
 	src/Hash.cpp \
 	\
