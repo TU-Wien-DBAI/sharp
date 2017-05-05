@@ -55,6 +55,7 @@ libsharp_la_include_HEADERS = \
 	include/sharp/Benchmark.hpp \
 	include/sharp/ConstEnumerator.hpp \
 	include/sharp/create.hpp \
+	include/sharp/DecomposableInstance.hpp \
 	include/sharp/Enumerator.hpp \
 	include/sharp/EnumeratorSkeleton.hpp \
 	include/sharp/Hasher.hpp \

@@ -21,6 +21,9 @@ namespace sharp
 				const IDecomposableInstance &instance) const = 0;
 
 		virtual ISolution *solve(
+				const IDecomposableInstance &instance) const override = 0;
+
+		virtual ISolution *solve(
 				const IDecomposableInstance &instance,
 				const htd::ITreeDecomposition &decomposition) const = 0;
 
