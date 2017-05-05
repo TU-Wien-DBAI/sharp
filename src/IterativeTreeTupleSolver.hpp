@@ -6,7 +6,7 @@
 #include <sharp/global>
 
 #include <sharp/ITreeSolver.hpp>
-#include <sharp/IInstance.hpp>
+#include <sharp/IDecomposableInstance.hpp>
 #include <sharp/ITreeTupleAlgorithm.hpp>
 #include <sharp/ITreeTupleSolutionExtractor.hpp>
 
@@ -30,7 +30,7 @@ namespace sharp
 					htd::vertex_t node,
 					const htd::ITreeDecomposition &decomposition,
 					const INodeTableMap &tables,
-					const IInstance &instance) const override;
+					const IDecomposableInstance &instance) const override;
 
 			virtual bool needAllTables() const override;
 
@@ -52,10 +52,10 @@ namespace sharp
 					htd::vertex_t node,
 					const htd::ITreeDecomposition &decomposition,
 					const INodeTableMap &tables,
-					const IInstance &instance) const override;
+					const IDecomposableInstance &instance) const override;
 
 			virtual ISolution *emptySolution(
-					const IInstance &instance) const override;
+					const IDecomposableInstance &instance) const override;
 
 		private:
 			const ITreeTupleSolutionExtractor &extractor_;

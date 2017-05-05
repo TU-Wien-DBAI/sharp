@@ -18,10 +18,10 @@ namespace sharp
 		virtual ~ITreeSolver() = 0;
 
 		virtual htd::ITreeDecomposition *decompose(
-				const IInstance &instance) const = 0;
+				const IDecomposableInstance &instance) const = 0;
 
 		virtual ISolution *solve(
-				const IInstance &instance,
+				const IDecomposableInstance &instance,
 				const htd::ITreeDecomposition &decomposition) const = 0;
 
 	}; // class ITreeSolver

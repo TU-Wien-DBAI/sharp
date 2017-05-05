@@ -120,7 +120,7 @@ namespace sharp
 	}
 
 	ITreeDecomposition *IterativeTreeSolver::decompose(
-			const IInstance &instance) const
+			const IDecomposableInstance &instance) const
 	{
 		unique_ptr<IHypergraph> hg(instance.toHypergraph());
 		//TODO: include preprocessingOperations in decomposition call
@@ -131,7 +131,7 @@ namespace sharp
 	}
 
 	ISolution *IterativeTreeSolver::solve(
-			const IInstance &instance,
+			const IDecomposableInstance &instance,
 			const ITreeDecomposition &td) const
 	{
 		unique_ptr<INodeTableMap> tables = 
@@ -156,7 +156,7 @@ namespace sharp
 		return sol;
 	}
 
-	ISolution *IterativeTreeSolver::solve(const IInstance &instance) const
+	ISolution *IterativeTreeSolver::solve(const IDecomposableInstance &instance) const
 	{
 		unique_ptr<ITreeDecomposition> td(this->decompose(instance));
 		return this->solve(instance, *td);
@@ -165,7 +165,7 @@ namespace sharp
 	bool IterativeTreeSolver::evaluate(
 			const ITreeDecomposition &td,
 			const ITreeAlgorithm &algorithm,
-			const IInstance &instance,
+			const IDecomposableInstance &instance,
 			INodeTableMap &tables) const
 	{
 		bool needAllTables = 

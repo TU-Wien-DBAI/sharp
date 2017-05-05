@@ -26,7 +26,7 @@ namespace sharp
 			vertex_t node,
 			const ITreeDecomposition &decomposition,
 			const INodeTableMap &tables,
-			const IInstance &instance) const
+			const IDecomposableInstance &instance) const
 	{
 		return extractor_.extractSolution(
 				node,
@@ -38,7 +38,7 @@ namespace sharp
 	ISolution *
 	IterativeTreeTupleSolver::
 	TupleToTreeSolutionExtractorAdapter::emptySolution(
-			const IInstance &instance) const
+			const IDecomposableInstance &instance) const
 	{
 		return extractor_.emptySolution(instance);
 	}

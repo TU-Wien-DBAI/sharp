@@ -34,7 +34,7 @@ namespace sharp
 			vertex_t node,
 			const ITreeDecomposition &decomposition,
 			const INodeTableMap &tables,
-			const IInstance &instance) const
+			const IDecomposableInstance &instance) const
 	{
 		TupleSet *newTable = new TupleSet();
 

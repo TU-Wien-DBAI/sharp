@@ -15,13 +15,13 @@ namespace sharp
 			vertex_t,
 			const ITreeDecomposition &,
 			const INodeTableMap &,
-			const IInstance &) const
+			const IDecomposableInstance &) const
 	{
 		return nullptr;
 	}
 	
 	ISolution *NullTreeSolutionExtractor::emptySolution(
-			const IInstance &) const
+			const IDecomposableInstance &) const
 	{
 		return nullptr;
 	}

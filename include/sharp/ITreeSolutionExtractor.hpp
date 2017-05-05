@@ -6,7 +6,7 @@
 #include <sharp/ISolution.hpp>
 #include <sharp/ITable.hpp>
 #include <sharp/INodeTableMap.hpp>
-#include <sharp/IInstance.hpp>
+#include <sharp/IDecomposableInstance.hpp>
 
 #include <htd/main.hpp>
 
@@ -25,9 +25,10 @@ namespace sharp
 				htd::vertex_t node,
 				const htd::ITreeDecomposition &decomposition,
 				const INodeTableMap &tables,
-				const IInstance &instance) const = 0;
+				const IDecomposableInstance &instance) const = 0;
 
-		virtual ISolution *emptySolution(const IInstance &instance) const = 0;
+		virtual ISolution *emptySolution(
+				const IDecomposableInstance &instance) const = 0;
 
 	}; // class ITreeSolutionExtractor
 

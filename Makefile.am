@@ -37,7 +37,7 @@ libsharp_la_include_HEADERS = \
 	include/sharp/main \
 	include/sharp/global \
 	\
-	include/sharp/IInstance.hpp \
+	include/sharp/IDecomposableInstance.hpp \
 	include/sharp/IMutableNodeTableMap.hpp \
 	include/sharp/INodeTableMap.hpp \
 	include/sharp/INodeTupleSetMap.hpp \

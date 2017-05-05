@@ -26,7 +26,7 @@ namespace sharp
 				htd::vertex_t node,
 				const htd::ITreeDecomposition &decomposition,
 				const INodeTupleSetMap &tuples,
-				const IInstance &instance,
+				const IDecomposableInstance &instance,
 				ITupleSet &outputTuples) const override;
 
 		virtual bool needAllTupleSets() const override;

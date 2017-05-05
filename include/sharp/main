@@ -6,7 +6,7 @@
 #include <sharp/Enumerator.hpp>
 #include <sharp/Hasher.hpp>
 #include <sharp/Hash.hpp>
-#include <sharp/IInstance.hpp>
+#include <sharp/IDecomposableInstance.hpp>
 #include <sharp/IMutableNodeTableMap.hpp>
 #include <sharp/INodeTableMap.hpp>
 #include <sharp/INodeTupleSetMap.hpp>

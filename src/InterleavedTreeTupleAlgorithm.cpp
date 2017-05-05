@@ -37,7 +37,7 @@ namespace sharp
 			vertex_t node,
 			const ITreeDecomposition &decomposition,
 			const INodeTupleSetMap &tuples,
-			const IInstance &instance,
+			const IDecomposableInstance &instance,
 			ITupleSet &outputTuples) const
 	{
 		TupleSet intermediateOutputTuples;

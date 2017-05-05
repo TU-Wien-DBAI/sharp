@@ -26,7 +26,7 @@ namespace sharp
 				htd::vertex_t node,
 				const htd::ITreeDecomposition &decomposition,
 				const INodeTableMap &tables,
-				const IInstance &instance) const override;
+				const IDecomposableInstance &instance) const override;
 
 		virtual bool needAllTables() const override;
 		

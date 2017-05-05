@@ -36,7 +36,7 @@ namespace sharp
 			vertex_t node,
 			const ITreeDecomposition &decomposition,
 			const INodeTableMap &tables,
-			const IInstance &instance) const
+			const IDecomposableInstance &instance) const
 	{
 		unique_ptr<ITable> table1(algorithm1_.evaluateNode(
 					node,

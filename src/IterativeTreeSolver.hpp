@@ -5,7 +5,7 @@
 
 #include <sharp/ITreeSolver.hpp>
 #include <sharp/ITreeAlgorithm.hpp>
-#include <sharp/IInstance.hpp>
+#include <sharp/IDecomposableInstance.hpp>
 #include <sharp/ISolution.hpp>
 #include <sharp/ITreeSolutionExtractor.hpp>
 
@@ -28,13 +28,15 @@ namespace sharp
 	private:
 		IterativeTreeSolver(
 				const htd::ITreeDecompositionAlgorithm &decomposer,
-				std::vector<std::unique_ptr<const ITreeAlgorithm> > &&algorithms,
+				std::vector<std::unique_ptr<const ITreeAlgorithm> > &&
+																	algorithms,
 				bool deleteAlgorithms);
 
 
 		IterativeTreeSolver(
 				const htd::ITreeDecompositionAlgorithm &decomposer,
-				std::vector<std::unique_ptr<const ITreeAlgorithm> > &&algorithms,
+				std::vector<std::unique_ptr<const ITreeAlgorithm> > &&
+																	algorithms,
 				std::unique_ptr<const ITreeSolutionExtractor> extractor,
 				bool deleteAlgorithms,
 				bool deleteExtractor);
@@ -72,12 +74,13 @@ namespace sharp
 		virtual ~IterativeTreeSolver() override;
 
 		virtual htd::ITreeDecomposition *decompose(
-				const IInstance &instance) const override;
-
-		virtual ISolution *solve(const IInstance &instance) const override;
+				const IDecomposableInstance &instance) const override;
 
 		virtual ISolution *solve(
-				const IInstance &instance,
+				const IDecomposableInstance &instance) const override;
+
+		virtual ISolution *solve(
+				const IDecomposableInstance &instance,
 				const htd::ITreeDecomposition &decomposition) const override;
 
 	private:
@@ -94,7 +97,7 @@ namespace sharp
 		bool evaluate(
 				const htd::ITreeDecomposition &decomposition,
 				const ITreeAlgorithm &algorithm,
-				const IInstance &instance,
+				const IDecomposableInstance &instance,
 				INodeTableMap &tables) const;
 		
 		const htd::ITreeDecompositionAlgorithm &decomposer_;

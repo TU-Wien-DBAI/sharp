@@ -3,7 +3,7 @@
 
 #include <sharp/global>
 
-#include <sharp/IInstance.hpp>
+#include <sharp/IDecomposableInstance.hpp>
 #include <sharp/ISolution.hpp>
 
 namespace sharp
@@ -16,7 +16,8 @@ namespace sharp
 	public:
 		virtual ~ISolver() = 0;
 
-		virtual ISolution *solve(const IInstance &instance) const = 0;
+		virtual ISolution *solve(
+				const IDecomposableInstance &instance) const = 0;
 
 	}; // class ISolver
 
