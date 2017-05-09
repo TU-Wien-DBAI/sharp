@@ -6,7 +6,7 @@
 AC_PREREQ([2.69])				# minimum autoconf version
 
 # supply the name of the project, version number, and contact email
-AC_INIT([sharp], [2.0], [morak@dbai.tuwien.ac.at])
+AC_INIT([sharp], [2.1], [morak@dbai.tuwien.ac.at])
 
 AC_CONFIG_SRCDIR([src/assembly.cpp])	# source directory
 AC_CONFIG_HEADERS([config.h])			# name of generated header
@@ -17,7 +17,7 @@ AC_CONFIG_AUX_DIR([build-aux])			# folder for auxilliary files
 #################################################
 #   subdir-objects:
 #	tell automake to create object files in same directory as the source
-AM_INIT_AUTOMAKE([1.15 dist-xz subdir-objects])
+AM_INIT_AUTOMAKE([1.15 subdir-objects])
 #   tell automake not to be verbose when compiling
 AM_SILENT_RULES([yes])
 

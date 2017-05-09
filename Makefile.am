@@ -119,7 +119,7 @@ libsharp_la_includedir = ${includedir}/sharp
 # 		0 if there is a backwards-compatibility breaking change, otherwise
 # 		increase by 1 if CURRENT was increased by one.
 #
-libsharp_la_LDFLAGS = -version-info 1:0:0
+libsharp_la_LDFLAGS = -version-info 2:0:0
 
 ############################
 # DISTRIBUTION OPTIONS:	   #
