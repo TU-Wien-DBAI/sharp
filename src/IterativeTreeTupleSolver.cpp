@@ -17,9 +17,6 @@ namespace sharp
 {
 	using logic::Benchmark;
 
-	using htd::vertex_t;
-	using htd::IHypergraph;
-	using htd::ITreeDecomposition;
 	using htd::ITreeDecompositionAlgorithm;
 
 	using std::size_t;

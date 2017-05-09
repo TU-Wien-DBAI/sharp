@@ -18,7 +18,7 @@ namespace sharp
 	using logic::Benchmark;
 
 	using htd::vertex_t;
-	using htd::IHypergraph;
+	using htd::IMultiHypergraph;
 	using htd::ITreeDecomposition;
 	using htd::ITreeDecompositionAlgorithm;
 
@@ -124,7 +124,7 @@ namespace sharp
 	ITreeDecomposition *IterativeTreeSolver::decompose(
 			const IDecomposableInstance &instance) const
 	{
-		unique_ptr<IHypergraph> hg(instance.toHypergraph());
+		unique_ptr<IMultiHypergraph> hg(instance.toHypergraph());
 		//TODO: include preprocessingOperations in decomposition call
 		//		once libhtd supports this
 		ITreeDecomposition * td = decomposer_.computeDecomposition(*hg);

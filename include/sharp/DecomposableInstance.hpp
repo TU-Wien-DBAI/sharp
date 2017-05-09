@@ -18,7 +18,7 @@ namespace sharp
 
 		const T &content() const { return content_; }
 
-		virtual htd::IHypergraph *toHypergraph() const override;
+		virtual htd::IMultiHypergraph *toHypergraph() const override;
 
 	private:
 		const T &content_;

@@ -16,7 +16,7 @@ namespace sharp
 	public:
 		virtual ~IDecomposableInstance() = 0;
 
-		virtual htd::IHypergraph *toHypergraph() const = 0;
+		virtual htd::IMultiHypergraph *toHypergraph() const = 0;
 
 	}; // class IDecomposableInstance
 
